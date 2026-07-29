@@ -151,6 +151,12 @@ service cloud.firestore {
       );
     }
 
+    // 게시판 — 읽기 공개, 쓰기는 관리자만
+    match /boards/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
     // 좋아요 카운터 — 읽기 공개, 쓰기는 로그인 사용자만
     match /likes/{docId} {
       allow read:  if true;
