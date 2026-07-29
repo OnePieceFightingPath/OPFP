@@ -5795,11 +5795,9 @@ html.is-pwa .site-footer {
     font-size: 13px;
   }
 
-  /* ── 네비게이션 카드: 가로 3탭 ── */
+  /* ── 네비게이션 카드: 모바일에서 숨김 (하단 탭바로 대체) ── */
   .comm-nav-card {
-    display: flex;
-    flex-direction: row;
-    overflow: hidden;
+    display: none;
   }
   .comm-nav-item {
     flex: 1;
