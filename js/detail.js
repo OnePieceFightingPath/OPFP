@@ -461,10 +461,16 @@ async function _renderBoardList() {
   history.pushState({}, '', 'detail.html?type=board');
   _setNavActive('board');
 
-  main.innerHTML = `<div style="padding:60px 16px;text-align:center">
-    <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
-    <p style="color:var(--text-muted)">게시판을 불러오는 중...</p>
-  </div>`;
+  main.innerHTML = `
+    <div style="padding-bottom:80px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
+        <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
+      </div>
+      <div style="padding:60px 16px;text-align:center">
+        <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
+        <p style="color:var(--text-muted)">게시판을 불러오는 중...</p>
+      </div>
+    </div>`;
 
   try {
     const snap = await db.collection('boards').orderBy('createdAt', 'desc').limit(50).get();
@@ -505,7 +511,13 @@ async function _renderBoardList() {
         </div>
       </div>`;
   } catch {
-    main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시판을 불러올 수 없습니다.</div>`;
+    main.innerHTML = `
+      <div style="padding-bottom:80px">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
+          <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
+        </div>
+        <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시판을 불러올 수 없습니다.</div>
+      </div>`;
   }
 
   window.scrollTo({ top: 0 });
