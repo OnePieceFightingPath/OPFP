@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://d2x8kymwjom7h7.cloudfront.net; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.cloudfunctions.net; frame-src https://fighting-path-patch.firebaseapp.com; object-src 'none'; worker-src 'self';">
+    <title>설정 - Fighting Path Patch</title>
+    <meta name="theme-color" content="#0d1117" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="파패 패치" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="img/logo-dark.png" id="appTouchIcon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="img/logo-dark.png" id="appFaviconIcon" />
+    <link rel="stylesheet" href="css/style.css?v=5" />
+    <style>
+      /* ── 헤더 ── */
+      .sp-header {
+        position: fixed; top: 0; left: 0; width: 100%; z-index: 200;
+        background: var(--bg); height: 56px;
+        display: flex; align-items: center; padding: 0 16px;
+        box-shadow: var(--shadow);
+      }
+      .sp-back-btn {
+        position: absolute; left: 16px;
+        display: flex; align-items: center;
+        color: var(--accent); padding: 8px 4px;
+        background: none; border: none; cursor: pointer;
+      }
+      .sp-back-btn svg { width: 28px; height: 28px; }
+      .sp-title {
+        flex: 1; text-align: center;
+        font-size: 17px; font-weight: 700; color: var(--text);
+      }
+
+      /* ── 뷰 시스템 ── */
+      .sp-screen {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: var(--bg);
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+        overflow-y: auto; z-index: 100;
+        padding-top: 56px;
+      }
+      .sp-screen.active {
+        transform: translateX(0);
+      }
+      /* 메인 뷰는 항상 기준 위치 */
+      #view-main {
+        transform: translateX(0);
+        transition: none;
+        z-index: 100;
+      }
+      /* 서브뷰가 열리면 메인은 왼쪽으로 살짝 */
+      body.sp-sub-open #view-main {
+        transform: translateX(-30%);
+        transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+        pointer-events: none;
+      }
+
+      /* ── 공통 컨텐츠 영역 ── */
+      .sp-wrap {
+        padding: 20px 16px 60px;
+        max-width: 600px; margin: 0 auto;
+      }
+
+      /* ── 메인: 설정 목록 ── */
+      .sp-section {
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); overflow: hidden;
+        margin-bottom: 16px;
+      }
+      .sp-section .gnb-setting-item {
+        width: 100%; padding: 15px 16px; font-size: 15px;
+        border-radius: 0; border-bottom: 1px solid var(--border);
+      }
+      .sp-section .gnb-setting-item:last-child { border-bottom: none; }
+
+      /* ── 테마 선택 ── */
+      .sp-theme-hint { color: var(--text-sub); font-size: 13px; margin-top: 12px; }
+
+      /* ── 앱 아이콘 ── */
+      .sp-desc { color: var(--text-sub); font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+      .sp-hint { color: var(--text-sub); font-size: 13px; margin-top: 16px; line-height: 1.6; }
+      .sp-icon-notice { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; line-height: 1.6; }
+
+      /* ── 알림 설정 ── */
+      .sp-notif-card {
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); overflow: hidden;
+      }
+
+      /* ── 공지사항 ── */
+      .sp-notice-wrap { }
+
+      /* ── 내 정보 (프로필 편집 인라인) ── */
+      .sp-myinfo-inner .profile-setup-modal {
+        box-shadow: none; border-radius: 0;
+        background: transparent; padding: 0;
+      }
+
+      /* ── 로그인 하기 ── */
+      .sp-login-description {
+        color: var(--text-sub); font-size: 14px; line-height: 1.6;
+        margin: 0 4px 16px;
+      }
+      .sp-login-list {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 12px; overflow: hidden;
+      }
+      .sp-login-list .gnb-setting-item {
+        width: 100%; padding: 16px; font-size: 15px;
+        border-radius: 0; border-bottom: 1px solid var(--border);
+      }
+      .sp-login-list .gnb-setting-item:last-child { border-bottom: none; }
+
+      /* ── 내 정보 ── */
+      .sp-account-list {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 12px; overflow: hidden;
+      }
+      .sp-account-row {
+        width: 100%; min-height: 58px; padding: 14px 16px;
+        display: flex; align-items: center; gap: 12px;
+        color: var(--text); text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      .sp-account-row:last-child { border-bottom: none; }
+      .sp-account-row.is-action { cursor: pointer; }
+      .sp-account-row.is-action:hover { background: var(--bg-hover); }
+      .sp-account-icon {
+        width: 22px; height: 22px; flex: 0 0 22px;
+        color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      }
+      .sp-account-icon svg { width: 20px; height: 20px; }
+      .sp-account-label { flex: 1; font-size: 15px; }
+      .sp-account-value {
+        color: var(--text-muted); font-size: 14px; text-align: right;
+        max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .sp-account-arrow {
+        width: 18px; height: 18px; color: var(--text-dim); flex: 0 0 18px;
+      }
+      .sp-account-row.is-danger { color: #f85149; }
+      .sp-account-row.is-danger .sp-account-icon { color: #f85149; }
+      .sp-account-loading, .sp-account-empty {
+        padding: 28px 16px; color: var(--text-muted); text-align: center; font-size: 14px;
+      }
+      .sp-account-email {
+        margin: 12px 4px 0; color: var(--text-dim); font-size: 12px;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .sp-confirm-overlay {
+        position: fixed; inset: 0; z-index: 500;
+        display: none; align-items: center; justify-content: center;
+        padding: 20px; background: rgba(0, 0, 0, 0.62);
+      }
+      .sp-confirm-overlay.open { display: flex; }
+      .sp-confirm-modal {
+        width: min(100%, 340px); padding: 24px 20px 18px;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
+        text-align: center;
+      }
+      .sp-confirm-title {
+        margin: 0 0 10px; color: var(--text); font-size: 17px; font-weight: 700;
+      }
+      .sp-confirm-message {
+        margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.65;
+        white-space: pre-line;
+      }
+      .sp-confirm-actions {
+        display: flex; gap: 8px; justify-content: center; margin-top: 22px;
+      }
+      .sp-confirm-actions button {
+        min-width: 76px; padding: 9px 14px; border-radius: 8px;
+        font: inherit; font-size: 14px; font-weight: 600;
+      }
+      #spConfirmCancel {
+        color: var(--text-muted); border: 1px solid var(--border);
+      }
+      #spConfirmOk { color: #fff; background: #4D9FFF; }
+    </style>
+  </head>
+  <body>
+
+    <!-- ══════════════ 공통 헤더 ══════════════ -->
+    <header class="sp-header">
+      <button class="sp-back-btn" id="spBackBtn">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <span class="sp-title" id="spTitle">설정</span>
+    </header>
+
+    <!-- ══════════════ 메인 뷰 (설정 목록) ══════════════ -->
+    <div class="sp-screen active" id="view-main">
+      <div class="sp-wrap">
+
+        <div class="sp-section">
+          <button class="gnb-setting-item" id="menuMyInfo">
+            <span class="gnb-setting-icon" id="menuMyInfoIcon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </span>
+            <span class="gnb-setting-label" id="menuMyInfoLabel">내 정보</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="sp-section">
+          <button class="gnb-setting-item" id="menuTheme">
+            <span class="gnb-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+            <span class="gnb-setting-label">테마 변경</span>
+            <span class="gnb-setting-value" id="themeCurrentLabel">다크</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="gnb-setting-item" id="menuAppIcon">
+            <span class="gnb-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+            <span class="gnb-setting-label">앱 아이콘 변경</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="gnb-setting-item" id="menuLang">
+            <span class="gnb-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
+            <span class="gnb-setting-label">언어 변경</span>
+            <span class="gnb-setting-value" id="langCurrentLabel">한국어</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="sp-section">
+          <button class="gnb-setting-item" id="menuNotif">
+            <span class="gnb-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+            <span class="gnb-setting-label">알림 설정</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <div class="sp-section">
+          <button class="gnb-setting-item" id="menuNotice">
+            <span class="gnb-setting-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h1l1 4h2l1-4h6l2 2V7l-2 2H9L8 5H6L5 9H4a1 1 0 0 0-1 1z"/><path d="M19 7c1.5 1 1.5 3 0 4"/></svg></span>
+            <span class="gnb-setting-label">공지사항</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════ 테마 변경 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-theme">
+      <div class="sp-wrap">
+        <div class="gnb-theme-options">
+          <button class="gnb-theme-option" data-theme="system">
+            <div class="gnb-theme-preview gnb-theme-preview-system">
+              <div class="gnb-theme-preview-bar"></div>
+              <div class="gnb-theme-preview-rows"><div></div><div></div><div></div></div>
+            </div>
+            <div class="gnb-theme-option-info">
+              <span class="gnb-theme-option-label">시스템 설정 모드</span>
+              <span class="gnb-theme-option-desc">기기 디스플레이 설정에 따라 자동으로 라이트/다크 모드로 전환됩니다.</span>
+            </div>
+            <div class="gnb-theme-radio"></div>
+          </button>
+          <button class="gnb-theme-option" data-theme="light">
+            <div class="gnb-theme-preview gnb-theme-preview-light">
+              <div class="gnb-theme-preview-bar"></div>
+              <div class="gnb-theme-preview-rows"><div></div><div></div><div></div></div>
+            </div>
+            <div class="gnb-theme-option-info">
+              <span class="gnb-theme-option-label">라이트 모드</span>
+            </div>
+            <div class="gnb-theme-radio"></div>
+          </button>
+          <button class="gnb-theme-option" data-theme="dark">
+            <div class="gnb-theme-preview gnb-theme-preview-dark">
+              <div class="gnb-theme-preview-bar"></div>
+              <div class="gnb-theme-preview-rows"><div></div><div></div><div></div></div>
+            </div>
+            <div class="gnb-theme-option-info">
+              <span class="gnb-theme-option-label">다크 모드</span>
+            </div>
+            <div class="gnb-theme-radio"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ 앱 아이콘 변경 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-appicon">
+      <div class="sp-wrap">
+        <p class="sp-desc">홈 화면에 추가할 아이콘을 선택하세요.</p>
+        <p class="sp-icon-notice">ⓘ 아이콘 변경은 앱을 지우고 다시 설치해야 적용되요.</p>
+        <div class="gnb-icon-picker" id="appIconPicker">
+          <button class="gnb-icon-option" data-icon="dark">
+            <div class="gnb-icon-preview gnb-icon-bg-dark">
+              <img src="img/logo-dark.png" alt="다크 아이콘" />
+            </div>
+            <span class="gnb-icon-label">다크</span>
+            <svg class="gnb-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+          <button class="gnb-icon-option" data-icon="light">
+            <div class="gnb-icon-preview gnb-icon-bg-light">
+              <img src="img/logo-light.png" alt="라이트 아이콘" />
+            </div>
+            <span class="gnb-icon-label">라이트</span>
+            <svg class="gnb-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+        </div>
+        <p class="sp-hint">선택 후 브라우저에서 "홈 화면에 추가"를 눌러 아이콘을 설치하세요.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════ 언어 변경 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-lang">
+      <div class="sp-wrap">
+        <div class="gnb-lang-options">
+          <button class="gnb-lang-option" data-lang="ko">
+            <span class="gnb-lang-flag">KR</span>
+            <span class="gnb-lang-name">한국어</span>
+            <svg class="gnb-lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+          <button class="gnb-lang-option" data-lang="en">
+            <span class="gnb-lang-flag">US</span>
+            <span class="gnb-lang-name">English</span>
+            <svg class="gnb-lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+        </div>
+        <p class="sp-hint">언어 설정은 추후 업데이트될 예정입니다.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════ 알림 설정 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-notif">
+      <div class="sp-wrap">
+        <div class="sp-notif-card">
+          <div class="gnb-notif-list">
+            <div class="gnb-notif-row">
+              <div class="gnb-notif-info">
+                <span class="gnb-notif-label">패치노트 알림</span>
+                <span class="gnb-notif-desc">신규 패치노트 등록 시 알림</span>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="notifPatch"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gnb-notif-row">
+              <div class="gnb-notif-info">
+                <span class="gnb-notif-label">즐겨찾기 알림</span>
+                <span class="gnb-notif-desc">즐겨찾기한 캐릭터/서폿 캐릭터 PvP 패치 등록 시 알림</span>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="notifFavorite"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gnb-notif-row">
+              <div class="gnb-notif-info">
+                <span class="gnb-notif-label">이벤트 알림</span>
+                <span class="gnb-notif-desc">신규 이벤트 등록 시 알림</span>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="notifEvent"/><span class="toggle-slider"></span></label>
+            </div>
+            <div class="gnb-notif-row">
+              <div class="gnb-notif-info">
+                <span class="gnb-notif-label">댓글 답글 알림</span>
+                <span class="gnb-notif-desc">내 댓글에 답글이 달릴 때 알림</span>
+              </div>
+              <label class="toggle-switch"><input type="checkbox" id="notifReply"/><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+        <p class="sp-hint">브라우저 알림 권한이 필요합니다.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════ 공지사항 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-notice">
+      <div class="sp-wrap">
+        <div class="gnb-notice-list" id="gnbNoticeList">
+          <div class="gnb-notice-loading">공지사항을 불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ 내 정보 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-myinfo">
+      <div class="sp-wrap">
+        <div class="sp-account-list" id="spAccountList">
+          <div class="sp-account-loading">내 정보를 불러오는 중...</div>
+        </div>
+        <p class="sp-account-email" id="spAccountEmail"></p>
+
+        <!-- 프로필 편집 (로그인 유저) -->
+        <div id="spProfileEditWrap" style="display:none">
+          <div class="profile-preview-wrap">
+            <div class="profile-preview-avatar">
+              <img id="profileEditAvatarPreview" src="" alt="아바타" style="display:none">
+              <div class="profile-avatar-preview-initial" id="profileEditAvatarPreviewInitial">?</div>
+            </div>
+            <div class="profile-preview-name" id="profileEditPreviewName">닉네임 입력</div>
+          </div>
+          <div class="profile-setup-section" style="margin-top:20px">
+            <label class="profile-label" for="profileEditNicknameInput">닉네임 <span class="profile-required">*</span></label>
+            <div class="profile-nickname-wrap">
+              <input type="text" id="profileEditNicknameInput" class="profile-nickname-input"
+                placeholder="2~12자로 입력해주세요" maxlength="12" autocomplete="off">
+              <span class="profile-nickname-count"><span id="profileEditNicknameLen">0</span>/12</span>
+            </div>
+          </div>
+          <div class="profile-setup-section">
+            <label class="profile-label">프로필 사진 <span class="profile-required">*</span></label>
+            <div class="avatar-picker-tabs">
+              <button type="button" class="avatar-picker-tab active" data-avatartab="strawhats">밀짚모자 해적단</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="warlords">칠무해</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="marines">해군</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="yonko">사황</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="allies">조력자</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="pirate_king">해적왕</button>
+            </div>
+            <div class="avatar-grid" id="avatarEditGridStrawhats"></div>
+            <div class="avatar-grid" id="avatarEditGridWarlords"   style="display:none"></div>
+            <div class="avatar-grid" id="avatarEditGridMarines"    style="display:none"></div>
+            <div class="avatar-grid" id="avatarEditGridYonko"      style="display:none"></div>
+            <div class="avatar-grid" id="avatarEditGridAllies"     style="display:none"></div>
+            <div class="avatar-grid" id="avatarEditGridPirateKing" style="display:none"></div>
+          </div>
+          <div class="profile-setup-error" id="profileEditError" style="display:none"></div>
+          <div style="display:flex; gap:10px; margin-top:20px">
+            <button type="button" class="profile-setup-cancel" id="profileEditCancel" style="flex:1">취소</button>
+            <button type="button" class="profile-setup-submit" id="profileEditSubmit" style="flex:2">저장</button>
+          </div>
+        </div>
+        <!-- 프로필 미설정 유저 -->
+        <div id="spProfileSetupWrap" style="display:none">
+          <div class="profile-preview-wrap">
+            <div class="profile-preview-avatar">
+              <img id="profileAvatarPreview" src="" alt="아바타" style="display:none">
+              <div class="profile-avatar-preview-initial" id="profileAvatarPreviewInitial">?</div>
+            </div>
+            <div class="profile-preview-name" id="profilePreviewName">닉네임 입력</div>
+          </div>
+          <div class="profile-setup-section" style="margin-top:20px">
+            <label class="profile-label" for="profileNicknameInput">닉네임 <span class="profile-required">*</span></label>
+            <div class="profile-nickname-wrap">
+              <input type="text" id="profileNicknameInput" class="profile-nickname-input"
+                placeholder="2~12자로 입력해주세요" maxlength="12" autocomplete="off">
+              <span class="profile-nickname-count"><span id="profileNicknameLen">0</span>/12</span>
+            </div>
+          </div>
+          <div class="profile-setup-section">
+            <label class="profile-label">프로필 사진 <span class="profile-required">*</span></label>
+            <div class="avatar-picker-tabs">
+              <button type="button" class="avatar-picker-tab active" data-avatartab="strawhats">밀짚모자 해적단</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="warlords">칠무해</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="marines">해군</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="yonko">사황</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="allies">조력자</button>
+              <button type="button" class="avatar-picker-tab" data-avatartab="pirate_king">해적왕</button>
+            </div>
+            <div class="avatar-grid" id="avatarGridStrawhats"></div>
+            <div class="avatar-grid" id="avatarGridWarlords"    style="display:none"></div>
+            <div class="avatar-grid" id="avatarGridMarines"     style="display:none"></div>
+            <div class="avatar-grid" id="avatarGridYonko"       style="display:none"></div>
+            <div class="avatar-grid" id="avatarGridAllies"      style="display:none"></div>
+            <div class="avatar-grid" id="avatarGridPirateKing"  style="display:none"></div>
+          </div>
+          <div class="profile-setup-error" id="profileSetupError" style="display:none"></div>
+          <div style="display:flex; gap:10px; margin-top:20px">
+            <button type="button" class="profile-setup-cancel" id="profileSetupCancel" style="flex:1">취소 (로그아웃)</button>
+            <button type="button" class="profile-setup-submit" id="profileSetupSubmit" style="flex:2">완료</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ 로그인 하기 뷰 ══════════════ -->
+    <div class="sp-screen" id="view-login">
+      <div class="sp-wrap">
+        <p class="sp-login-description">로그인 방법을 선택해주세요.</p>
+        <div class="sp-login-list">
+          <button class="gnb-setting-item" id="spEmailLoginBtn">
+            <span class="gnb-setting-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            </span>
+            <span class="gnb-setting-label">이메일로 로그인</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="gnb-setting-item" id="spGoogleLoginBtn">
+            <span class="gnb-setting-icon">
+              <svg viewBox="0 0 24 24" fill="none"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h6.44a5.5 5.5 0 0 1-2.39 3.61v3h3.87c2.27-2.09 3.57-5.18 3.57-8.64Z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.93-2.86l-3.87-3c-1.07.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.1A12 12 0 0 0 12 24Z"/><path fill="#FBBC05" d="M5.28 14.34A7.2 7.2 0 0 1 4.9 12c0-.81.14-1.6.38-2.34v-3.1H1.28A12 12 0 0 0 0 12c0 1.93.46 3.75 1.28 5.44l4-3.1Z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.94 1.07 15.23 0 12 0A12 12 0 0 0 1.28 6.56l4 3.1C6.23 6.88 8.88 4.77 12 4.77Z"/></svg>
+            </span>
+            <span class="gnb-setting-label">구글로 로그인</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="gnb-setting-item" id="spRegisterBtn">
+            <span class="gnb-setting-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            </span>
+            <span class="gnb-setting-label">회원가입</span>
+            <svg class="gnb-setting-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ 토스트 ══════════════ -->
+    <div id="toastNotification" class="toast-notification" role="alert" aria-live="assertive"></div>
+
+    <div class="sp-confirm-overlay" id="spConfirmOverlay">
+      <div class="sp-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="spConfirmTitle">
+        <h2 class="sp-confirm-title" id="spConfirmTitle">탈퇴 확인</h2>
+        <p class="sp-confirm-message" id="spConfirmMessage"></p>
+        <div class="sp-confirm-actions">
+          <button type="button" id="spConfirmCancel">취소</button>
+          <button type="button" id="spConfirmOk">확인</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════ Firebase & Scripts ══════════════ -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/userauth.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+      // 테마·액센트 즉시 적용
+      (function(){
+        const t = localStorage.getItem('theme') || 'system';
+        if (t === 'light' || (t === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+          document.documentElement.classList.add('light');
+        }
+        const c = localStorage.getItem('accentColor');
+        if (c) document.documentElement.style.setProperty('--accent', c);
+      })();
+
+      // ── 뷰 라우터 ──────────────────────────────────
+      var _currentView = 'main';
+      var VIEW_TITLES = {
+        main:    '설정',
+        theme:   '테마 변경',
+        appicon: '앱 아이콘 변경',
+        lang:    '언어 변경',
+        notif:   '알림 설정',
+        notice:  '공지사항',
+        myinfo:  '내 정보',
+        login:   '로그인 하기'
+      };
+
+      function spGo(view) {
+        if (view === _currentView) return;
+        // 이전 서브뷰 닫기
+        var prev = document.getElementById('view-' + _currentView);
+        if (prev && _currentView !== 'main') prev.classList.remove('active');
+
+        _currentView = view;
+        document.getElementById('spTitle').textContent = VIEW_TITLES[view] || '설정';
+
+        if (view === 'main') {
+          document.body.classList.remove('sp-sub-open');
+        } else {
+          // 서브뷰 진입 시 히스토리 항목 추가 → iOS 엣지 스와이프를 popstate로 잡기 위함
+          history.pushState({ spView: view }, '');
+          var el = document.getElementById('view-' + view);
+          if (el) {
+            // 살짝 딜레이 후 active (transition 발동)
+            requestAnimationFrame(function(){
+              requestAnimationFrame(function(){
+                el.classList.add('active');
+              });
+            });
+          }
+          document.body.classList.add('sp-sub-open');
+          _onViewEnter(view);
+        }
+      }
+
+      // UI만 메인으로 되돌리는 내부 함수
+      function _doSpBack() {
+        var el = document.getElementById('view-' + _currentView);
+        if (el) el.classList.remove('active');
+        _currentView = 'main';
+        document.getElementById('spTitle').textContent = '설정';
+        document.body.classList.remove('sp-sub-open');
+      }
+
+      function spBack() {
+        if (_currentView === 'main') {
+          history.back();
+        } else {
+          _doSpBack();
+          // pushState로 쌓은 항목 제거 (popstate가 재진입하지 않도록 이미 main으로 바꾼 뒤 호출)
+          history.back();
+        }
+      }
+
+      // iOS 엣지 스와이프 등 네이티브 뒤로가기 → 설정 메인으로 복귀
+      window.addEventListener('popstate', function() {
+        if (_currentView !== 'main') {
+          _doSpBack();
+        }
+      });
+
+      // 뷰 진입 시 초기화
+      function _onViewEnter(view) {
+        if (view === 'theme') {
+          if (typeof applyTheme === 'function') applyTheme(localStorage.getItem('theme') || 'dark');
+        } else if (view === 'appicon') {
+          if (typeof _initAppIconModal === 'function') _initAppIconModal();
+        } else if (view === 'lang') {
+          if (typeof _initLangModal === 'function') _initLangModal();
+        } else if (view === 'notif') {
+          if (typeof _initNotifModal === 'function') _initNotifModal();
+        } else if (view === 'notice') {
+          if (typeof _loadNotices === 'function') _loadNotices();
+        } else if (view === 'myinfo') {
+          _initMyInfoView();
+        }
+      }
+
+      function _myInfoIcon(path) {
+        return '<span class="sp-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg></span>';
+      }
+
+      function _renderMyInfo(user) {
+        var list = document.getElementById('spAccountList');
+        var emailEl = document.getElementById('spAccountEmail');
+        if (!list || !user) return;
+
+        var profile = (typeof currentUserProfile !== 'undefined' && currentUserProfile) || {};
+        var nickname = profile.nickname || user.displayName || '닉네임 없음';
+        var isEmailUser = (user.providerData || []).some(function(provider) {
+          return provider.providerId === 'password';
+        });
+        var providerLabel = isEmailUser ? '이메일' : 'Google';
+        var arrow = '<svg class="sp-account-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+
+        list.innerHTML =
+          '<button type="button" class="sp-account-row is-action" id="spNicknameRow">' +
+            _myInfoIcon('<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>') +
+            '<span class="sp-account-label">닉네임</span><span class="sp-account-value">' + _settingEsc(nickname) + '</span>' + arrow +
+          '</button>' +
+          '<div class="sp-account-row">' +
+            _myInfoIcon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>') +
+            '<span class="sp-account-label">가입 계정 정보</span><span class="sp-account-value">' + providerLabel + '</span>' +
+          '</div>' +
+          (isEmailUser
+            ? '<button type="button" class="sp-account-row is-action" id="spPasswordRow">' +
+                _myInfoIcon('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>') +
+                '<span class="sp-account-label">비밀번호 변경</span>' + arrow +
+              '</button>'
+            : '') +
+          '<button type="button" class="sp-account-row is-action" id="spLogoutRow">' +
+            _myInfoIcon('<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/>') +
+            '<span class="sp-account-label">로그아웃</span>' + arrow +
+          '</button>' +
+          '<button type="button" class="sp-account-row is-action is-danger" id="spDeleteAccountRow">' +
+            _myInfoIcon('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 15H6L5 6"/><path d="M10 11v6M14 11v6"/>') +
+            '<span class="sp-account-label">탈퇴하기</span>' + arrow +
+          '</button>';
+
+        if (emailEl) emailEl.textContent = user.email || '';
+        document.getElementById('spNicknameRow')?.addEventListener('click', _showSettingProfileEditor);
+        document.getElementById('spPasswordRow')?.addEventListener('click', _changeSettingPassword);
+        document.getElementById('spLogoutRow')?.addEventListener('click', _logoutFromSettings);
+        document.getElementById('spDeleteAccountRow')?.addEventListener('click', _deleteSettingAccount);
+      }
+
+      function _settingEsc(value) {
+        return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+      }
+
+      function _showSettingProfileEditor() {
+        var wrap = document.getElementById('spProfileEditWrap');
+        var list = document.getElementById('spAccountList');
+        var user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        var profile = (typeof currentUserProfile !== 'undefined' && currentUserProfile) || {};
+        if (!wrap || !user) return;
+
+        var selectedAvatar = profile.avatar || '';
+        var input = document.getElementById('profileEditNicknameInput');
+        if (input) {
+          input.value = profile.nickname || user.displayName || '';
+          document.getElementById('profileEditNicknameLen').textContent = input.value.length;
+        }
+        if (typeof _editSelectedAvatar !== 'undefined') _editSelectedAvatar = selectedAvatar;
+        if (typeof _updateEditPreview === 'function') _updateEditPreview(input?.value || '', selectedAvatar);
+        if (typeof _renderEditAvatarGrid === 'function') _renderEditAvatarGrid('strawhats');
+        if (typeof _switchEditAvatarTab === 'function') _switchEditAvatarTab('strawhats');
+        wrap.style.display = 'block';
+        if (list) list.style.display = 'none';
+        document.getElementById('spAccountEmail').style.display = 'none';
+      }
+
+      async function _changeSettingPassword() {
+        var user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        if (!user || !user.email) return;
+        if (!window.confirm(user.email + '로 비밀번호 재설정 이메일을 보내시겠습니까?')) return;
+        try {
+          await auth.sendPasswordResetEmail(user.email);
+          if (typeof showToast === 'function') showToast('비밀번호 재설정 이메일을 보냈습니다.', 'success');
+        } catch (error) {
+          console.error('비밀번호 변경 이메일 전송 실패:', error);
+          if (typeof showToast === 'function') showToast('이메일 전송에 실패했습니다. 다시 시도해주세요.', 'error');
+        }
+      }
+
+      async function _logoutFromSettings() {
+        var shouldLogout = await _confirmSettingDialog('로그아웃 확인', '로그아웃하시겠습니까?');
+        if (!shouldLogout) return;
+        try {
+          await logoutUser();
+          spBack();
+        } catch (error) {
+          console.error('로그아웃 실패:', error);
+          if (typeof showToast === 'function') showToast('로그아웃에 실패했습니다.', 'error');
+        }
+      }
+
+      async function _deleteSettingAccount() {
+        var user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        if (!user) return;
+        var shouldDelete = await _confirmSettingWithdrawal();
+        if (!shouldDelete) return;
+        var emailHash = null;
+        var blockWritten = false;
+        var profileDeleted = false;
+        var profileSnapshot = null;
+        try {
+          if (!user.email || typeof _authEmailHash !== 'function') {
+            throw new Error('탈퇴 제한 정보를 저장할 수 없습니다.');
+          }
+          emailHash = await _authEmailHash(user.email);
+          var blockedUntil = firebase.firestore.Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000);
+          await db.collection('withdrawalBlocks').doc(emailHash).set({
+            uid: user.uid,
+            emailHash: emailHash,
+            blockedUntil: blockedUntil,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          blockWritten = true;
+          var profileDoc = await db.collection('users').doc(user.uid).get();
+          profileSnapshot = profileDoc.exists ? profileDoc.data() : null;
+          await db.collection('users').doc(user.uid).delete();
+          profileDeleted = true;
+          await user.delete();
+          location.href = 'index.html';
+        } catch (error) {
+          console.error('회원 탈퇴 실패:', error);
+          if (profileDeleted && profileSnapshot && user) {
+            try {
+              await db.collection('users').doc(user.uid).set(profileSnapshot);
+            } catch (restoreError) {
+              console.error('프로필 복구 실패:', restoreError);
+            }
+          }
+          if (blockWritten && emailHash) {
+            try {
+              // 재인증 필요 등으로 탈퇴가 실패하면 24시간 제한도 취소합니다.
+              await db.collection('withdrawalBlocks').doc(emailHash).update({
+                blockedUntil: firebase.firestore.Timestamp.fromMillis(Date.now())
+              });
+            } catch (rollbackError) {
+              console.error('탈퇴 제한 롤백 실패:', rollbackError);
+            }
+          }
+          var msg = error.code === 'auth/requires-recent-login'
+            ? '보안을 위해 다시 로그인한 후 탈퇴해주세요.'
+            : '탈퇴에 실패했습니다. 다시 시도해주세요.';
+          if (typeof showToast === 'function') showToast(msg, 'error');
+        }
+      }
+
+      function _confirmSettingWithdrawal() {
+        return _confirmSettingDialog(
+          '탈퇴 확인',
+          '지금 탈퇴시 24시간 동안 재가입이 불가능합니다.<br>진행하시겠습니까?'
+        );
+      }
+
+      function _confirmSettingDialog(titleText, messageHtml) {
+        return new Promise(function(resolve) {
+          var overlay = document.getElementById('spConfirmOverlay');
+          var title = document.getElementById('spConfirmTitle');
+          var cancel = document.getElementById('spConfirmCancel');
+          var ok = document.getElementById('spConfirmOk');
+          var message = document.getElementById('spConfirmMessage');
+          if (!overlay || !title || !cancel || !ok || !message) {
+            resolve(false);
+            return;
+          }
+
+          title.textContent = titleText;
+          message.innerHTML = messageHtml;
+          overlay.classList.add('open');
+          document.body.style.overflow = 'hidden';
+
+          var finish = function(result) {
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+            cancel.removeEventListener('click', onCancel);
+            ok.removeEventListener('click', onOk);
+            overlay.removeEventListener('click', onOverlay);
+            resolve(result);
+          };
+          var onCancel = function() { finish(false); };
+          var onOk = function() { finish(true); };
+          var onOverlay = function(event) {
+            if (event.target === overlay) finish(false);
+          };
+          cancel.addEventListener('click', onCancel);
+          ok.addEventListener('click', onOk);
+          overlay.addEventListener('click', onOverlay);
+        });
+      }
+
+      function _initMyInfoView() {
+        var user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+        if (!user) {
+          spGo('login');
+          return;
+        }
+        document.getElementById('spProfileEditWrap').style.display = 'none';
+        document.getElementById('spAccountList').style.display = '';
+        document.getElementById('spAccountEmail').style.display = '';
+        _renderMyInfo(user);
+      }
+
+      window.refreshSettingMyInfo = function(user) {
+        if (_currentView === 'myinfo') {
+          if (user) {
+            _initMyInfoView();
+          } else {
+            spBack();
+          }
+        }
+      };
+      window.closeSettingProfileEditor = function() {
+        var wrap = document.getElementById('spProfileEditWrap');
+        var list = document.getElementById('spAccountList');
+        var email = document.getElementById('spAccountEmail');
+        if (wrap) wrap.style.display = 'none';
+        if (list) list.style.display = '';
+        if (email) email.style.display = '';
+        _initMyInfoView();
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        // 테마 초기화
+        if (typeof initTheme === 'function') initTheme();
+        // 앱 아이콘 초기화
+        if (typeof applyAppIcon === 'function') applyAppIcon(localStorage.getItem('appIcon') || 'dark');
+
+        // 뒤로 버튼
+        document.getElementById('spBackBtn').addEventListener('click', spBack);
+
+        // ── 메뉴 클릭 ──
+        document.getElementById('menuMyInfo').addEventListener('click', function() {
+          var user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+          if (user) {
+            spGo('myinfo');
+          } else {
+            spGo('login');
+          }
+        });
+        document.getElementById('menuTheme').addEventListener('click',   function(){ spGo('theme');   });
+        document.getElementById('menuAppIcon').addEventListener('click', function(){
+          spGo('appicon');
+          // 아이콘 피커 현재 선택 상태 반영
+          var saved = localStorage.getItem('appIcon') || 'dark';
+          document.querySelectorAll('.gnb-icon-option').forEach(function(btn) {
+            btn.classList.toggle('active', btn.dataset.icon === saved);
+          });
+        });
+
+        // ── 앱 아이콘 선택 ──
+        document.getElementById('appIconPicker')?.addEventListener('click', function(e) {
+          var btn = e.target.closest('.gnb-icon-option');
+          if (!btn) return;
+          var iconKey = btn.dataset.icon;
+          document.querySelectorAll('.gnb-icon-option').forEach(function(b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          if (typeof applyAppIcon === 'function') applyAppIcon(iconKey);
+        });
+        document.getElementById('menuLang').addEventListener('click',    function(){ spGo('lang');    });
+        document.getElementById('menuNotif').addEventListener('click',   function(){ spGo('notif');   });
+        document.getElementById('menuNotice').addEventListener('click',  function(){ spGo('notice');  });
+
+        // ── 로그인 방식 선택 ──
+        function goToAuth(mode) {
+          var from = new URLSearchParams(location.search).get('from') === 'detail' ? 'detail' : 'index';
+          window.location.href = from + '.html?auth=' + encodeURIComponent(mode);
+        }
+        document.getElementById('spEmailLoginBtn')?.addEventListener('click', function(){ goToAuth('email'); });
+        document.getElementById('spGoogleLoginBtn')?.addEventListener('click', function(){ goToAuth('google'); });
+        document.getElementById('spRegisterBtn')?.addEventListener('click', function(){ goToAuth('register'); });
+
+        // ── 테마 선택 ──
+        document.querySelectorAll('.gnb-theme-option').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            if (typeof applyTheme === 'function') applyTheme(btn.dataset.theme);
+            setTimeout(spBack, 250);
+          });
+        });
+
+        // ── 언어 선택 ──
+        document.querySelectorAll('.gnb-lang-option').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            localStorage.setItem('appLang', btn.dataset.lang);
+            document.querySelectorAll('.gnb-lang-option').forEach(function(b){
+              b.classList.toggle('active', b === btn);
+            });
+            var lbl = document.getElementById('langCurrentLabel');
+            if (lbl) lbl.textContent = btn.dataset.lang === 'ko' ? '한국어' : 'English';
+          });
+        });
+
+        // ── 프로필 편집 취소 ──
+        document.getElementById('profileEditCancel')?.addEventListener('click', function() {
+          window.closeSettingProfileEditor();
+        });
+        document.getElementById('profileSetupCancel')?.addEventListener('click', function(){
+          if (typeof logoutUser === 'function') logoutUser();
+          spBack();
+        });
+
+        // ── auth 상태 감지 → 내 정보 / 로그인 하기 전환 ──
+        if (typeof auth !== 'undefined') {
+          auth.onAuthStateChanged(function(user) {
+            var label = document.getElementById('menuMyInfoLabel');
+            var icon  = document.getElementById('menuMyInfoIcon');
+            if (!label || !icon) return;
+            if (user) {
+              label.textContent = '내 정보';
+              icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+            } else {
+              label.textContent = '로그인 하기';
+              icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>';
+            }
+          });
+        }
+
+        // ── 서브뷰 좌 스와이프 → 설정 메인으로 ──
+        (function() {
+          var startX = 0, startY = 0;
+          document.querySelectorAll('.sp-screen:not(#view-main)').forEach(function(el) {
+            el.addEventListener('touchstart', function(e) {
+              startX = e.touches[0].clientX;
+              startY = e.touches[0].clientY;
+            }, { passive: true });
+            el.addEventListener('touchend', function(e) {
+              var dx = e.changedTouches[0].clientX - startX;
+              var dy = e.changedTouches[0].clientY - startY;
+              // 수평 이동이 수직보다 크고 40px 이상 왼쪽으로 스와이프
+              if (dx < -40 && Math.abs(dx) > Math.abs(dy)) {
+                spBack();
+              }
+            }, { passive: true });
+          });
+        })();
+
+      });
+    </script>
+  </body>
+</html>

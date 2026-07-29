@@ -1,0 +1,25 @@
+{
+  "name": "Fighting Path Patch",
+  "short_name": "파패 패치",
+  "description": "원피스 파이팅 패스 패치노트 & PvP 밸런스",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "img/logo-dark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/logo-dark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
