@@ -631,6 +631,10 @@ function _openNoticeDetail(idx) {
   document.getElementById('gnbNoticeList').style.display = 'none';
   document.getElementById('gnbNoticeDetail').style.display = '';
 
+  // 모바일 바텀시트 스크롤 상단 리셋
+  const modal = document.querySelector('#noticeModalOverlay .gnb-sub-modal');
+  if (modal) modal.scrollTop = 0;
+
   // 제목
   document.getElementById('gnbNoticeDetailTitle').textContent = d.title || '제목 없음';
 
