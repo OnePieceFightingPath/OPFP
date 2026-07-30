@@ -11,6 +11,8 @@ function loadDashboardStats() {
   const activeBanners = allBanners.filter(b => b.isActive).length;
   const evtBannerCount = allEvtBanners.length;
   const activeEvtBanners = allEvtBanners.filter(b => b.isActive).length;
+  const noticeCount = (typeof allNotices !== 'undefined') ? allNotices.length : 0;
+  const pinnedNotices = (typeof allNotices !== 'undefined') ? allNotices.filter(n => n.pinned).length : 0;
 
   const attrCount = { '力': 0, '技': 0, '心': 0 };
   allCharacters.forEach(c => {
@@ -29,6 +31,10 @@ function loadDashboardStats() {
   if (document.getElementById('statEvtBannerCount')) {
     document.getElementById('statEvtBannerCount').textContent = evtBannerCount;
     document.getElementById('statEvtBannerSub').textContent = `활성 ${activeEvtBanners} / 비활성 ${evtBannerCount - activeEvtBanners}`;
+  }
+  if (document.getElementById('statNoticeCount')) {
+    document.getElementById('statNoticeCount').textContent = noticeCount;
+    document.getElementById('statNoticeSub').textContent = `고정 ${pinnedNotices}개`;
   }
   document.getElementById('statCharSub').textContent = `力 ${attrCount['力']}  技 ${attrCount['技']}  心 ${attrCount['心']}`;
   document.getElementById('statScSub').textContent     = `등급별 총 ${scCount}명`;

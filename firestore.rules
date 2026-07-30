@@ -110,6 +110,12 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // 공지사항 컬렉션 — 읽기 공개, 쓰기는 관리자만
+    match /notices/{docId} {
+      allow read:  if true;
+      allow write: if canWriteSection('notices');
+    }
+
     // 이벤트 컬렉션 — 읽기 공개, 쓰기는 관리자만
     // 단, 로그인 유저는 commentCount 필드 하나만 업데이트 허용 (댓글 수 카운팅용)
     match /events/{docId} {

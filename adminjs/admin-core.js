@@ -88,6 +88,7 @@ const SECTION_CONFIG = [
   { sidebarKey: 'patchnote',    permKey: 'patchNotes',   label: '패치노트' },
   { sidebarKey: 'banners',      permKey: 'banners',      label: '배너' },
   { sidebarKey: 'events',       permKey: 'events',       label: '이벤트' },
+  { sidebarKey: 'notices',      permKey: 'notices',      label: '공지사항' },
 ];
 const PERM_ACTIONS = [
   { key: 'view',    label: '보기' },
@@ -454,6 +455,7 @@ const SECTION_NAMES = {
   pvppatch:     'PvP 패치 관리',
   patchnote:    '패치노트 관리',
   banners:      '배너 관리',
+  notices:      '공지사항 관리',
   backup:       '백업 / 복원',
   profile:      '내 정보',
   permissions:  '권한관리',
@@ -663,6 +665,7 @@ function switchSection(sectionKey) {
   if (sectionKey === 'profile') loadProfileSection();
   if (sectionKey === 'permissions') loadPermissionsSection();
   if (sectionKey === 'events') { loadEvtBanners(); loadEvtPages(); }
+  if (sectionKey === 'notices') loadNotices();
 }
 
 document.getElementById('gnbNavBack')?.addEventListener('click', () => {
@@ -813,7 +816,7 @@ let filteredSupportCharList = [];
 
 async function loadAllData() {
   await loadAdminNicknameMap();
-  await Promise.all([loadCharacters(), loadPvpPatches(), loadPatchNotes(), loadBanners(), loadSupportChars(), loadEvtBanners(), loadEvtPages()]);
+  await Promise.all([loadCharacters(), loadPvpPatches(), loadPatchNotes(), loadBanners(), loadSupportChars(), loadEvtBanners(), loadEvtPages(), loadNotices()]);
   loadDashboardStats();
 }
 
