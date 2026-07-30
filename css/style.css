@@ -678,6 +678,37 @@ img.logo-img { content: url('../img/logo-dark.png'); }
 }
 .gnb-lang-option.active .gnb-lang-check { opacity: 1; }
 
+
+/* ── 알림 벨 버튼 (패치노트 / 이벤트 헤더) ── */
+.dl-notif-bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim, #888);
+  cursor: pointer;
+  transition: color 0.18s, background 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.dl-notif-bell:hover {
+  background: var(--bg-hover, rgba(255,255,255,0.07));
+  color: var(--text-muted, #aaa);
+}
+.dl-notif-bell.active {
+  color: var(--accent, #4d9fff);
+}
+.dl-notif-bell.active svg {
+  fill: var(--accent, #4d9fff);
+  stroke: var(--accent, #4d9fff);
+  fill-opacity: 0.18;
+}
+
 /* ── 알림 설정 ── */
 .gnb-notif-list {
   display: flex;
@@ -4425,7 +4456,7 @@ html.is-pwa .site-footer {
 }
 @media (max-width: 1100px) { .event-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px)  { .event-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
-@media (max-width: 480px)  { .event-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px)  { .event-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
 
 /* detail 페이지 이벤트 그리드 (inline style 오버라이드) */
 #detailEventGrid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -4502,9 +4533,9 @@ html.is-pwa .site-footer {
   border: 1px solid rgba(255,255,255,0.2);
 }
 /* 카드 본문 */
-.event-card-body { padding: 12px 14px 14px; }
+.event-card-body { padding: 8px 14px 10px; }
 .event-card-title {
-  font-size: 14px; font-weight: 600;
+  font-size: 15px; font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
   line-height: 1.4;
@@ -5408,6 +5439,32 @@ html.is-pwa .site-footer {
   align-items: center;
   gap: 10px;
   text-align: center;
+  position: relative;
+}
+
+/* 좌상단 알림 벨 */
+.comm-profile-card-bell {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 5px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+  line-height: 1;
+}
+.comm-profile-card-bell:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+.comm-profile-card-bell.active {
+  color: var(--accent);
 }
 
 #commUserInfo {
@@ -5430,12 +5487,20 @@ html.is-pwa .site-footer {
   height: 88px;
   border-radius: 50%;
   overflow: hidden;
-  border: none;
   background: var(--bg-hover);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+.comm-profile-avatar-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .comm-profile-avatar img {
   width: 100%;
@@ -5470,10 +5535,10 @@ html.is-pwa .site-footer {
 .comm-profile-stats {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 0;
   margin-top: 0;
   width: 100%;
-  justify-content: center;
+  justify-content: space-between;
 }
 .comm-stat-item {
   display: flex;
@@ -5488,11 +5553,11 @@ html.is-pwa .site-footer {
   color: var(--text-muted);
 }
 .comm-stat-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 .comm-stat-num {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
 }
@@ -5509,10 +5574,25 @@ html.is-pwa .site-footer {
 
 /* 글쓰기 버튼 */
 .comm-write-btn {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  margin-top: 2px;
+  letter-spacing: 0.01em;
 }
 .comm-write-btn:hover {
-  background: #cf6018;
+  opacity: 0.85;
 }
 
 /* 검색바 */
@@ -5708,7 +5788,9 @@ html.is-pwa .site-footer {
 
   #commUserInfo {
     flex-direction: row !important;
+    flex-wrap: nowrap;
     justify-content: space-between;
+    align-items: center;
     gap: 0;
   }
 
@@ -5737,9 +5819,13 @@ html.is-pwa .site-footer {
     justify-content: center;
   }
 
+  .comm-profile-divider { display: none; }
+
   .comm-stat-item {
     padding: 0 12px;
   }
+  .comm-stat-icon svg { width: 16px; height: 16px; }
+  .comm-stat-num { font-size: 13px; }
 
   /* 비로그인 프롬프트 */
   .comm-login-prompt {
@@ -5768,7 +5854,7 @@ html.is-pwa .site-footer {
   }
 
   /* 글쓰기 버튼 / 검색 */
-  .comm-write-btn { padding: 8px 0; font-size: 13px; }
+  .comm-write-btn { display: flex; width: auto; padding: 7px 10px; font-size: 12px; margin-top: 0; flex-shrink: 0; border-radius: 6px; }
   .comm-search-wrap { display: none; }
   .comm-stat-divider { height: 20px; }
 
@@ -6281,3 +6367,95 @@ html.is-pwa .site-footer {
   background: none;
 }
 #gnbConfirmOk { color: #fff; background: #4D9FFF; border: none; }
+
+/* ── 뷰 컨트롤 툴바 (이벤트·게시판 공통) ── */
+.dl-evt-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.dl-evt-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  padding: 5px 7px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.dl-evt-view-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(77,159,255,0.08);
+}
+.dl-evt-view-btn:hover:not(.active) { color: var(--text); border-color: var(--text-muted); }
+.dl-evt-toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ── 이벤트 목록형(list) 뷰 ── */
+.dl-evt-list-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.dl-evt-list-row:last-child { border-bottom: none; }
+.dl-evt-list-row:hover { background: var(--bg-hover); }
+.dl-evt-list-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 110px;
+  aspect-ratio: 16/9;
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+  background: var(--bg-hover);
+}
+.dl-evt-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s;
+}
+.dl-evt-list-row:hover .dl-evt-list-thumb img { transform: scale(1.04); }
+.dl-evt-list-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.dl-evt-list-body { flex: 1; min-width: 0; }
+
+/* ── 게시판 카드형(card) 뷰 ── */
+.dl-board-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.dl-board-card:hover { background: var(--bg-hover); border-color: var(--accent); }
+
+@media (max-width: 768px) {
+  .dl-evt-list-thumb { width: 80px; }
+  #detailEventGrid[style*="repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
+  #detailBoardList[style*="repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
+}

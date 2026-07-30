@@ -173,7 +173,7 @@ function _renderPatchDetail(id) {
           ${isNew ? `<span class="evt-detail-status-badge active">NEW</span>` : ''}
         </div>
         <h1 class="evt-detail-title">${escHtml(patch.title)}</h1>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${patch.date ? `<div class="evt-detail-period" style="margin-top:0">📅 ${_dFmtPatchDate(patch.date)}</div>` : '<div></div>'}
           <span class="patch-detail-read-count" id="patchDetailReadCount" style="display:none">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13">
@@ -454,6 +454,11 @@ function _setNavActive(type) {
 }
 
 /* ── 게시판 목록 렌더링 ── */
+/* ── 게시판 목록 뷰 상태 ── */
+let _dlBoardViewMode = 'list'; // 'card' | 'list'
+let _dlBoardSortBy   = 'recent'; // 'recent' | 'oldest' | 'recommended'
+let _allBoardPosts   = [];
+
 async function _renderBoardList() {
   const main = document.getElementById('detailMain');
   if (!main) return;
@@ -474,16 +479,31 @@ async function _renderBoardList() {
 
   try {
     const snap = await db.collection('boards').orderBy('createdAt', 'desc').limit(50).get();
-    const posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    _allBoardPosts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
 
-    if (!posts.length) {
+    if (!_allBoardPosts.length) {
       main.innerHTML = `
         <div style="padding-bottom:80px">
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
             <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
           </div>
+          <div class="dl-evt-toolbar">
+            <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+            </button>
+            <button class="dl-evt-view-btn${_dlBoardViewMode==='list'?' active':''}" data-bview="list" title="목록형으로 보기">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
+            </button>
+            <span class="dl-evt-toolbar-sep"></span>
+            <select class="event-sort-select" id="dlBoardSortSelect">
+              <option value="recent"${_dlBoardSortBy==='recent'?' selected':''}>최신순</option>
+              <option value="oldest"${_dlBoardSortBy==='oldest'?' selected':''}>오래된순</option>
+              <option value="recommended"${_dlBoardSortBy==='recommended'?' selected':''}>추천순</option>
+            </select>
+          </div>
           <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글이 없습니다.</div>
         </div>`;
+      _initNotifBell('bellEvent', 'notifEvent');
       return;
     }
 
@@ -492,24 +512,37 @@ async function _renderBoardList() {
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
           <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
         </div>
-        <div id="detailBoardList" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
-          ${posts.map((p, i) => {
-            const rawDate = p.createdAt?.toDate ? p.createdAt.toDate() : (p.createdAt ? new Date(p.createdAt) : null);
-            const date = rawDate ? rawDate.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '';
-            return `
-              <div data-boardid="${escHtml(p.docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-                <div style="display:flex;align-items:center;gap:6px;min-width:0">
-                  ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
-                  <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
-                  <span style="font-size:11px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">${escHtml(p.author || '익명')}</span>
-                  ${date ? `<span style="font-size:11px;color:var(--text-dim)">${date}</span>` : ''}
-                </div>
-              </div>`;
-          }).join('')}
+        <div class="dl-evt-toolbar">
+          <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+          </button>
+          <button class="dl-evt-view-btn${_dlBoardViewMode==='list'?' active':''}" data-bview="list" title="목록형으로 보기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
+          </button>
+          <span class="dl-evt-toolbar-sep"></span>
+          <select class="event-sort-select" id="dlBoardSortSelect">
+            <option value="recent"${_dlBoardSortBy==='recent'?' selected':''}>최신순</option>
+            <option value="oldest"${_dlBoardSortBy==='oldest'?' selected':''}>오래된순</option>
+            <option value="recommended"${_dlBoardSortBy==='recommended'?' selected':''}>추천순</option>
+          </select>
         </div>
+        <div id="detailBoardList"></div>
       </div>`;
+
+    _applyDlBoardFilter(main);
+
+    main.querySelectorAll('.dl-evt-view-btn[data-bview]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _dlBoardViewMode = btn.dataset.bview;
+        main.querySelectorAll('.dl-evt-view-btn[data-bview]').forEach(b => b.classList.toggle('active', b === btn));
+        _applyDlBoardFilter(main);
+      });
+    });
+    document.getElementById('dlBoardSortSelect')?.addEventListener('change', e => {
+      _dlBoardSortBy = e.target.value;
+      _applyDlBoardFilter(main);
+    });
+
   } catch {
     main.innerHTML = `
       <div style="padding-bottom:80px">
@@ -521,6 +554,72 @@ async function _renderBoardList() {
   }
 
   window.scrollTo({ top: 0 });
+}
+
+function _applyDlBoardFilter(main) {
+  const container = document.getElementById('detailBoardList');
+  if (!container) return;
+
+  let sorted = [..._allBoardPosts];
+  if (_dlBoardSortBy === 'recent') {
+    sorted.sort((a, b) => {
+      const da = a.createdAt?.toDate?.() ?? (a.createdAt ? new Date(a.createdAt) : new Date(0));
+      const db2 = b.createdAt?.toDate?.() ?? (b.createdAt ? new Date(b.createdAt) : new Date(0));
+      return db2 - da;
+    });
+  } else if (_dlBoardSortBy === 'oldest') {
+    sorted.sort((a, b) => {
+      const da = a.createdAt?.toDate?.() ?? (a.createdAt ? new Date(a.createdAt) : new Date(0));
+      const db2 = b.createdAt?.toDate?.() ?? (b.createdAt ? new Date(b.createdAt) : new Date(0));
+      return da - db2;
+    });
+  } else if (_dlBoardSortBy === 'recommended') {
+    sorted.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+  }
+
+  function _fmtBoardDate(p) {
+    const raw = p.createdAt?.toDate ? p.createdAt.toDate() : (p.createdAt ? new Date(p.createdAt) : null);
+    return raw ? raw.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '';
+  }
+
+  if (_dlBoardViewMode === 'card') {
+    container.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
+    container.innerHTML = sorted.map((p, i) => {
+      const date = _fmtBoardDate(p);
+      return `
+        <div class="dl-board-card" data-boardid="${escHtml(p.docId)}">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:8px">
+            ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
+            <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;min-width:0;line-height:1.4">${escHtml(p.title || '제목 없음')}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">${escHtml(p.author || '익명')}</span>
+            ${date ? `<span style="font-size:11px;color:var(--text-dim)">${date}</span>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  } else {
+    container.style.cssText = '';
+    container.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">` +
+      sorted.map((p, i) => {
+        const date = _fmtBoardDate(p);
+        return `
+          <div data-boardid="${escHtml(p.docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+              ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
+              <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+              <span style="font-size:11px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">${escHtml(p.author || '익명')}</span>
+              ${date ? `<span style="font-size:11px;color:var(--text-dim)">${date}</span>` : ''}
+            </div>
+          </div>`;
+      }).join('') + `</div>`;
+  }
+
+  container.querySelectorAll('[data-boardid]').forEach(el => {
+    el.addEventListener('click', () => _renderBoardDetail(el.dataset.boardid));
+  });
 }
 
 /* ── 홈 렌더링 ── */
@@ -538,14 +637,14 @@ function _renderHome() {
         <p style="font-size:12px;color:var(--text-muted)">게시판, 패치노트, 이벤트를 한곳에서 확인하세요</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="history.pushState({},\\'\\',\\'detail.html?type=board\\'); _renderBoardList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+        <button onclick="_renderBoardList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20" style="color:var(--accent);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/></svg>
           <div>
             <div style="font-size:14px;font-weight:600;color:var(--text)">게시판</div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:2px">커뮤니티 게시글을 확인하세요</div>
           </div>
         </button>
-        <button onclick="history.pushState({},\\'\\',\\'detail.html?type=patchnote\\'); _renderPatchList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+        <button onclick="_renderPatchList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20" style="color:var(--accent);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           <div>
             <div style="font-size:14px;font-weight:600;color:var(--text)">패치노트</div>
@@ -590,9 +689,11 @@ async function _renderPatchList() {
       <div style="padding-bottom:80px">
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
           <span style="font-size:15px;font-weight:700;color:var(--text)">패치노트</span>
+          <button id="bellPatch" class="dl-notif-bell${localStorage.getItem('notifPatch')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
         </div>
         <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">패치노트가 없습니다.</div>
       </div>`;
+    _initNotifBell('bellPatch', 'notifPatch');
     return;
   }
 
@@ -601,6 +702,7 @@ async function _renderPatchList() {
     <div style="padding-bottom:80px">
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
         <span style="font-size:15px;font-weight:700;color:var(--text)">패치노트</span>
+        <button id="bellPatch" class="dl-notif-bell${localStorage.getItem('notifPatch')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
       </div>
       <div id="detailPatchList" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
         ${notes.map((p, i) => `
@@ -648,10 +750,15 @@ async function _renderPatchList() {
     });
   } catch {}
 
+  _initNotifBell('bellPatch', 'notifPatch');
   window.scrollTo({ top: 0 });
 }
 
 /* ── 이벤트 목록 렌더링 ── */
+/* ── 이벤트 목록 뷰 상태 ── */
+let _dlViewMode = 'card'; // 'card' | 'list'
+let _dlSortBy   = 'recent'; // 'recent' | 'updated' | 'recommended'
+
 async function _renderEventList() {
   const main = document.getElementById('detailMain');
   if (!main) return;
@@ -702,89 +809,180 @@ async function _renderEventList() {
         <div style="padding-bottom:80px">
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
             <span style="font-size:15px;font-weight:700;color:var(--text)">이벤트</span>
+            <button id="bellEvent" class="dl-notif-bell${localStorage.getItem('notifEvent')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
           </div>
           <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">이벤트가 없습니다.</div>
         </div>`;
       return;
     }
 
-    const now = new Date();
-    function _dlIsActive(e) {
-      if (!e.endDate) return true;
-      const end = e.endDate.toDate ? e.endDate.toDate() : new Date(e.endDate);
-      return end >= now;
-    }
-    function _dlFmtDate(ts) {
-      if (!ts) return '';
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-    }
-
     main.innerHTML = `
       <div style="padding-bottom:80px">
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
           <span style="font-size:15px;font-weight:700;color:var(--text)">이벤트</span>
+          <button id="bellEvent" class="dl-notif-bell${localStorage.getItem('notifEvent')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
         </div>
-        <div id="detailEventGrid" style="
-          display:grid;
-          grid-template-columns:repeat(3,1fr);
-          gap:12px;
-        ">
-          ${_allDetailEvents.map(e => {
-            const active  = _dlIsActive(e);
-            const dateStr = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
-            const commentCount = e.commentCount ?? 0;
-            const thumb = e.thumbnailUrl
-              ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title || '')}" loading="lazy">`
-              : `<div class="event-card-thumb-placeholder">이미지 없음</div>`;
-            return `
-              <div class="event-card event-card-clickable${active ? '' : ' event-card-ended'}" data-evtid="${escHtml(e._docId)}">
-                <div class="event-card-thumb">
-                  ${thumb}
-                  ${e.tag ? `<span class="event-card-tag">${escHtml(e.tag)}</span>` : ''}
-                  ${!active ? `<div class="event-card-ended-overlay"><span>종료</span></div>` : ''}
-                </div>
-                <div class="event-card-body">
-                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:4px">
-                    <div class="event-card-title" style="flex:1;min-width:0">${escHtml(e.title || '제목 없음')}</div>
-                    ${commentCount > 0 ? `<span style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--accent)">[${commentCount}]</span>` : ''}
-                  </div>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
-                    <span style="font-size:10px;font-weight:700;color:var(--accent);padding:1px 5px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
-                    ${dateStr ? `<span style="font-size:11px;color:var(--text-dim)">${escHtml(dateStr)}</span>` : ''}
-                    <span id="ev-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                      <span>-</span>
-                    </span>
-                  </div>
-                </div>
-              </div>`;
-          }).join('')}
+        <div class="dl-evt-toolbar">
+          <button class="dl-evt-view-btn${_dlViewMode==='card'?' active':''}" data-view="card" title="카드형으로 보기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+          </button>
+          <button class="dl-evt-view-btn${_dlViewMode==='list'?' active':''}" data-view="list" title="목록형으로 보기">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
+          </button>
+          <span class="dl-evt-toolbar-sep"></span>
+          <select class="event-sort-select" id="dlEvtSortSelect">
+            <option value="recent"${_dlSortBy==='recent'?' selected':''}>최신순</option>
+            <option value="updated"${_dlSortBy==='updated'?' selected':''}>업데이트순</option>
+            <option value="recommended"${_dlSortBy==='recommended'?' selected':''}>추천순</option>
+          </select>
         </div>
+        <div id="detailEventGrid"></div>
       </div>
     `;
 
-    main.querySelectorAll('#detailEventGrid .event-card-clickable[data-evtid]').forEach(el => {
-      el.addEventListener('click', () => {
-        history.pushState({}, '', `detail.html?type=event&id=${encodeURIComponent(el.dataset.evtid)}`);
-        _renderEventDetail(el.dataset.evtid);
+    _applyDlFilter();
+
+    main.querySelectorAll('.dl-evt-view-btn[data-view]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _dlViewMode = btn.dataset.view;
+        main.querySelectorAll('.dl-evt-view-btn').forEach(b => b.classList.toggle('active', b === btn));
+        _applyDlFilter();
       });
     });
+    document.getElementById('dlEvtSortSelect')?.addEventListener('change', e => {
+      _dlSortBy = e.target.value;
+      _applyDlFilter();
+    });
 
-    /* 이벤트 조회수 배치 로드 */
-    try {
-      const evtIds = _allDetailEvents.map(e => e._docId);
-      const snaps  = await Promise.all(evtIds.map(id => db.collection('eventViews').doc(id).get()));
-      snaps.forEach((snap, i) => {
-        const el = document.querySelector(`#ev-${CSS.escape(evtIds[i])} span`);
-        if (el) el.textContent = snap.exists ? (snap.data().count || 0).toLocaleString() : '0';
-      });
-    } catch {}
+    await _loadDlEventCounts();
   } catch (err) {
     console.error('이벤트 목록 로드 실패:', err);
     if (main) main.innerHTML = '<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">이벤트를 불러오지 못했습니다.</div>';
   }
+  _initNotifBell('bellEvent', 'notifEvent');
   window.scrollTo({ top: 0 });
+}
+
+/* ── 이벤트 목록 필터/뷰 렌더 ── */
+function _applyDlFilter() {
+  const grid = document.getElementById('detailEventGrid');
+  if (!grid) return;
+
+  const now = new Date();
+  function _dlIsActive(e) {
+    if (!e.endDate) return true;
+    const end = e.endDate.toDate ? e.endDate.toDate() : new Date(e.endDate);
+    return end >= now;
+  }
+  function _dlFmtDate(ts) {
+    if (!ts) return '';
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  let sorted = [..._allDetailEvents];
+  if (_dlSortBy === 'recent') {
+    sorted.sort((a, b) => {
+      const da = a.startDate?.toDate?.() ?? (a.date ? new Date(a.date) : new Date(0));
+      const db2 = b.startDate?.toDate?.() ?? (b.date ? new Date(b.date) : new Date(0));
+      return db2 - da;
+    });
+  } else if (_dlSortBy === 'updated') {
+    sorted.sort((a, b) => {
+      const da = a.updatedAt?.toDate?.() ?? a.startDate?.toDate?.() ?? new Date(0);
+      const db2 = b.updatedAt?.toDate?.() ?? b.startDate?.toDate?.() ?? new Date(0);
+      return db2 - da;
+    });
+  } else if (_dlSortBy === 'recommended') {
+    sorted.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+  }
+
+  const metaHtml = (e) => `
+    <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:700;color:var(--accent);padding:1px 5px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
+      <span id="ev-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span>-</span>
+      </span>
+      <span id="ec-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span>${e.commentCount ?? 0}</span>
+      </span>
+    </div>`;
+
+  if (_dlViewMode === 'card') {
+    grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px';
+    grid.innerHTML = sorted.map(e => {
+      const active   = _dlIsActive(e);
+      const dateStr  = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
+      const thumb    = e.thumbnailUrl
+        ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title||'')}" loading="lazy">`
+        : `<div class="event-card-thumb-placeholder">이미지 없음</div>`;
+      const dateBadge = dateStr ? `<span class="event-card-period">${escHtml(dateStr)}</span>` : '';
+      return `
+        <div class="event-card event-card-clickable${active?'':' event-card-ended'}" data-evtid="${escHtml(e._docId)}">
+          <div class="event-card-thumb">
+            ${thumb}
+            ${e.tag ? `<span class="event-card-tag">${escHtml(e.tag)}</span>` : ''}
+            ${dateBadge}
+            ${!active ? `<div class="event-card-ended-overlay"><span>종료</span></div>` : ''}
+          </div>
+          <div class="event-card-body">
+            <div class="event-card-title">${escHtml(e.title||'제목 없음')}</div>
+            ${metaHtml(e)}
+          </div>
+        </div>`;
+    }).join('');
+  } else {
+    grid.style.cssText = 'display:flex;flex-direction:column;gap:0';
+    grid.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">` +
+      sorted.map(e => {
+        const active  = _dlIsActive(e);
+        const dateStr = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
+        const thumb   = e.thumbnailUrl
+          ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title||'')}" loading="lazy">`
+          : `<div class="dl-evt-list-thumb-placeholder">이미지 없음</div>`;
+        const dateBadge = dateStr ? `<span class="event-card-period" style="font-size:10px">${escHtml(dateStr)}</span>` : '';
+        return `
+          <div class="dl-evt-list-row event-card-clickable${active?'':' event-card-ended'}" data-evtid="${escHtml(e._docId)}">
+            <div class="dl-evt-list-thumb">
+              ${thumb}
+              ${dateBadge}
+              ${!active ? `<div class="event-card-ended-overlay"><span>종료</span></div>` : ''}
+            </div>
+            <div class="dl-evt-list-body">
+              <div class="event-card-title" style="font-size:13px">${escHtml(e.title||'제목 없음')}</div>
+              ${metaHtml(e)}
+            </div>
+          </div>`;
+      }).join('') + `</div>`;
+  }
+
+  grid.querySelectorAll('.event-card-clickable[data-evtid]').forEach(el => {
+    el.addEventListener('click', () => {
+      history.pushState({}, '', `detail.html?type=event&id=${encodeURIComponent(el.dataset.evtid)}`);
+      _renderEventDetail(el.dataset.evtid);
+    });
+  });
+}
+
+async function _loadDlEventCounts() {
+  try {
+    const ids = _allDetailEvents.map(e => e._docId);
+    const snaps = await Promise.all(ids.map(id => db.collection('eventViews').doc(id).get()));
+    snaps.forEach((snap, i) => {
+      const el = document.querySelector(`#ev-${CSS.escape(ids[i])} span`);
+      if (el) el.textContent = snap.exists ? (snap.data().count || 0).toLocaleString() : '0';
+    });
+  } catch {}
+  try {
+    const ids = _allDetailEvents.map(e => e._docId);
+    const cmtSnaps = await Promise.all(ids.map(id => db.collection('eventComments').where('eventId','==',id).get()));
+    cmtSnaps.forEach((snap, i) => {
+      const el = document.querySelector(`#ec-${CSS.escape(ids[i])} span`);
+      if (el) el.textContent = snap.size;
+    });
+  } catch {}
 }
 
 /* ── 이벤트 상세 ── */
@@ -854,7 +1052,7 @@ function _buildEventHtml(evt) {
           <span class="evt-detail-status-badge ${active ? 'active' : 'ended'}">${active ? '진행 중' : '종료'}</span>
         </div>
         <h1 class="evt-detail-title">${escHtml(evt.title || '제목 없음')}</h1>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${period ? `<div class="evt-detail-period" style="margin-top:0">📅 ${escHtml(period)}</div>` : '<div></div>'}
           <span class="evt-detail-read-count" id="evtDetailReadCount" style="display:none">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13">
@@ -1062,6 +1260,14 @@ function _renderDetailComments(comments) {
   const topLevel = comments.filter(c => !c.replyTo);
   const replies  = comments.filter(c => !!c.replyTo);
   if (countEl) countEl.textContent = comments.length;
+  // 이벤트 카드 댓글 수 배지도 실제 값으로 갱신
+  if (_detailEventId) {
+    const cardCmtEl = document.getElementById('ec-' + _detailEventId);
+    if (cardCmtEl) {
+      const numSpan = cardCmtEl.querySelector('span');
+      if (numSpan) numSpan.textContent = comments.length;
+    }
+  }
 
   if (!topLevel.length) {
     list.innerHTML = '<div class="evt-comment-empty"><div class="evt-comment-empty-title">등록 된 댓글이 없습니다.</div><div class="evt-comment-empty-sub">첫번째 댓글을 작성해보세요!</div></div>';
@@ -1128,6 +1334,9 @@ async function submitDetailComment() {
       dislikedBy: [],
       createdAt : firebase.firestore.FieldValue.serverTimestamp(),
     });
+    await db.collection('events').doc(_detailEventId).update({
+      commentCount: firebase.firestore.FieldValue.increment(1),
+    });
     _clearEditor('main');
   } catch (e) {
     console.error('댓글 작성 실패:', e);
@@ -1163,6 +1372,9 @@ function _deleteDetailComment(cid) {
     close();
     try {
       await db.collection('eventComments').doc(cid).delete();
+      await db.collection('events').doc(_detailEventId).update({
+        commentCount: firebase.firestore.FieldValue.increment(-1),
+      });
     } catch (e) {
       console.error('댓글 삭제 실패:', e);
       alert('댓글 삭제에 실패했습니다.');
@@ -1314,6 +1526,9 @@ async function _submitReply(parentId) {
       likedBy   : [],
       dislikedBy: [],
       createdAt : firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await db.collection('events').doc(_detailEventId).update({
+      commentCount: firebase.firestore.FieldValue.increment(1),
     });
     _clearEditor('reply-' + parentId);
     _toggleReplyArea(parentId);
@@ -1682,3 +1897,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { passive: true });
   }
 });
+
+/* ── 알림 벨 버튼 초기화 ─────────────────────────────────────────
+ * bellId : 버튼 element id
+ * lsKey  : localStorage key ('notifPatch' | 'notifEvent' 등)
+ * 클릭 시 localStorage 토글 + 알림 설정 모달 체크박스 동기화 + 권한 요청
+ */
+function _initNotifBell(bellId, lsKey) {
+  const btn = document.getElementById(bellId);
+  if (!btn) return;
+  btn.classList.toggle('active', localStorage.getItem(lsKey) === 'true');
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    const newVal = localStorage.getItem(lsKey) !== 'true';
+    localStorage.setItem(lsKey, newVal);
+    btn.classList.toggle('active', newVal);
+    // 알림 설정 모달 체크박스 동기화
+    const cb = document.getElementById(lsKey);
+    if (cb) cb.checked = newVal;
+    // 알림 권한 요청
+    if (newVal && 'Notification' in window) {
+      Notification.requestPermission();
+    }
+  });
+}

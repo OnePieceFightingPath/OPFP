@@ -111,9 +111,12 @@ service cloud.firestore {
     }
 
     // 이벤트 컬렉션 — 읽기 공개, 쓰기는 관리자만
+    // 단, 로그인 유저는 commentCount 필드 하나만 업데이트 허용 (댓글 수 카운팅용)
     match /events/{docId} {
       allow read:  if true;
       allow write: if isAdmin();
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']);
     }
 
     // 패치노트 조회수 — 누구나 읽기/쓰기 허용 (익명 카운팅용)

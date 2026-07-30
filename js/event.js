@@ -60,7 +60,7 @@ async function loadEvents() {
 }
 
 // ── 카드 렌더링 ───────────────────────────────────────────────────────────
-function renderEventCards() {
+async function renderEventCards() {
   const grid = document.getElementById('eventGrid');
   if (!grid) return;
 
@@ -96,19 +96,39 @@ function renderEventCards() {
     card.addEventListener('click',   () => { location.href = `detail.html?type=event&id=${encodeURIComponent(card.dataset.evtid)}`; });
     card.addEventListener('keydown', e => { if (e.key === 'Enter') location.href = `detail.html?type=event&id=${encodeURIComponent(card.dataset.evtid)}`; });
   });
+
+  // 조회수 배치 로드
+  try {
+    const evtIds = filtered.map(e => e._docId);
+    const snaps  = await Promise.all(evtIds.map(id => db.collection('eventViews').doc(id).get()));
+    snaps.forEach((snap, i) => {
+      const el = document.querySelector(`#ev-${CSS.escape(evtIds[i])} span`);
+      if (el) el.textContent = snap.exists ? (snap.data().count || 0).toLocaleString() : '0';
+    });
+  } catch {}
+
+  // 댓글 수 배치 로드
+  try {
+    const evtIds = filtered.map(e => e._docId);
+    const cmtSnaps = await Promise.all(
+      evtIds.map(id => db.collection('eventComments').where('eventId', '==', id).get())
+    );
+    cmtSnaps.forEach((snap, i) => {
+      const el = document.querySelector(`#ec-${CSS.escape(evtIds[i])} span`);
+      if (el) el.textContent = snap.size;
+    });
+  } catch {}
 }
 
 function _renderCard(e) {
-  const ended  = !_isActive(e);
-  const start  = e.startDate ? _fmtDate(e.startDate) : (e.date || '');
-  const end    = _fmtDate(e.endDate);
-  const period = start && end ? `${start} ~ ${end}` : (start || end || '');
-  const tag    = e.tag ? `<span class="event-card-tag">${escHtml(e.tag)}</span>` : '';
-  const periodBadge = period ? `<span class="event-card-period">${escHtml(period)}</span>` : '';
-  const thumb  = e.thumbnailUrl
+  const ended   = !_isActive(e);
+  const dateStr = e.startDate ? _fmtDate(e.startDate) : (e.date || '');
+  const commentCount = e.commentCount ?? 0;
+  const tag   = e.tag ? `<span class="event-card-tag">${escHtml(e.tag)}</span>` : '';
+  const dateBadge = dateStr ? `<span class="event-card-period">${escHtml(dateStr)}</span>` : '';
+  const thumb = e.thumbnailUrl
     ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title)}" loading="lazy">`
     : `<div class="event-card-thumb-placeholder">이미지 없음</div>`;
-  const desc = e.description || e.excerpt || '';
 
   return `
     <div class="event-card event-card-clickable${ended ? ' event-card-ended' : ''}"
@@ -116,12 +136,22 @@ function _renderCard(e) {
       <div class="event-card-thumb">
         ${thumb}
         ${tag}
-        ${periodBadge}
+        ${dateBadge}
         ${ended ? '<div class="event-card-ended-overlay"><span>종료</span></div>' : ''}
       </div>
       <div class="event-card-body">
         <div class="event-card-title">${escHtml(e.title || '제목 없음')}</div>
-        ${desc ? `<div class="event-card-desc">${escHtml(desc)}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:700;color:var(--accent);padding:1px 5px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
+          <span id="ev-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <span>-</span>
+          </span>
+          <span id="ec-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <span>${commentCount}</span>
+          </span>
+        </div>
       </div>
     </div>`;
 }
