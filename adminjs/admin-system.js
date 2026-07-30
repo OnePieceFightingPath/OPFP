@@ -395,7 +395,7 @@ function renderBannerOrderList() {
            <div class="order-thumb-placeholder" style="display:none">없음</div>`
         : `<div class="order-thumb-placeholder">이미지 없음</div>`}
       <span class="order-item-title">${b.title || '<span style="color:var(--text-dim)">제목 없음</span>'}</span>
-      <span class="order-item-status">${b.isActive ? '✅ 활성' : '⬜ 비활성'}</span>
+      <span class="order-item-status">${b.isActive ? '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(79,198,106,0.12);border:1px solid rgba(79,198,106,0.35);border-radius:20px;padding:2px 10px 2px 7px;color:#4fc66a;font-size:11px;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#4fc66a;flex-shrink:0;display:inline-block"></span>ON</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(110,118,129,0.10);border:1px solid rgba(110,118,129,0.25);border-radius:20px;padding:2px 10px 2px 7px;color:var(--text-dim);font-size:11px;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:var(--text-dim);flex-shrink:0;display:inline-block"></span>OFF</span>'}</span>
     </li>
   `).join('');
 }
