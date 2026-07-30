@@ -1097,6 +1097,48 @@ Developed</span>
   </nav>
 
   <script>
+    (function () {
+      var _step = 0;
+      var _stepTimer = null;
+      var _tapLogo = 0, _tapName = 0;
+
+      function resetStep() { _step = 0; }
+
+      function onLogoActivate() {
+        _step = 1;
+        clearTimeout(_stepTimer);
+        _stepTimer = setTimeout(resetStep, 5000);
+      }
+
+      function onNameActivate() {
+        if (_step === 1) {
+          clearTimeout(_stepTimer);
+          window.location.href = 'admin.html';
+        }
+      }
+
+      var logo = document.getElementById('footerAdminLogo');
+      var name = document.getElementById('footerAdminName');
+
+      if (logo) {
+        logo.addEventListener('dblclick', onLogoActivate);
+        logo.addEventListener('touchend', function (e) {
+          var now = Date.now();
+          if (now - _tapLogo < 300) { e.preventDefault(); onLogoActivate(); }
+          _tapLogo = now;
+        });
+      }
+      if (name) {
+        name.addEventListener('dblclick', onNameActivate);
+        name.addEventListener('touchend', function (e) {
+          var now = Date.now();
+          if (now - _tapName < 300) { e.preventDefault(); onNameActivate(); }
+          _tapName = now;
+        });
+      }
+    })();
+  </script>
+  <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js');
