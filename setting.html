@@ -96,6 +96,45 @@
 
       /* ── 공지사항 ── */
       .sp-notice-wrap { }
+      .gnb-notice-item { cursor: pointer; }
+      .gnb-notice-item:active { opacity: 0.7; }
+
+      /* ── 공지사항 상세 ── */
+      .sp-notice-detail { display: none; padding-bottom: 32px; }
+      .sp-notice-detail-back {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 14px; font-weight: 600; color: var(--accent, #4d9fff);
+        background: none; border: none; cursor: pointer;
+        padding: 4px 0; margin-bottom: 16px;
+      }
+      .sp-notice-detail-back svg { width: 18px; height: 18px; }
+      .sp-notice-detail-title {
+        font-size: 17px; font-weight: 700; color: var(--text);
+        line-height: 1.45; margin-bottom: 10px; word-break: break-word;
+      }
+      .sp-notice-detail-meta {
+        display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+        margin-bottom: 16px; padding-bottom: 14px;
+        border-bottom: 1px solid var(--border, #313244);
+        font-size: 12px; color: var(--text-dim);
+      }
+      .sp-notice-detail-meta .gnb-notice-item-badge { font-size: 10px; }
+      .sp-notice-detail-pin {
+        font-size: 11px; color: var(--text-dim);
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--border, #313244);
+        border-radius: 4px; padding: 1px 6px;
+      }
+      .sp-notice-detail-content {
+        font-size: 15px; line-height: 1.8; color: var(--text);
+        word-break: break-word; overflow-wrap: break-word;
+      }
+      .sp-notice-detail-content img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
+      .sp-notice-detail-content a { color: var(--accent, #4d9fff); text-decoration: underline; }
+      .sp-notice-detail-content p { margin: 0 0 10px; }
+      .sp-notice-detail-content ul,
+      .sp-notice-detail-content ol { padding-left: 20px; margin: 0 0 10px; }
+      .sp-notice-detail-content li { margin-bottom: 4px; }
 
       /* ── 내 정보 (프로필 편집 인라인) ── */
       .sp-myinfo-inner .profile-setup-modal {
@@ -377,8 +416,19 @@
     <!-- ══════════════ 공지사항 뷰 ══════════════ -->
     <div class="sp-screen" id="view-notice">
       <div class="sp-wrap">
+        <!-- 목록 -->
         <div class="gnb-notice-list" id="gnbNoticeList">
           <div class="gnb-notice-loading">공지사항을 불러오는 중...</div>
+        </div>
+        <!-- 상세 -->
+        <div class="sp-notice-detail" id="spNoticeDetail">
+          <button class="sp-notice-detail-back" id="spNoticeDetailBack">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            목록
+          </button>
+          <h3 class="sp-notice-detail-title" id="spNoticeDetailTitle"></h3>
+          <div class="sp-notice-detail-meta" id="spNoticeDetailMeta"></div>
+          <div class="sp-notice-detail-content" id="spNoticeDetailContent"></div>
         </div>
       </div>
     </div>
@@ -589,7 +639,74 @@
         document.body.classList.remove('sp-sub-open');
       }
 
+      // ── 공지사항 상세 ──────────────────────────
+      var _noticeCache = [];
+      var _noticeDetailOpen = false;
+
+      function _spLoadNotices() {
+        var listEl = document.getElementById('gnbNoticeList');
+        if (!listEl) return;
+        listEl.innerHTML = '<div class="gnb-notice-loading">공지사항을 불러오는 중...</div>';
+        if (typeof db === 'undefined') {
+          listEl.innerHTML = '<div class="gnb-notice-empty">공지사항을 불러올 수 없습니다.</div>';
+          return;
+        }
+        db.collection('notices').orderBy('createdAt', 'desc').limit(20).get()
+          .then(function(snap) {
+            _noticeCache = snap.docs.map(function(d) { return d.data(); }).filter(function(d) { return d.visible !== false; });
+            if (!_noticeCache.length) {
+              listEl.innerHTML = '<div class="gnb-notice-empty">등록된 공지사항이 없습니다.</div>';
+              return;
+            }
+            listEl.innerHTML = _noticeCache.map(function(d, i) {
+              var date = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+              var isNew = d.createdAt && d.createdAt.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
+              return '<div class="gnb-notice-item" onclick="_spOpenNoticeDetail(' + i + ')">' +
+                '<div class="gnb-notice-item-title">' + (d.pinned ? '<span style="margin-right:4px">📌</span>' : '') + (isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : '') + escHtml(d.title || '제목 없음') + '</div>' +
+                '<div class="gnb-notice-item-date">' + escHtml(date) + '</div>' +
+                '</div>';
+            }).join('');
+          })
+          .catch(function() {
+            listEl.innerHTML = '<div class="gnb-notice-empty">공지사항을 불러올 수 없습니다.</div>';
+          });
+      }
+
+      function _spOpenNoticeDetail(idx) {
+        var d = _noticeCache[idx];
+        if (!d) return;
+        _noticeDetailOpen = true;
+        document.getElementById('gnbNoticeList').style.display = 'none';
+        document.getElementById('spNoticeDetail').style.display = '';
+        document.getElementById('spTitle').textContent = '공지사항';
+        // 스크롤 상단 리셋
+        var screen = document.getElementById('view-notice');
+        if (screen) screen.scrollTop = 0;
+        // 제목
+        document.getElementById('spNoticeDetailTitle').textContent = d.title || '제목 없음';
+        // 메타
+        var date = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+        var isNew = d.createdAt && d.createdAt.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
+        document.getElementById('spNoticeDetailMeta').innerHTML =
+          (isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : '') +
+          (d.pinned ? '<span class="sp-notice-detail-pin">📌 상단 고정</span>' : '') +
+          '<span>' + escHtml(date) + '</span>';
+        // 본문
+        document.getElementById('spNoticeDetailContent').innerHTML = d.content || '<p style="color:var(--text-dim)">내용이 없습니다.</p>';
+      }
+
+      function _spBackToNoticeList() {
+        _noticeDetailOpen = false;
+        document.getElementById('spNoticeDetail').style.display = 'none';
+        document.getElementById('gnbNoticeList').style.display = '';
+        document.getElementById('spTitle').textContent = '공지사항';
+      }
+
       function spBack() {
+        if (_noticeDetailOpen) {
+          _spBackToNoticeList();
+          return;
+        }
         if (_currentView === 'main') {
           history.back();
         } else {
@@ -601,6 +718,10 @@
 
       // iOS 엣지 스와이프 등 네이티브 뒤로가기 → 설정 메인으로 복귀
       window.addEventListener('popstate', function() {
+        if (_noticeDetailOpen) {
+          _spBackToNoticeList();
+          return;
+        }
         if (_currentView !== 'main') {
           _doSpBack();
         }
@@ -617,7 +738,7 @@
         } else if (view === 'notif') {
           if (typeof _initNotifModal === 'function') _initNotifModal();
         } else if (view === 'notice') {
-          if (typeof _loadNotices === 'function') _loadNotices();
+          _spLoadNotices();
         } else if (view === 'myinfo') {
           _initMyInfoView();
         }
@@ -858,6 +979,7 @@
 
         // 뒤로 버튼
         document.getElementById('spBackBtn').addEventListener('click', spBack);
+        document.getElementById('spNoticeDetailBack').addEventListener('click', _spBackToNoticeList);
 
         // ── 메뉴 클릭 ──
         document.getElementById('menuMyInfo').addEventListener('click', function() {
