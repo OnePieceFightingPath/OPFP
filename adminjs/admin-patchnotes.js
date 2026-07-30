@@ -53,7 +53,6 @@ function renderPatchNoteTable(list) {
       <td class="cell-id">#${escHtml(String(d.id ?? '-'))}</td>
       <td>${escHtml(d.date || '-')}</td>
       <td class="cell-name">${safeTitle || '-'}${isPendingDelete ? '<span class="badge-pending-delete">삭제 예정</span>' : ''}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${escHtml(d.excerpt || '')}</td>
       <td><span class="${isVisible ? 'badge-visible-on' : 'badge-visible-off'}">${isVisible ? 'ON' : 'OFF'}</span></td>
       <td><span class="admin-email-cell">${escHtml(resolveAdminLabel(d.updatedBy))}</span></td>
       <td>
@@ -128,7 +127,6 @@ async function openPatchNoteForm(docId) {
       document.getElementById('pnAutoIdDisplay').value  = src.id ?? p.id ?? '자동 생성';
       document.getElementById('pnFieldDate').value    = src.date || '';
       document.getElementById('pnFieldTitle').value   = src.title || '';
-      document.getElementById('pnFieldExcerpt').value = src.excerpt || '';
       return src.content || '';
     } else {
       const nextId = Math.max(0, ...allPatchNotes.map(p => p.id || 0)) + 1;
@@ -136,7 +134,6 @@ async function openPatchNoteForm(docId) {
       document.getElementById('pnAutoIdDisplay').value  = nextId;
       document.getElementById('pnFieldDate').value    = new Date().toISOString().split('T')[0];
       document.getElementById('pnFieldTitle').value   = '';
-      document.getElementById('pnFieldExcerpt').value = '';
       return '';
     }
   })();
@@ -166,11 +163,9 @@ document.getElementById('patchNoteFormSubmit')?.addEventListener('click', async 
 
   const date    = document.getElementById('pnFieldDate').value;
   const title   = document.getElementById('pnFieldTitle').value.trim();
-  const excerpt = document.getElementById('pnFieldExcerpt').value.trim();
   const content = $('#pnEditor').summernote('code') || '';
 
   if (!date || !title) { errEl.textContent = '날짜, 제목은 필수입니다.'; errEl.style.display = 'block'; return; }
-  if (!excerpt) { errEl.textContent = '요약은 필수입니다.'; errEl.style.display = 'block'; return; }
   if (!content) { errEl.textContent = '본문은 필수입니다.'; errEl.style.display = 'block'; return; }
 
   const _effPatchForId = _applyPendingOps(allPatchNotes, _pendingPatch);
@@ -178,7 +173,7 @@ document.getElementById('patchNoteFormSubmit')?.addEventListener('click', async 
     ? (_effPatchForId.find(p => p._docId === pnEditDocId)?.id || Math.max(0, ..._effPatchForId.map(p => p.id || 0)) + 1)
     : Math.max(0, ..._effPatchForId.map(p => p.id || 0)) + 1;
 
-  const data = { id: autoId, date, title, excerpt: excerpt || title, content, updatedBy: getCurrentUserLabel() };
+  const data = { id: autoId, date, title, content, updatedBy: getCurrentUserLabel() };
 
   const isEditingPn = !!pnEditDocId;
   document.getElementById('patchNoteFormSubmit').disabled = true;

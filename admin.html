@@ -606,7 +606,6 @@
               <th>ID</th>
               <th>날짜</th>
               <th>제목</th>
-              <th>요약</th>
               <th>노출 상태</th>
               <th>관리자</th>
               <th class="col-actions">작업</th>
@@ -772,7 +771,7 @@
         </div>
         <div class="admin-table-wrap">
           <table class="admin-table">
-            <thead><tr><th>ID</th><th>날짜</th><th>제목</th><th>요약</th><th>노출 상태</th><th>관리자</th><th class="col-actions">작업</th></tr></thead>
+            <thead><tr><th>ID</th><th>날짜</th><th>제목</th><th>노출 상태</th><th>관리자</th><th class="col-actions">작업</th></tr></thead>
             <tbody id="evtPageTableBody"><tr><td colspan="7" class="table-loading"><div class="spinner"></div><span>데이터 로딩 중...</span></td></tr></tbody>
           </table>
         </div>
@@ -844,7 +843,7 @@
             <tr>
               <th style="width:60px">고정</th>
               <th>제목</th>
-              <th>요약</th>
+              
               <th style="width:70px">노출</th>
               <th style="width:120px">관리자</th>
               <th class="col-actions">작업</th>
@@ -1559,10 +1558,6 @@
           <label class="form-label" for="pnFieldTitle">제목 <span class="required">*</span></label>
           <input type="text" id="pnFieldTitle" class="form-input" placeholder="패치노트 제목">
         </div>
-        <div class="form-group">
-          <label class="form-label" for="pnFieldExcerpt">요약 <span class="required">*</span></label>
-          <input type="text" id="pnFieldExcerpt" class="form-input" placeholder="목록에 표시될 짧은 요약">
-        </div>
       </div>
       <div class="form-section">
         <div class="form-section-label">본문 <span class="required">*</span></div>
@@ -1848,10 +1843,6 @@
             <input type="text" id="evtPgFieldTitle" class="form-input" placeholder="이벤트 제목 입력" maxlength="200">
           </div>
           <div class="form-group">
-            <label class="form-label" for="evtPgFieldExcerpt">요약 <span class="required">*</span></label>
-            <input type="text" id="evtPgFieldExcerpt" class="form-input" placeholder="이벤트 요약 입력" maxlength="300">
-          </div>
-          <div class="form-group">
             <label class="form-label">본문 <span class="required">*</span></label>
             <textarea id="evtEditor" name="evtEditor" style="width:100%; min-height:300px;"></textarea>
           </div>
@@ -2048,10 +2039,6 @@
       <div class="form-row">
         <label class="form-label">제목 <span class="form-required">*</span></label>
         <input type="text" id="noticeFieldTitle" class="form-input" placeholder="공지 제목을 입력하세요">
-      </div>
-      <div class="form-row">
-        <label class="form-label">요약 <span class="form-required">*</span></label>
-        <input type="text" id="noticeFieldExcerpt" class="form-input" placeholder="목록에 표시될 한 줄 요약">
       </div>
       <div class="form-row">
         <label class="form-label">본문 <span class="form-required">*</span></label>

@@ -792,7 +792,6 @@ function renderEvtPageTable(list) {
       <td class="cell-id">#${escHtml(String(d.id ?? '-'))}</td>
       <td>${escHtml(d.date || '-')}</td>
       <td class="cell-name">${safeTitle || '-'}${isPendingDelete ? '<span class="badge-pending-delete">삭제 예정</span>' : ''}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${escHtml(d.excerpt || '')}</td>
       <td><span class="${isVisible ? 'badge-visible-on' : 'badge-visible-off'}">${isVisible ? 'ON' : 'OFF'}</span></td>
       <td><span class="admin-email-cell">${escHtml(resolveAdminLabel(d.updatedBy))}</span></td>
       <td>
@@ -924,7 +923,6 @@ async function openEvtPgForm(docId) {
       document.getElementById('evtPgFieldStartDate').value = toDateStr(src.startDate) || src.date || '';
       document.getElementById('evtPgFieldEndDate').value   = toDateStr(src.endDate)   || '';
       document.getElementById('evtPgFieldTitle').value     = src.title || '';
-      document.getElementById('evtPgFieldExcerpt').value   = src.excerpt || '';
       // 썸네일
       if (src.thumbnailUrl) showEvtPgThumbUrl(src.thumbnailUrl);
       else resetEvtPgThumbWidget();
@@ -936,7 +934,6 @@ async function openEvtPgForm(docId) {
       document.getElementById('evtPgFieldStartDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('evtPgFieldEndDate').value   = '';
       document.getElementById('evtPgFieldTitle').value     = '';
-      document.getElementById('evtPgFieldExcerpt').value   = '';
       resetEvtPgThumbWidget();
       return '';
     }
@@ -997,12 +994,10 @@ document.getElementById('evtPgFormSubmit')?.addEventListener('click', async () =
   const startDateStr = document.getElementById('evtPgFieldStartDate').value;
   const endDateStr   = document.getElementById('evtPgFieldEndDate').value;
   const title   = document.getElementById('evtPgFieldTitle').value.trim();
-  const excerpt = document.getElementById('evtPgFieldExcerpt').value.trim();
   const content = $('#evtEditor').summernote('code') || '';
   const thumbUrl = document.getElementById('evtPgThumbUrl').value.trim();
 
   if (!startDateStr || !title) { errEl.textContent = '시작 날짜와 제목은 필수입니다.'; errEl.style.display = 'block'; return; }
-  if (!excerpt)        { errEl.textContent = '요약은 필수입니다.';  errEl.style.display = 'block'; return; }
   if (!content)        { errEl.textContent = '본문은 필수입니다.';  errEl.style.display = 'block'; return; }
 
   const effForId = _applyPendingOps(allEvtPages, _pendingEvtPages);
@@ -1018,8 +1013,6 @@ document.getElementById('evtPgFormSubmit')?.addEventListener('click', async () =
     ...(endTs   ? { endDate:   endTs   } : {}),
     ...(thumbUrl ? { thumbnailUrl: thumbUrl } : {}),
     title,
-    excerpt,
-    description: excerpt,
     content,
     updatedBy: getCurrentUserLabel()
   };

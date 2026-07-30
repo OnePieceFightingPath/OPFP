@@ -63,7 +63,6 @@ function renderNoticeTable(list) {
     <tr class="${rowClass}">
       <td>${isPinned ? '<span class="badge-visible-on">고정</span>' : '<span style="color:var(--text-muted);font-size:12px">—</span>'}${isPendingDelete ? '<span class="badge-pending-delete">삭제 예정</span>' : ''}</td>
       <td class="cell-name">${safeTitle || '—'}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted)">${escHtml(d.excerpt || '')}</td>
       <td><span class="${isVisible ? 'badge-visible-on' : 'badge-visible-off'}">${isVisible ? 'ON' : 'OFF'}</span></td>
       <td><span class="admin-email-cell">${escHtml(resolveAdminLabel(d.updatedBy))}</span><div style="font-size:11px;color:var(--text-muted);margin-top:2px">${dateStr}</div></td>
       <td>
@@ -136,14 +135,12 @@ async function openNoticeForm(docId) {
       const src = (n.hasDraft && n.draftData) ? n.draftData : n;
       document.getElementById('noticeFormTitle').textContent = '공지사항 수정';
       document.getElementById('noticeFieldTitle').value   = src.title   || '';
-      document.getElementById('noticeFieldExcerpt').value = src.excerpt || '';
       document.getElementById('noticeFieldPinned').checked = !!src.pinned;
       document.getElementById('noticeFieldVisible').checked = src.visible !== false;
       return src.content || '';
     } else {
       document.getElementById('noticeFormTitle').textContent = '공지사항 추가';
       document.getElementById('noticeFieldTitle').value   = '';
-      document.getElementById('noticeFieldExcerpt').value = '';
       document.getElementById('noticeFieldPinned').checked  = false;
       document.getElementById('noticeFieldVisible').checked = true;
       return '';
@@ -174,16 +171,14 @@ document.getElementById('noticeFormSubmit')?.addEventListener('click', async () 
   errEl.style.display = 'none';
 
   const title   = document.getElementById('noticeFieldTitle').value.trim();
-  const excerpt = document.getElementById('noticeFieldExcerpt').value.trim();
   const pinned  = document.getElementById('noticeFieldPinned').checked;
   const visible = document.getElementById('noticeFieldVisible').checked;
   const content = $('#noticeEditor').summernote('code') || '';
 
   if (!title)   { errEl.textContent = '제목은 필수입니다.';   errEl.style.display = 'block'; return; }
-  if (!excerpt) { errEl.textContent = '요약은 필수입니다.';   errEl.style.display = 'block'; return; }
   if (!content) { errEl.textContent = '본문은 필수입니다.';   errEl.style.display = 'block'; return; }
 
-  const data = { title, excerpt, content, pinned, visible, updatedBy: getCurrentUserLabel() };
+  const data = { title, content, pinned, visible, updatedBy: getCurrentUserLabel() };
 
   const isEditing = !!noticeEditDocId;
   document.getElementById('noticeFormSubmit').disabled = true;
