@@ -2916,3 +2916,186 @@ body.dragging-banner * { cursor: grabbing !important; }
     #evtPgFormOverlay .form-group { margin-bottom: 12px; }
     }
     
+
+/* ============================================================
+   NOTICE FORM MODAL — 기본 스타일 (form-overlay / form-modal)
+   공지사항 추가·수정 팝업 전용 스타일 (admin.css에 미정의 상태 보완)
+   ============================================================ */
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+.form-overlay.open { display: flex; }
+
+.form-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  /* max-width: inline style로 지정 (720px) */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.2s ease;
+}
+
+.form-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.form-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.form-modal-close {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+.form-modal-close:hover { background: var(--bg-hover); color: var(--text); }
+.form-modal-close svg { width: 18px; height: 18px; }
+
+.form-modal-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 20px 24px;
+  flex: 1;
+}
+.form-modal-footer {
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* form-required: .required 와 동일 */
+.form-required { color: var(--danger); }
+
+/* form-row: .form-group 와 동일 */
+.form-row { margin-bottom: 14px; }
+.form-row:last-child { margin-bottom: 0; }
+
+
+/* ============================================================
+   추가 팝업 모바일 최적화 (≤ 600px)
+   콘텐츠 / 이벤트 / 공지사항 관리 추가 팝업 전용
+   ============================================================ */
+@media (max-width: 600px) {
+
+  /* ── 공지사항 팝업 — 바텀 시트 ── */
+  .form-overlay { align-items: flex-end; padding: 0; }
+  .form-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-height: 96dvh;
+    animation: slideUpSheet 0.25s ease;
+  }
+  /* 공지사항 - summernote 에디터 포함 → 전체 화면 사용 */
+  #noticeFormOverlay .form-modal {
+    max-height: 100dvh;
+    height: 100dvh;
+  }
+  .form-modal-header { padding: 14px 16px 12px; }
+  .form-modal-title { font-size: 16px; }
+  .form-modal-body { padding: 14px 14px; }
+  .form-modal-footer { padding: 12px 14px; }
+  .form-modal-footer .btn-primary,
+  .form-modal-footer .btn-secondary { flex: 1; justify-content: center; }
+
+  /* form-row 간격 축소 */
+  .form-modal-body .form-row { margin-bottom: 12px; }
+  .form-modal-body .form-group { margin-bottom: 12px; }
+
+  /* ── 이벤트 날짜 범위(기간) → 세로 스택 ── */
+  .date-range-row { flex-direction: column; gap: 6px; align-items: stretch; }
+  .date-range-sep { display: none; }
+
+  /* ── 이벤트 카드 썸네일 미리보기 → 전체 너비 ── */
+  .evt-thumb-preview { width: 100%; height: 80px; }
+
+  /* ── iOS 자동 확대 방지: 모든 모달 입력 폰트 16px / 터치 높이 44px ── */
+  .modal-overlay .form-input:not(textarea):not(select),
+  .form-overlay  .form-input:not(textarea):not(select) {
+    font-size: 16px;
+    height: 44px;
+    padding: 0 12px;
+  }
+  .modal-overlay select.form-input,
+  .form-overlay  select.form-input {
+    font-size: 16px;
+    height: 44px;
+  }
+  .modal-overlay textarea.form-input,
+  .form-overlay  textarea.form-input {
+    font-size: 16px;
+  }
+
+  /* ── 업로드 버튼 터치 타깃 확보 (44px) ── */
+  .btn-upload-trigger {
+    min-height: 44px;
+    padding: 0 20px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* ── 토글 스위치 터치 타깃 ── */
+  .banner-toggle-row { min-height: 44px; }
+
+  /* ── 공지사항 Summernote 에디터 모바일 최적화 ── */
+  #noticeFormOverlay .note-editable {
+    min-height: 160px !important;
+    font-size: 16px !important;
+  }
+  #noticeFormOverlay .note-toolbar .note-btn {
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+  #noticeFormOverlay .note-toolbar {
+    flex-wrap: wrap !important;
+  }
+
+  /* ── 이벤트 배너 폼 입력 높이 명시 ── */
+  #evtBnrFormOverlay .form-input:not(textarea):not(select) {
+    font-size: 16px;
+    height: 44px;
+    padding: 0 12px;
+  }
+  #evtBnrFormOverlay select.form-input { font-size: 16px; height: 44px; }
+
+  /* ── 배너·서포트캐릭터·PvP 폼 입력 ── */
+  #bannerFormOverlay  .form-input:not(textarea):not(select),
+  #scFormOverlay      .form-input:not(textarea):not(select),
+  #pvpFormOverlay     .form-input:not(textarea):not(select) {
+    font-size: 16px;
+    height: 44px;
+    padding: 0 12px;
+  }
+  #bannerFormOverlay select.form-input,
+  #scFormOverlay     select.form-input,
+  #pvpFormOverlay    select.form-input { font-size: 16px; height: 44px; }
+}
