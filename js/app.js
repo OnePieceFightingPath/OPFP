@@ -345,6 +345,11 @@ function initGnbMenu() {
     _openSubModal('noticeModalOverlay');
   });
   document.getElementById('noticeModalClose')?.addEventListener('click', () => _closeSubModal('noticeModalOverlay'));
+  document.getElementById('noticeDetailBack')?.addEventListener('click', _backToNoticeList);
+  document.getElementById('noticeDetailClose')?.addEventListener('click', () => {
+    _backToNoticeList();
+    _closeSubModal('noticeModalOverlay');
+  });
 
   // 오버레이 배경 클릭 시 닫기
   document.querySelectorAll('.gnb-sub-modal-overlay').forEach(overlay => {
@@ -575,6 +580,8 @@ function _initNotifModal() {
 }
 
 // ── 공지사항 로드 (Firestore 'notices' 컬렉션) ──
+let _noticeDocsCache = [];
+
 function _loadNotices() {
   const listEl = document.getElementById('gnbNoticeList');
   if (!listEl) return;
@@ -586,15 +593,23 @@ function _loadNotices() {
   db.collection('notices').orderBy('createdAt', 'desc').limit(20).get()
     .then(snap => {
       if (snap.empty) {
+        _noticeDocsCache = [];
         listEl.innerHTML = '<div class="gnb-notice-empty">등록된 공지사항이 없습니다.</div>';
         return;
       }
-      listEl.innerHTML = snap.docs.map(doc => {
-        const d = doc.data();
+      _noticeDocsCache = snap.docs
+        .map(doc => doc.data())
+        .filter(d => d.visible !== false);
+      if (!_noticeDocsCache.length) {
+        listEl.innerHTML = '<div class="gnb-notice-empty">등록된 공지사항이 없습니다.</div>';
+        return;
+      }
+      listEl.innerHTML = _noticeDocsCache.map((d, i) => {
         const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
         const isNew = d.createdAt?.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
-        return `<div class="gnb-notice-item">
-          <div class="gnb-notice-item-title">${isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : ''}${escHtml(d.title || '제목 없음')}</div>
+        const isPinned = !!d.pinned;
+        return `<div class="gnb-notice-item" onclick="_openNoticeDetail(${i})">
+          <div class="gnb-notice-item-title">${isPinned ? '<span class="gnb-notice-item-pin">📌</span>' : ''}${isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : ''}${escHtml(d.title || '제목 없음')}</div>
           <div class="gnb-notice-item-date">${escHtml(date)}</div>
         </div>`;
       }).join('');
@@ -602,6 +617,41 @@ function _loadNotices() {
     .catch(() => {
       listEl.innerHTML = '<div class="gnb-notice-empty">공지사항을 불러올 수 없습니다.</div>';
     });
+}
+
+function _openNoticeDetail(idx) {
+  const d = _noticeDocsCache[idx];
+  if (!d) return;
+
+  // 헤더 전환
+  document.getElementById('noticeListHeader').style.display = 'none';
+  document.getElementById('noticeDetailHeader').style.display = '';
+
+  // 목록 ↔ 상세 전환
+  document.getElementById('gnbNoticeList').style.display = 'none';
+  document.getElementById('gnbNoticeDetail').style.display = '';
+
+  // 제목
+  document.getElementById('gnbNoticeDetailTitle').textContent = d.title || '제목 없음';
+
+  // 메타 (날짜 + 뱃지)
+  const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+  const isNew = d.createdAt?.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
+  const metaEl = document.getElementById('gnbNoticeDetailMeta');
+  metaEl.innerHTML =
+    (isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : '') +
+    (d.pinned ? '<span class="gnb-notice-detail-pin-badge">📌 상단 고정</span>' : '') +
+    `<span class="gnb-notice-detail-date">${escHtml(date)}</span>`;
+
+  // 본문 (summernote HTML — XSS 방지 위해 DOMPurify 없이 innerHTML 사용 / 신뢰된 관리자 콘텐츠)
+  document.getElementById('gnbNoticeDetailContent').innerHTML = d.content || '<p style="color:var(--text-dim)">내용이 없습니다.</p>';
+}
+
+function _backToNoticeList() {
+  document.getElementById('noticeListHeader').style.display = '';
+  document.getElementById('noticeDetailHeader').style.display = 'none';
+  document.getElementById('gnbNoticeList').style.display = '';
+  document.getElementById('gnbNoticeDetail').style.display = 'none';
 }
 
 // ===== SMART STICKY SUBNAV =====

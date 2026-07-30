@@ -825,14 +825,32 @@
     <!-- ===== 공지사항 모달 ===== -->
     <div class="gnb-sub-modal-overlay" id="noticeModalOverlay">
       <div class="gnb-sub-modal gnb-sub-modal--wide">
-        <div class="gnb-sub-modal-header">
+        <!-- 목록 헤더 -->
+        <div class="gnb-sub-modal-header" id="noticeListHeader">
           <span class="gnb-sub-modal-title">공지사항</span>
           <button class="gnb-sub-modal-close" id="noticeModalClose">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>
+        <!-- 상세 헤더 -->
+        <div class="gnb-sub-modal-header" id="noticeDetailHeader" style="display:none">
+          <button class="gnb-notice-back-btn" id="noticeDetailBack">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            목록
+          </button>
+          <button class="gnb-sub-modal-close" id="noticeDetailClose">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <!-- 목록 -->
         <div class="gnb-notice-list" id="gnbNoticeList">
           <div class="gnb-notice-loading">공지사항을 불러오는 중...</div>
+        </div>
+        <!-- 상세 -->
+        <div class="gnb-notice-detail" id="gnbNoticeDetail" style="display:none">
+          <h3 class="gnb-notice-detail-title" id="gnbNoticeDetailTitle"></h3>
+          <div class="gnb-notice-detail-meta" id="gnbNoticeDetailMeta"></div>
+          <div class="gnb-notice-detail-content" id="gnbNoticeDetailContent"></div>
         </div>
       </div>
     </div>
