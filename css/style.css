@@ -5017,6 +5017,7 @@ html.is-pwa .site-footer {
   flex-shrink: 0;
 }
 .evt-editor-tool:hover { background: var(--bg-hover, #242436); color: var(--text, #cdd6f4); }
+.evt-editor-tool.active { background: var(--bg-hover, #242436); color: var(--text, #cdd6f4); box-shadow: inset 0 -2px 0 var(--accent, #89b4fa); }
 .evt-editor-tool b { font-weight: 800; }
 .evt-editor-tool i { font-style: italic; }
 .evt-editor-tool u { text-decoration: underline; }

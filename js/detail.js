@@ -1704,6 +1704,21 @@ function _initEditor(editorId, opts) {
     });
   });
 
+  /* 포맷 버튼 활성 상태 표시 (B/i/U/S) */
+  var _fmtCmds = ['bold','italic','underline','strikeThrough'];
+  function _updateFmtActive() {
+    _fmtCmds.forEach(function(cmd) {
+      var btn = wrap.querySelector('.evt-editor-tool[data-cmd="' + cmd + '"]');
+      if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
+    });
+  }
+  area.addEventListener('keyup',   _updateFmtActive);
+  area.addEventListener('mouseup', _updateFmtActive);
+  area.addEventListener('input',   _updateFmtActive);
+  document.addEventListener('selectionchange', function() {
+    if (document.activeElement === area) _updateFmtActive();
+  });
+
   /* 정렬 드롭다운 */
   var alignBtn = wrap.querySelector('.evt-editor-align-btn');
   var alignDd  = document.getElementById('align-dd-' + editorId);
