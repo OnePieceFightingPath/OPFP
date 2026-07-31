@@ -575,6 +575,8 @@ function _initNotifModal() {
 }
 
 // ── 공지사항 로드 (Firestore 'notices' 컬렉션) ──
+let _gnbNoticeCache = [];
+
 function _loadNotices() {
   const listEl = document.getElementById('gnbNoticeList');
   if (!listEl) return;
@@ -589,12 +591,16 @@ function _loadNotices() {
         listEl.innerHTML = '<div class="gnb-notice-empty">등록된 공지사항이 없습니다.</div>';
         return;
       }
-      listEl.innerHTML = snap.docs.map(doc => {
-        const d = doc.data();
+      _gnbNoticeCache = snap.docs.map(doc => doc.data()).filter(d => d.visible !== false);
+      if (!_gnbNoticeCache.length) {
+        listEl.innerHTML = '<div class="gnb-notice-empty">등록된 공지사항이 없습니다.</div>';
+        return;
+      }
+      listEl.innerHTML = _gnbNoticeCache.map((d, i) => {
         const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
         const isNew = d.createdAt?.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
-        return `<div class="gnb-notice-item">
-          <div class="gnb-notice-item-title">${isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : ''}${escHtml(d.title || '제목 없음')}</div>
+        return `<div class="gnb-notice-item" onclick="window._openGnbNoticeDetail(${i})">
+          <div class="gnb-notice-item-title">${d.pinned ? '<span style="margin-right:4px">📌</span>' : ''}${isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : ''}${escHtml(d.title || '제목 없음')}</div>
           <div class="gnb-notice-item-date">${escHtml(date)}</div>
         </div>`;
       }).join('');
@@ -603,6 +609,33 @@ function _loadNotices() {
       listEl.innerHTML = '<div class="gnb-notice-empty">공지사항을 불러올 수 없습니다.</div>';
     });
 }
+
+window._openGnbNoticeDetail = function(idx) {
+  const d = _gnbNoticeCache[idx];
+  if (!d) return;
+  const listEl  = document.getElementById('gnbNoticeList');
+  const detailEl = document.getElementById('gnbNoticeDetail');
+  if (!listEl || !detailEl) return;
+  listEl.style.display  = 'none';
+  detailEl.style.display = '';
+  detailEl.scrollTop = 0;
+  const date  = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+  const isNew = d.createdAt?.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
+  document.getElementById('gnbNoticeDetailTitle').textContent = d.title || '제목 없음';
+  document.getElementById('gnbNoticeDetailMeta').innerHTML =
+    (isNew ? '<span class="gnb-notice-item-badge">NEW</span>' : '') +
+    (d.pinned ? '<span style="margin-left:4px;font-size:12px;color:var(--text-muted)">📌 상단 고정</span>' : '') +
+    `<span style="font-size:12px;color:var(--text-muted);margin-left:6px">${escHtml(date)}</span>`;
+  document.getElementById('gnbNoticeDetailContent').innerHTML =
+    d.content || '<p style="color:var(--text-dim)">내용이 없습니다.</p>';
+};
+
+window._backToGnbNoticeList = function() {
+  const listEl   = document.getElementById('gnbNoticeList');
+  const detailEl = document.getElementById('gnbNoticeDetail');
+  if (listEl)   listEl.style.display   = '';
+  if (detailEl) detailEl.style.display = 'none';
+};
 
 // ===== SMART STICKY SUBNAV =====
 (function initSubnavScroll() {

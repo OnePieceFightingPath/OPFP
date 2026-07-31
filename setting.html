@@ -702,6 +702,10 @@
         document.getElementById('spTitle').textContent = '공지사항';
       }
 
+      // onclick 속성에서 호출되므로 전역 노출
+      window._spOpenNoticeDetail  = _spOpenNoticeDetail;
+      window._spBackToNoticeList  = _spBackToNoticeList;
+
       function spBack() {
         if (_noticeDetailOpen) {
           _spBackToNoticeList();

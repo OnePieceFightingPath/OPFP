@@ -834,6 +834,15 @@
         <div class="gnb-notice-list" id="gnbNoticeList">
           <div class="gnb-notice-loading">공지사항을 불러오는 중...</div>
         </div>
+        <div id="gnbNoticeDetail" style="display:none;padding:16px 20px;overflow-y:auto;flex:1">
+          <button onclick="window._backToGnbNoticeList()" style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:0;margin-bottom:14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M15 18l-6-6 6-6"/></svg>
+            목록으로
+          </button>
+          <h3 id="gnbNoticeDetailTitle" style="font-size:15px;font-weight:700;color:var(--text-primary);margin:0 0 8px"></h3>
+          <div id="gnbNoticeDetailMeta" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)"></div>
+          <div id="gnbNoticeDetailContent" style="font-size:14px;line-height:1.7;color:var(--text-secondary)"></div>
+        </div>
       </div>
     </div>
 
