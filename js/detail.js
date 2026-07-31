@@ -1611,7 +1611,19 @@ function _buildEditorHtml(editorId, opts) {
     '    <button type="button" class="evt-editor-tool" data-cmd="strikeThrough" title="취소선"><s>S</s></button>',
     '    <span class="evt-editor-color-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-color-btn" data-editor-id="' + editorId + '" title="글자색"><span class="evt-editor-color-preview" id="color-preview-' + editorId + '" style="background:#ffffff"></span>A</button>',
-    '      <input type="color" class="evt-editor-color-picker" id="color-picker-' + editorId + '" value="#ffffff" tabindex="-1">',
+    '      <div class="evt-editor-color-palette" id="color-palette-' + editorId + '" style="display:none">',
+    '        <div class="evt-editor-color-swatches" id="color-swatches-' + editorId + '"></div>',
+    '        <div class="evt-editor-color-actions">',
+    '          <button type="button" class="evt-editor-color-clear-btn" id="color-clear-' + editorId + '" title="색상 제거"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>',
+    '        </div>',
+    '        <div class="evt-editor-color-hex-wrap">',
+    '          <span class="evt-editor-color-hex-label">HEX Color</span>',
+    '          <div class="evt-editor-color-hex-row">',
+    '            <input type="text" class="evt-editor-color-hex-input" id="color-hex-' + editorId + '" placeholder="#ffffff" maxlength="7">',
+    '            <button type="button" class="evt-editor-color-ok-btn" id="color-ok-' + editorId + '">OK</button>',
+    '          </div>',
+    '        </div>',
+    '      </div>',
     '    </span>',
     '    <span class="evt-editor-align-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-align-btn" data-editor-id="' + editorId + '" title="정렬"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M7 10l5 5 5-5H7z"/></svg></button>',
@@ -1715,17 +1727,64 @@ function _initEditor(editorId, opts) {
   }
 
   /* 글자색 */
-  var colorBtn     = wrap.querySelector('.evt-editor-color-btn');
-  var colorPicker  = document.getElementById('color-picker-' + editorId);
-  var colorPreview = document.getElementById('color-preview-' + editorId);
-  if (colorBtn && colorPicker) {
-    colorBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); colorPicker.click(); });
-    colorPicker.addEventListener('input',  function() { if (colorPreview) colorPreview.style.background = colorPicker.value; });
-    colorPicker.addEventListener('change', function() {
+  var colorBtn      = wrap.querySelector('.evt-editor-color-btn');
+  var colorPalette  = document.getElementById('color-palette-'  + editorId);
+  var colorPreview  = document.getElementById('color-preview-'  + editorId);
+  var colorSwatches = document.getElementById('color-swatches-' + editorId);
+  var colorHexInput = document.getElementById('color-hex-'      + editorId);
+  var colorOkBtn    = document.getElementById('color-ok-'       + editorId);
+  var colorClearBtn = document.getElementById('color-clear-'    + editorId);
+  if (colorBtn && colorPalette) {
+    var _palette = [
+      '#006464','#006480','#003280','#480080','#000000',
+      '#008040','#008080','#0040c0','#800080','#404040',
+      '#60c030','#00c0c0','#4080d0','#a040c0','#808080',
+      '#c0c000','#d06000','#d03030','#d04080','#c0c0c0',
+      '#ffffa0','#ffc060','#ff8080','#ffb0c0','#ffffff'
+    ];
+    colorSwatches.innerHTML = _palette.map(function(c) {
+      return '<span class="evt-editor-color-swatch" data-color="'+c+'" style="background:'+c+'"></span>';
+    }).join('');
+    function _applyColor(color) {
       restoreRange();
-      document.execCommand('foreColor', false, colorPicker.value);
-      if (colorPreview) colorPreview.style.background = colorPicker.value;
+      document.execCommand('foreColor', false, color);
+      if (colorPreview) colorPreview.style.background = color;
+      if (colorHexInput) colorHexInput.value = color;
+      colorPalette.style.display = 'none';
       area.focus();
+    }
+    colorBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
+    colorBtn.addEventListener('click', function() {
+      colorPalette.style.display = colorPalette.style.display === 'none' ? 'block' : 'none';
+    });
+    colorSwatches.querySelectorAll('.evt-editor-color-swatch').forEach(function(sw) {
+      sw.addEventListener('mousedown', function(e) { e.preventDefault(); });
+      sw.addEventListener('click', function() { _applyColor(sw.dataset.color); });
+    });
+    if (colorClearBtn) {
+      colorClearBtn.addEventListener('mousedown', function(e) { e.preventDefault(); });
+      colorClearBtn.addEventListener('click', function() {
+        restoreRange();
+        document.execCommand('removeFormat', false, null);
+        if (colorPreview) colorPreview.style.background = '#ffffff';
+        colorPalette.style.display = 'none';
+        area.focus();
+      });
+    }
+    if (colorOkBtn && colorHexInput) {
+      colorOkBtn.addEventListener('mousedown', function(e) { e.preventDefault(); });
+      colorOkBtn.addEventListener('click', function() {
+        var val = colorHexInput.value.trim();
+        if (!/^#[0-9a-fA-F]{3,6}$/.test(val)) return;
+        _applyColor(val);
+      });
+      colorHexInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); colorOkBtn.click(); }
+      });
+    }
+    document.addEventListener('click', function(e) {
+      if (!colorBtn.contains(e.target) && !colorPalette.contains(e.target))
+        colorPalette.style.display = 'none';
     });
   }
 
