@@ -324,12 +324,11 @@ footer {
 }
 
 .gnb-dropdown-header {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  padding: 0 4px 10px;
+  color: var(--text);
+  letter-spacing: 0;
+  padding: 2px 4px 12px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
 }
