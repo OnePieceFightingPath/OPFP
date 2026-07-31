@@ -756,8 +756,9 @@ async function _renderPatchList() {
 
 /* ── 이벤트 목록 렌더링 ── */
 /* ── 이벤트 목록 뷰 상태 ── */
-let _dlViewMode = 'card'; // 'card' | 'list'
-let _dlSortBy   = 'recent'; // 'recent' | 'updated' | 'recommended'
+let _dlViewMode     = 'card'; // 'card' | 'list'
+let _dlSortBy       = 'recent'; // 'recent' | 'updated' | 'recommended'
+let _dlStatusFilter = 'all'; // 'all' | 'active' | 'ended'
 
 async function _renderEventList() {
   const main = document.getElementById('detailMain');
@@ -823,6 +824,11 @@ async function _renderEventList() {
           <button id="bellEvent" class="dl-notif-bell${localStorage.getItem('notifEvent')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
         </div>
         <div class="dl-evt-toolbar">
+          <div class="dl-evt-status-filter">
+            <button class="dl-evt-status-btn${_dlStatusFilter==='all'?' active':''}" data-status="all">전체</button>
+            <button class="dl-evt-status-btn${_dlStatusFilter==='active'?' active':''}" data-status="active">진행중</button>
+            <button class="dl-evt-status-btn${_dlStatusFilter==='ended'?' active':''}" data-status="ended">종료</button>
+          </div>
           <button class="dl-evt-view-btn${_dlViewMode==='card'?' active':''}" data-view="card" title="카드형으로 보기">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
           </button>
@@ -842,6 +848,13 @@ async function _renderEventList() {
 
     _applyDlFilter();
 
+    main.querySelectorAll('.dl-evt-status-btn[data-status]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _dlStatusFilter = btn.dataset.status;
+        main.querySelectorAll('.dl-evt-status-btn').forEach(b => b.classList.toggle('active', b === btn));
+        _applyDlFilter();
+      });
+    });
     main.querySelectorAll('.dl-evt-view-btn[data-view]').forEach(btn => {
       btn.addEventListener('click', () => {
         _dlViewMode = btn.dataset.view;
@@ -895,6 +908,12 @@ function _applyDlFilter() {
     });
   } else if (_dlSortBy === 'recommended') {
     sorted.sort((a, b) => (b.likeCount || 0) - (a.likeCount || 0));
+  }
+
+  if (_dlStatusFilter === 'active') {
+    sorted = sorted.filter(e => _dlIsActive(e));
+  } else if (_dlStatusFilter === 'ended') {
+    sorted = sorted.filter(e => !_dlIsActive(e));
   }
 
   const metaHtml = (e) => `

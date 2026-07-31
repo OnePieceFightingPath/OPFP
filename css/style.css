@@ -6486,6 +6486,33 @@ html.is-pwa .site-footer {
   gap: 6px;
   margin-bottom: 12px;
 }
+.dl-evt-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+}
+.dl-evt-status-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 11px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+}
+.dl-evt-status-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(77,159,255,0.08);
+}
+.dl-evt-status-btn:hover:not(.active) {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
 .dl-evt-view-btn {
   display: inline-flex;
   align-items: center;
