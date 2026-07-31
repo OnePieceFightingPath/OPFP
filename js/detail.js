@@ -943,7 +943,7 @@ function _applyDlFilter() {
           ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(34,197,94,0.15);color:#22c55e">진행중</span>`
           : `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(150,150,150,0.15);color:var(--text-dim)">종료</span>`;
         return `
-          <div data-evtid="${escHtml(e._docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+          <div class="event-card-clickable" data-evtid="${escHtml(e._docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
             <div style="display:flex;align-items:center;gap:6px;min-width:0">
               ${statusBadge}
               <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(e.title||'제목 없음')}</span>
