@@ -1695,28 +1695,27 @@ function _initEditor(editorId, opts) {
     updateCount();
   });
 
+  /* 포맷 버튼 활성 상태 표시 (B/i/U/S) */
+  var _fmtCmds = ['bold','italic','underline','strikeThrough'];
+  var _fmtBtns = {};
+  _fmtCmds.forEach(function(cmd) { _fmtBtns[cmd] = wrap.querySelector('.evt-editor-tool[data-cmd="' + cmd + '"]'); });
+  function _updateFmtActive() {
+    _fmtCmds.forEach(function(cmd) {
+      if (_fmtBtns[cmd]) _fmtBtns[cmd].classList.toggle('active', document.queryCommandState(cmd));
+    });
+  }
+  area.addEventListener('keydown', _updateFmtActive);
+  area.addEventListener('mousedown', _updateFmtActive);
+  document.addEventListener('selectionchange', _updateFmtActive);
+
   /* execCommand 버튼 */
   wrap.querySelectorAll('.evt-editor-tool[data-cmd]').forEach(function(btn) {
     btn.addEventListener('mousedown', function(e) {
       e.preventDefault();
       document.execCommand(btn.dataset.cmd, false, null);
+      _updateFmtActive();
       area.focus(); updateCount();
     });
-  });
-
-  /* 포맷 버튼 활성 상태 표시 (B/i/U/S) */
-  var _fmtCmds = ['bold','italic','underline','strikeThrough'];
-  function _updateFmtActive() {
-    _fmtCmds.forEach(function(cmd) {
-      var btn = wrap.querySelector('.evt-editor-tool[data-cmd="' + cmd + '"]');
-      if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
-    });
-  }
-  area.addEventListener('keyup',   _updateFmtActive);
-  area.addEventListener('mouseup', _updateFmtActive);
-  area.addEventListener('input',   _updateFmtActive);
-  document.addEventListener('selectionchange', function() {
-    if (document.activeElement === area) _updateFmtActive();
   });
 
   /* 정렬 드롭다운 */
