@@ -6338,7 +6338,7 @@ html.is-pwa .site-footer {
 }
 .gnb-confirm-overlay.open { display: flex; }
 .gnb-confirm-modal {
-  width: min(100%, 320px);
+  width: min(100%, 380px);
   padding: 24px 20px 18px;
   background: var(--bg-card, #1e1e2e);
   border: 1px solid var(--border, #313244);
