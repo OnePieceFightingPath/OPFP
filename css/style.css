@@ -5106,10 +5106,8 @@ html.is-pwa .site-footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
-  cursor: grab;
   user-select: none;
 }
-.evt-editor-emoji-grid:active { cursor: grabbing; }
 .evt-editor-emoji-item {
   cursor: pointer;
   padding: 3px;

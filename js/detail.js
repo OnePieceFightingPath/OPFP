@@ -1767,25 +1767,26 @@ function _initEditor(editorId, opts) {
         });
       });
     }
-    /* 위아래 드래그/스와이프로 페이지 이동 */
-    var _dragStartY = 0, _dragging = false;
-    function _onDragStart(y) { _dragStartY = y; _dragging = true; emojiGrid._dragged = false; }
-    function _onDragEnd(y) {
-      if (!_dragging) return;
-      _dragging = false;
-      var dy = y - _dragStartY;
+    /* 마우스 휠로 페이지 이동 */
+    var _wheelLock = false;
+    emojiPicker.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      if (_wheelLock) return;
+      _wheelLock = true;
+      setTimeout(function() { _wheelLock = false; }, 300);
+      _ePg = e.deltaY > 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
+      _renderEPg();
+    }, { passive: false });
+    /* 터치 스와이프 (모바일용) */
+    var _touchStartY = 0;
+    emojiGrid.addEventListener('touchstart', function(e) { _touchStartY = e.touches[0].clientY; emojiGrid._dragged = false; }, { passive: true });
+    emojiGrid.addEventListener('touchend', function(e) {
+      var dy = e.changedTouches[0].clientY - _touchStartY;
       if (Math.abs(dy) < 30) return;
       emojiGrid._dragged = true;
       _ePg = dy < 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
       _renderEPg();
-    }
-    /* 터치 이벤트 */
-    emojiGrid.addEventListener('touchstart', function(e) { _onDragStart(e.touches[0].clientY); }, { passive: true });
-    emojiGrid.addEventListener('touchend',   function(e) { _onDragEnd(e.changedTouches[0].clientY); });
-    /* 마우스 드래그 */
-    emojiGrid.addEventListener('mousedown', function(e) { _onDragStart(e.clientY); });
-    emojiGrid.addEventListener('mouseup',   function(e) { _onDragEnd(e.clientY); });
-    emojiGrid.addEventListener('mouseleave',function()  { _dragging = false; });
+    });
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
       emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
