@@ -619,6 +619,12 @@ window._openGnbNoticeDetail = function(idx) {
   listEl.style.display  = 'none';
   detailEl.style.display = '';
   detailEl.scrollTop = 0;
+  const titleEl = document.getElementById('gnbNoticeModalTitle');
+  if (titleEl) {
+    titleEl.innerHTML = '<span onclick="window._backToGnbNoticeList()" style="cursor:pointer;display:inline-flex;align-items:center;gap:4px">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M15 18l-6-6 6-6"/></svg>'
+      + '목록</span>';
+  }
   const date  = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
   const isNew = d.createdAt?.toDate && (Date.now() - d.createdAt.toDate().getTime() < 7 * 24 * 60 * 60 * 1000);
   document.getElementById('gnbNoticeDetailTitle').textContent = d.title || '제목 없음';
@@ -635,6 +641,8 @@ window._backToGnbNoticeList = function() {
   const detailEl = document.getElementById('gnbNoticeDetail');
   if (listEl)   listEl.style.display   = '';
   if (detailEl) detailEl.style.display = 'none';
+  const titleEl = document.getElementById('gnbNoticeModalTitle');
+  if (titleEl) titleEl.textContent = '공지사항';
 };
 
 // ===== SMART STICKY SUBNAV =====
