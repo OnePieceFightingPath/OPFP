@@ -1767,24 +1767,24 @@ function _initEditor(editorId, opts) {
         });
       });
     }
-    /* 드래그/스와이프로 페이지 이동 */
-    var _dragStartX = 0, _dragging = false;
-    function _onDragStart(x) { _dragStartX = x; _dragging = true; emojiGrid._dragged = false; }
-    function _onDragEnd(x) {
+    /* 위아래 드래그/스와이프로 페이지 이동 */
+    var _dragStartY = 0, _dragging = false;
+    function _onDragStart(y) { _dragStartY = y; _dragging = true; emojiGrid._dragged = false; }
+    function _onDragEnd(y) {
       if (!_dragging) return;
       _dragging = false;
-      var dx = x - _dragStartX;
-      if (Math.abs(dx) < 30) return;
+      var dy = y - _dragStartY;
+      if (Math.abs(dy) < 30) return;
       emojiGrid._dragged = true;
-      _ePg = dx < 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
+      _ePg = dy < 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
       _renderEPg();
     }
     /* 터치 이벤트 */
-    emojiGrid.addEventListener('touchstart', function(e) { _onDragStart(e.touches[0].clientX); }, { passive: true });
-    emojiGrid.addEventListener('touchend',   function(e) { _onDragEnd(e.changedTouches[0].clientX); });
+    emojiGrid.addEventListener('touchstart', function(e) { _onDragStart(e.touches[0].clientY); }, { passive: true });
+    emojiGrid.addEventListener('touchend',   function(e) { _onDragEnd(e.changedTouches[0].clientY); });
     /* 마우스 드래그 */
-    emojiGrid.addEventListener('mousedown', function(e) { _onDragStart(e.clientX); });
-    emojiGrid.addEventListener('mouseup',   function(e) { _onDragEnd(e.clientX); });
+    emojiGrid.addEventListener('mousedown', function(e) { _onDragStart(e.clientY); });
+    emojiGrid.addEventListener('mouseup',   function(e) { _onDragEnd(e.clientY); });
     emojiGrid.addEventListener('mouseleave',function()  { _dragging = false; });
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
