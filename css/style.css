@@ -5220,10 +5220,9 @@ html.is-pwa .site-footer {
 }
 /* 댓글에 삽입된 커스텀 이모지 */
 .evt-comment-emoji-img {
-  width: 28px;
-  height: 28px;
+  max-width: 100%;
+  height: auto;
   vertical-align: middle;
-  object-fit: contain;
   display: inline-block;
   margin: 0 1px;
 }
