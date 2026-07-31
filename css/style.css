@@ -4470,7 +4470,7 @@ html.is-pwa .site-footer {
   transition: transform var(--transition), box-shadow var(--transition);
 }
 .event-card-clickable { cursor: pointer; }
-.event-card-clickable:hover {
+.event-card.event-card-clickable:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 28px rgba(0,0,0,0.35);
 }
