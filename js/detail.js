@@ -1631,11 +1631,7 @@ function _buildEditorHtml(editorId, opts) {
     '    <span class="evt-editor-emoji-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-emoji-btn" data-editor-id="' + editorId + '" title="이모지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>',
     '      <div class="evt-editor-emoji-picker" id="emoji-picker-' + editorId + '" style="display:none">',
-    '        <div class="evt-editor-emoji-header">',
-    '          <button type="button" class="evt-editor-emoji-arrow" id="emoji-prev-' + editorId + '">&#8249;</button>',
-    '          <div class="evt-editor-emoji-grid" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
-    '          <button type="button" class="evt-editor-emoji-arrow" id="emoji-next-' + editorId + '">&#8250;</button>',
-    '        </div>',
+    '        <div class="evt-editor-emoji-grid" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
     '        <div class="evt-editor-emoji-page-info" id="emoji-pinfo-' + editorId + '">1 / ' + totalEmojiPg + '</div>',
     '      </div>',
     '    </span>',
@@ -1754,8 +1750,6 @@ function _initEditor(editorId, opts) {
     var _eSrcs = (function(){ var a=[]; for(var i=1;i<=39;i++) a.push('img/emoji/emogi'+i+'.png'); return a; })();
     var _ePgSz = 9, _ePg = 0, _eTotalPg = Math.ceil(_eSrcs.length / _ePgSz);
     var emojiGrid  = document.getElementById('emoji-grid-'  + editorId);
-    var emojiPrev  = document.getElementById('emoji-prev-'  + editorId);
-    var emojiNext  = document.getElementById('emoji-next-'  + editorId);
     var emojiPInfo = document.getElementById('emoji-pinfo-' + editorId);
     function _renderEPg() {
       var start = _ePg * _ePgSz;
@@ -1764,8 +1758,8 @@ function _initEditor(editorId, opts) {
       }).join('');
       if (emojiPInfo) emojiPInfo.textContent = (_ePg + 1) + ' / ' + _eTotalPg;
       emojiGrid.querySelectorAll('.evt-editor-emoji-item').forEach(function(item) {
-        item.addEventListener('mousedown', function(e) {
-          e.preventDefault();
+        item.addEventListener('click', function(e) {
+          if (emojiGrid._dragged) return;
           restoreRange();
           document.execCommand('insertHTML', false, '<img src="'+item.dataset.src+'" class="evt-comment-emoji-img" alt="이모지">');
           emojiPicker.style.display = 'none';
@@ -1773,18 +1767,29 @@ function _initEditor(editorId, opts) {
         });
       });
     }
+    /* 드래그/스와이프로 페이지 이동 */
+    var _dragStartX = 0, _dragging = false;
+    function _onDragStart(x) { _dragStartX = x; _dragging = true; emojiGrid._dragged = false; }
+    function _onDragEnd(x) {
+      if (!_dragging) return;
+      _dragging = false;
+      var dx = x - _dragStartX;
+      if (Math.abs(dx) < 30) return;
+      emojiGrid._dragged = true;
+      _ePg = dx < 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
+      _renderEPg();
+    }
+    /* 터치 이벤트 */
+    emojiGrid.addEventListener('touchstart', function(e) { _onDragStart(e.touches[0].clientX); }, { passive: true });
+    emojiGrid.addEventListener('touchend',   function(e) { _onDragEnd(e.changedTouches[0].clientX); });
+    /* 마우스 드래그 */
+    emojiGrid.addEventListener('mousedown', function(e) { _onDragStart(e.clientX); });
+    emojiGrid.addEventListener('mouseup',   function(e) { _onDragEnd(e.clientX); });
+    emojiGrid.addEventListener('mouseleave',function()  { _dragging = false; });
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
       emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
     });
-    if (emojiPrev) {
-      emojiPrev.addEventListener('mousedown', function(e) { e.preventDefault(); });
-      emojiPrev.addEventListener('click', function() { _ePg = (_ePg - 1 + _eTotalPg) % _eTotalPg; _renderEPg(); });
-    }
-    if (emojiNext) {
-      emojiNext.addEventListener('mousedown', function(e) { e.preventDefault(); });
-      emojiNext.addEventListener('click', function() { _ePg = (_ePg + 1) % _eTotalPg; _renderEPg(); });
-    }
     _renderEPg();
     document.addEventListener('click', function(e) {
       if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target))
