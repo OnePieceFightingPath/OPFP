@@ -939,19 +939,15 @@ function _applyDlFilter() {
       sorted.map(e => {
         const active  = _dlIsActive(e);
         const dateStr = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
-        const thumb   = e.thumbnailUrl
-          ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title||'')}" loading="lazy">`
-          : `<div class="dl-evt-list-thumb-placeholder">이미지 없음</div>`;
-        const dateBadge = dateStr ? `<span class="event-card-period" style="font-size:10px">${escHtml(dateStr)}</span>` : '';
         return `
-          <div class="dl-evt-list-row event-card-clickable${active?'':' event-card-ended'}" data-evtid="${escHtml(e._docId)}">
-            <div class="dl-evt-list-thumb">
-              ${thumb}
-              ${dateBadge}
-              ${!active ? `<div class="event-card-ended-overlay"><span>종료</span></div>` : ''}
+          <div class="dl-evt-list-row event-card-clickable${active?'':' event-card-ended'}" data-evtid="${escHtml(e._docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+            <div style="display:flex;align-items:center;gap:6px;min-width:0">
+              ${e.tag ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12);color:var(--accent)">${escHtml(e.tag)}</span>` : ''}
+              ${!active ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(180,180,180,0.15);color:var(--text-dim)">종료</span>` : ''}
+              <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(e.title||'제목 없음')}</span>
             </div>
-            <div class="dl-evt-list-body">
-              <div class="event-card-title" style="font-size:13px">${escHtml(e.title||'제목 없음')}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+              ${dateStr ? `<span style="font-size:11px;color:var(--text-dim)">${escHtml(dateStr)}</span>` : ''}
               ${metaHtml(e)}
             </div>
           </div>`;
