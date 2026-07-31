@@ -989,6 +989,8 @@ function _applyDlFilter() {
       _renderEventDetail(el.dataset.evtid);
     });
   });
+
+  _loadDlEventCounts();
 }
 
 async function _loadDlEventCounts() {
