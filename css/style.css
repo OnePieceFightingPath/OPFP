@@ -5267,6 +5267,24 @@ html.is-pwa .site-footer {
   align-items: center;
   gap: 8px;
 }
+/* 본문 에디터 (글쓰기 전용) */
+.evt-body-editor .evt-editor-area {
+  min-height: 360px;
+  max-height: none;
+  font-size: 15px;
+  line-height: 1.75;
+  padding: 16px 18px;
+}
+.evt-body-editor .evt-editor-area:empty::before {
+  font-size: 15px;
+}
+.evt-body-editor .evt-editor-footer .evt-editor-actions {
+  display: none;
+}
+.evt-body-editor {
+  margin-bottom: 0;
+}
+
 /* 댓글 텍스트 — HTML 렌더링 */
 .evt-comment-text img  { max-width: 100%; border-radius: 6px; }
 .evt-comment-text a    { color: var(--accent, #4d9fff); text-decoration: underline; }

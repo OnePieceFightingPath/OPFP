@@ -655,7 +655,7 @@ function _renderBoardWrite() {
       </div>
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
-        ${_buildEditorHtml('board-write', {})}
+        ${_buildEditorHtml('board-write', { bodyMode: true })}
       </div>
 
       <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -1818,7 +1818,7 @@ function _buildEditorHtml(editorId, opts) {
   var emojiItems = CUSTOM_EMOJIS.slice(0,9).map(function(src,i){ return '<span class="evt-editor-emoji-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(i+1)+'"></span>'; }).join('');
   var totalEmojiPg = Math.ceil(CUSTOM_EMOJIS.length / 9);
   return [
-    '<div class="evt-editor-wrap" data-editor-id="' + editorId + '">',
+    '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
     '  <div class="evt-editor-toolbar">',
     '    <button type="button" class="evt-editor-tool" data-cmd="bold"          title="굵게"><b>B</b></button>',
     '    <button type="button" class="evt-editor-tool" data-cmd="italic"        title="기울임"><i>i</i></button>',
@@ -1866,10 +1866,12 @@ function _buildEditorHtml(editorId, opts) {
     '    <button type="button" class="evt-editor-tool evt-editor-video-btn" data-editor-id="' + editorId + '" title="동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></button>',
     '    <span class="evt-editor-toolbar-spacer"></span>',
     '  </div>',
-    '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="댓글을 입력하세요"></div>',
+    '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 입력하세요') + '"></div>',
     '  <div class="evt-editor-footer">',
     '    <span class="evt-editor-charcount" id="editor-count-' + editorId + '">0 / 1,000</span>',
-    '    <div class="evt-editor-actions">' + cancelHtml + '<button type="button" class="evt-comment-submit-btn" id="editor-submit-' + editorId + '">' + (opts.submitLabel || '등록') + '</button></div>',
+    opts.bodyMode
+      ? '    <div class="evt-editor-actions"></div>'
+      : '    <div class="evt-editor-actions">' + cancelHtml + '<button type="button" class="evt-comment-submit-btn" id="editor-submit-' + editorId + '">' + (opts.submitLabel || '등록') + '</button></div>',
     '  </div>',
     '</div>'
   ].join('\n');
