@@ -225,7 +225,7 @@ function _renderPatchDetail(id) {
   _renderPatchRecentPage(allNotes, id, 0);
 
   window.scrollTo({ top: 0 });
-  _trackPatchView(Number(id));
+  _trackPatchView(Number(id)).catch(err => console.error('패치 조회수 오류:', err));
 }
 
 /* ── 패치노트 하단 목록 페이지네이션 ── */
@@ -1038,7 +1038,7 @@ async function _renderEventDetail(id) {
     const evt = { id: snap.id, ...snap.data() };
     document.title = `${evt.title || '이벤트'} — Fighting Path Patch`;
     _buildEventHtml(evt);
-    _trackEventView(id);
+    _trackEventView(id).catch(err => console.error('이벤트 조회수 오류:', err));
     loadDetailComments(id);
   } catch (e) {
     console.error('이벤트 로드 실패:', e);

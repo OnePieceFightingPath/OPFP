@@ -19,8 +19,9 @@ function _isActive(e) {
   return end >= new Date();
 }
 function _evSanitizeHtml(html) {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
+  // DOMParser로 비활성 문서에서 파싱 → 파싱 시점에 스크립트/이벤트 핸들러 실행 방지
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const tmp = doc.body;
   tmp.querySelectorAll('script,iframe,object,embed,form,meta,link').forEach(el => el.remove());
   tmp.querySelectorAll('*').forEach(el => {
     [

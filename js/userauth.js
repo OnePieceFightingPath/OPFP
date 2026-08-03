@@ -122,7 +122,8 @@ auth.onAuthStateChanged(user => {
       firstSnapshot = false;
       _refreshCharTipsIfOpen();
     },
-    () => {
+    err => {
+      console.error('Firestore 프로필 onSnapshot 오류:', err);
       currentUserProfile = null;
       _updateGnbAuth(null, null);
       window.refreshSettingMyInfo?.(user);

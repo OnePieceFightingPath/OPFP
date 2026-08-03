@@ -144,14 +144,14 @@ function _fmtPvpDate(d) {
 }
 
 // 최신 패치 날짜에서 한 달 전 날짜를 계산합니다.
+// Date.setMonth()를 사용해 연초/연말 경계를 자동 처리합니다.
 function _pvpOneMonthAgo(dateKey) {
-  const [year, month, day] = dateKey.split('-').map(Number);
-  const targetMonth = month - 2;
-  const targetYear = year + Math.floor(targetMonth / 12);
-  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
-  const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate();
-  const clampedDay = Math.min(day, lastDay);
-  return `${targetYear}-${String(normalizedMonth + 1).padStart(2, '0')}-${String(clampedDay).padStart(2, '0')}`;
+  const d = new Date(dateKey + 'T00:00:00');
+  d.setMonth(d.getMonth() - 1);
+  const y  = d.getFullYear();
+  const m  = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 
 // 타이틀 배지 상태 업데이트
