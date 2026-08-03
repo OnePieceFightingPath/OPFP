@@ -251,8 +251,19 @@ function applyAppIcon(iconKey) {
   localStorage.setItem('appIcon', iconKey || 'dark');
 
   // SW에 아이콘 변경 메시지 전송 (이미 설치된 PWA에도 적용)
-  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({ type: 'SET_ICON', iconKey: iconKey || 'dark' });
+  if (navigator.serviceWorker) {
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SET_ICON', iconKey: iconKey || 'dark' });
+    } else {
+      // 첫 로드 또는 SW 업데이트 직후 controller가 null인 경우
+      // 새 controller가 활성화되면 메시지 재전송
+      navigator.serviceWorker.addEventListener('controllerchange', function onCtrlChange() {
+        navigator.serviceWorker.removeEventListener('controllerchange', onCtrlChange);
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'SET_ICON', iconKey: iconKey || 'dark' });
+        }
+      });
+    }
   }
 
   // Cache API에서 logo.png를 선택된 아이콘으로 직접 교체

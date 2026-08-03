@@ -99,10 +99,18 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // POST/PUT 등 non-GET 요청은 캐시 불가 → 그냥 네트워크로 통과
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  const isNavigate = event.request.mode === 'navigate';
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        // 정상 응답만 캐시에 저장 (404, 500 등 오류 응답은 캐시 오염 방지)
+        // 정상 GET 응답만 캐시에 저장 (404, 500 등 오류 응답은 캐시 오염 방지)
         if (response && response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
@@ -112,13 +120,19 @@ self.addEventListener('fetch', event => {
         return caches.match(event.request).then(cached => cached || response);
       })
       .catch(() =>
-        // 오프라인 또는 네트워크 오류 → 캐시 폴백, 없으면 기본 오프라인 응답
+        // 오프라인 또는 네트워크 오류 → 캐시 폴백
         caches.match(event.request).then(cached => {
           if (cached) return cached;
-          return new Response(
-            '<html><body style="font-family:sans-serif;text-align:center;padding:60px"><h2>오프라인 상태입니다</h2><p>인터넷 연결을 확인하고 다시 시도해주세요.</p></body></html>',
-            { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-          );
+          // 페이지 이동 요청(navigate)에만 오프라인 안내 HTML 반환
+          // 이미지·JS·CSS 등에 HTML을 반환하면 파싱 오류 유발
+          if (isNavigate) {
+            return new Response(
+              '<html><body style="font-family:sans-serif;text-align:center;padding:60px"><h2>오프라인 상태입니다</h2><p>인터넷 연결을 확인하고 다시 시도해주세요.</p></body></html>',
+              { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+            );
+          }
+          // 그 외 리소스는 빈 응답 반환 (이미지/스크립트에 HTML 주입 방지)
+          return new Response('', { status: 503, statusText: 'Service Unavailable' });
         })
       )
   );

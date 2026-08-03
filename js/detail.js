@@ -1314,25 +1314,24 @@ function _renderDetailComments(comments) {
     return _buildCommentHtml(c, false, replies) + childReplies.map(r => _buildCommentHtml(r, true, null)).join('');
   }).join('');
 
-  list.querySelectorAll('.evt-comment-delete-btn[data-cid]').forEach(btn => {
-    btn.addEventListener('click', () => _deleteDetailComment(btn.dataset.cid));
-  });
-  list.querySelectorAll('.evt-comment-edit-btn[data-cid]').forEach(btn => {
-    btn.addEventListener('click', () => _openCommentEdit(btn.dataset.cid));
-  });
+  // 이벤트 위임: list 자체에 한 번만 리스너를 등록하여
+  // onSnapshot 재호출 시 리스너 중복 등록 방지
+  if (!list._commentDelegated) {
+    list._commentDelegated = true;
+    list.addEventListener('click', e => {
+      const del   = e.target.closest('.evt-comment-delete-btn[data-cid]');
+      const edit  = e.target.closest('.evt-comment-edit-btn[data-cid]');
+      const react = e.target.closest('.evt-comment-react-btn[data-action]');
+      const reply = e.target.closest('.evt-comment-reply-btn[data-cid]');
+      const menu  = e.target.closest('.evt-comment-menu-btn[data-cid]');
 
-  list.querySelectorAll('.evt-comment-react-btn[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => _toggleCommentReaction(btn.dataset.cid, btn.dataset.action));
-  });
-  list.querySelectorAll('.evt-comment-reply-btn[data-cid]').forEach(btn => {
-    btn.addEventListener('click', () => _toggleReplyArea(btn.dataset.cid));
-  });
-  // 대댓글 에디터 초기화는 _toggleReplyArea 에서 처음 열 때 수행
-
-  /* ⋮ 세로 메뉴 토글 */
-  list.querySelectorAll('.evt-comment-menu-btn[data-cid]').forEach(btn => {
-    btn.addEventListener('click', e => { e.stopPropagation(); _toggleCommentMenu(btn.dataset.cid); });
-  });
+      if (del)   { _deleteDetailComment(del.dataset.cid); return; }
+      if (edit)  { _openCommentEdit(edit.dataset.cid); return; }
+      if (react) { _toggleCommentReaction(react.dataset.cid, react.dataset.action); return; }
+      if (reply) { _toggleReplyArea(reply.dataset.cid); return; }
+      if (menu)  { e.stopPropagation(); _toggleCommentMenu(menu.dataset.cid); return; }
+    });
+  }
 }
 
 /* ── 댓글 작성 ── */
