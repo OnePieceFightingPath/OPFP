@@ -5555,8 +5555,8 @@ html.is-pwa .site-footer {
 /* 좌상단 알림 벨 */
 .comm-profile-card-bell {
   position: absolute;
-  top: -4px;
-  right: -4px;
+  top: 12px;
+  left: 12px;
   background: none;
   border: none;
   cursor: pointer;
@@ -5586,7 +5586,6 @@ html.is-pwa .site-footer {
 }
 
 .comm-user-left {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5963,6 +5962,9 @@ html.is-pwa .site-footer {
   .comm-profile-avatar-initial {
     font-size: 20px;
   }
+
+  /* 알림 벨: 모바일에서 숨김 */
+  .comm-profile-card-bell { display: none; }
 
   /* 글쓰기 버튼 / 검색 */
   .comm-write-btn { display: flex; width: auto; padding: 7px 10px; font-size: 12px; margin-top: 0; flex-shrink: 0; border-radius: 6px; }
