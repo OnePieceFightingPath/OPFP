@@ -1,9 +1,10 @@
-const CACHE_NAME = 'opfp-v3';
+const CACHE_NAME = 'opfp-v4';
 const PREFS_CACHE = 'opfp-prefs';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './detail.html',
+  './setting.html',
   './css/style.css',
   './js/app.js',
   './js/character.js',
