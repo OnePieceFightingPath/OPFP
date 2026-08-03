@@ -281,7 +281,12 @@ auth.onAuthStateChanged(async user => {
   currentUser = user;
   startSessionExpiryCheck();
   _hideLoginOverlay(user);
-  await loadAllData();
+  try {
+    await loadAllData();
+  } catch (err) {
+    console.error('관리자 데이터 로드 실패:', err);
+    showToast('데이터를 불러오지 못했습니다. 페이지를 새로고침해 주세요.', 'error');
+  }
 });
 
 function _showLoginOverlay() {

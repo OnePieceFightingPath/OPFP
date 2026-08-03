@@ -27,7 +27,8 @@ function _dFmtPatchDate(str) {
 function _dSanitizeHtml(html) {
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
-  tmp.querySelectorAll('script,iframe,object,embed,form,meta,link').forEach(el => el.remove());
+  // style·base 태그도 XSS 벡터 → 제거
+  tmp.querySelectorAll('script,iframe,object,embed,form,meta,link,style,base').forEach(el => el.remove());
   tmp.querySelectorAll('*').forEach(el => {
     [
         'onclick','ondblclick','onerror','onload','onunload','onbeforeunload',
@@ -39,6 +40,8 @@ function _dSanitizeHtml(html) {
         'onpointerdown','onpointerup','onpointermove','onpointercancel',
         'ontouchstart','ontouchend','ontouchmove'
       ].forEach(a => el.removeAttribute(a));
+    // style 속성 — CSS expression/url() 등 CSS 기반 공격 방지
+    el.removeAttribute('style');
     const href = el.getAttribute('href') || '';
     if (href && !/^https?:\/\//i.test(href) && !href.startsWith('/') && !href.startsWith('#') && !href.startsWith('mailto:')) {
       el.removeAttribute('href');
@@ -1592,12 +1595,15 @@ function _sanitizeHtml(html) {
   if (!html) return '';
   const tmp = document.createElement('div');
   tmp.innerHTML = html;
-  ['script','iframe','object','embed','form','input'].forEach(function(tag) {
+  // meta·link·base·style 태그도 XSS/CSS injection 벡터 → 제거
+  ['script','iframe','object','embed','form','input','meta','link','base','style'].forEach(function(tag) {
     tmp.querySelectorAll(tag).forEach(function(el) { el.remove(); });
   });
   tmp.querySelectorAll('*').forEach(function(el) {
     Array.from(el.attributes).forEach(function(attr) {
       if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+      // style 속성 제거 — CSS expression/url() 기반 공격 방지
+      if (attr.name === 'style') el.removeAttribute(attr.name);
       if ((attr.name === 'href' || attr.name === 'src') && /^javascript:/i.test(attr.value))
         el.removeAttribute(attr.name);
     });

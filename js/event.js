@@ -22,7 +22,8 @@ function _evSanitizeHtml(html) {
   // DOMParser로 비활성 문서에서 파싱 → 파싱 시점에 스크립트/이벤트 핸들러 실행 방지
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const tmp = doc.body;
-  tmp.querySelectorAll('script,iframe,object,embed,form,meta,link').forEach(el => el.remove());
+  // style·base 태그도 XSS 벡터 → 제거
+  tmp.querySelectorAll('script,iframe,object,embed,form,meta,link,style,base').forEach(el => el.remove());
   tmp.querySelectorAll('*').forEach(el => {
     [
         'onclick','ondblclick','onerror','onload','onunload','onbeforeunload',
@@ -34,6 +35,8 @@ function _evSanitizeHtml(html) {
         'onpointerdown','onpointerup','onpointermove','onpointercancel',
         'ontouchstart','ontouchend','ontouchmove'
       ].forEach(a => el.removeAttribute(a));
+    // style 속성 — CSS expression/url() 등 CSS 기반 공격 방지
+    el.removeAttribute('style');
     const href = el.getAttribute('href') || '';
     if (href && !/^https?:\/\//i.test(href) && !href.startsWith('/') && !href.startsWith('#') && !href.startsWith('mailto:')) el.removeAttribute('href');
     if (el.tagName === 'A') {
@@ -164,6 +167,9 @@ async function renderEventBanner() {
   const track    = document.getElementById('eventBannerTrack');
   const dots     = document.getElementById('eventBannerDots');
   if (!carousel || !track || !dots) return;
+
+  // 슬라이드 수 관계없이 항상 기존 타이머 정리 (단일 슬라이드 후 재호출 시 타이머 누적 방지)
+  if (_evtBannerTimer) { clearInterval(_evtBannerTimer); _evtBannerTimer = null; }
 
   try {
     const snap = await db.collection('eventBanners').orderBy('order', 'asc').get();

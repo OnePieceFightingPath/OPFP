@@ -5,6 +5,7 @@ const STATIC_ASSETS = [
   './index.html',
   './detail.html',
   './setting.html',
+  './manifest.json',
   './css/style.css',
   './js/app.js',
   './js/character.js',
@@ -38,9 +39,17 @@ async function setIconPref(key) {
 }
 
 // ── 설치 ──
+// cache.addAll은 하나라도 실패하면 전체 설치가 취소되므로
+// Promise.allSettled로 개별 캐싱 → 일부 누락돼도 설치 완료 보장
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(
+        STATIC_ASSETS.map(url => cache.add(url).catch(err => {
+          console.warn('[SW] 캐시 실패:', url, err);
+        }))
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -85,17 +94,20 @@ self.addEventListener('fetch', event => {
   if (url.pathname.endsWith('/img/logo.png') || url.pathname.endsWith('/logo.png')) {
     event.respondWith((async () => {
       const pref = await getIconPref();
-      const iconPath = pref === 'light' ? './img/logo-light.png' : './img/logo-dark.png';
+      const iconRelPath = pref === 'light' ? './img/logo-light.png' : './img/logo-dark.png';
+      // self.registration.scope 기준으로 절대 URL 생성 (서브 경로 배포 대응)
+      const iconUrl = new URL(iconRelPath, self.registration.scope).href;
+      const fallbackUrl = new URL('./img/logo-dark.png', self.registration.scope).href;
       try {
-        const res = await fetch(iconPath);
+        const res = await fetch(iconUrl);
         if (res && res.ok) {
           const cache = await caches.open(CACHE_NAME);
           cache.put(event.request, res.clone());
           return res;
         }
       } catch(e) {}
-      const cached = await caches.match(iconPath);
-      return cached || caches.match('./img/logo-dark.png');
+      const cached = await caches.match(iconUrl);
+      return cached || caches.match(fallbackUrl);
     })());
     return;
   }
