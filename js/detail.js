@@ -625,6 +625,182 @@ function _applyDlBoardFilter(main) {
   });
 }
 
+/* ── 게시판 글쓰기 ── */
+function _renderBoardWrite() {
+  const user    = (typeof currentUser !== 'undefined') ? currentUser : null;
+  const profile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
+  if (!user || !profile) {
+    document.getElementById('loginModalOverlay')?.classList.add('open');
+    return;
+  }
+
+  const main = document.getElementById('detailMain');
+  if (!main) return;
+  document.title = '글쓰기 — Fighting Path Patch';
+  history.pushState({}, '', 'detail.html?type=board&mode=write');
+  _setNavActive('board');
+
+  main.innerHTML = `
+    <div style="padding-bottom:80px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+        <button id="boardWriteBack" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <span style="font-size:15px;font-weight:700;color:var(--text)">글쓰기</span>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
+        <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
+          style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none">
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
+        ${_buildEditorHtml('board-write', {})}
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="boardWriteCancelBtn" style="padding:10px 20px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:14px;cursor:pointer">취소</button>
+        <button id="boardWriteSubmitBtn" style="padding:10px 24px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer">등록</button>
+      </div>
+    </div>`;
+
+  _initEditor('board-write', {});
+
+  document.getElementById('boardWriteBack')?.addEventListener('click', _renderBoardList);
+  document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
+  document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
+    const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
+    if (!title) { alert('제목을 입력해주세요.'); document.getElementById('boardWriteTitle')?.focus(); return; }
+    if (!_hasEditorContent('board-write')) { alert('내용을 입력해주세요.'); return; }
+
+    const html = _getEditorContent('board-write');
+    const submitBtn = document.getElementById('boardWriteSubmitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+      const ref = await db.collection('boards').add({
+        title      : title,
+        text       : html,
+        uid        : user.uid,
+        author     : profile.nickname || '익명',
+        avatar     : profile.avatar   || '',
+        likedBy    : [],
+        likeCount  : 0,
+        commentCount: 0,
+        createdAt  : firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      _renderBoardDetail(ref.id);
+    } catch (e) {
+      console.error('게시글 작성 실패:', e);
+      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  window.scrollTo({ top: 0 });
+}
+
+/* ── 게시판 글 상세 ── */
+async function _renderBoardDetail(boardId) {
+  const main = document.getElementById('detailMain');
+  if (!main) return;
+  _setNavActive('board');
+  history.pushState({}, '', 'detail.html?type=board&id=' + boardId);
+
+  main.innerHTML = `
+    <div style="padding:60px 16px;text-align:center">
+      <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
+      <p style="color:var(--text-muted)">불러오는 중...</p>
+    </div>`;
+
+  try {
+    const doc = await db.collection('boards').doc(boardId).get();
+    if (!doc.exists) {
+      main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글을 찾을 수 없습니다.</div>`;
+      return;
+    }
+    const p    = { docId: doc.id, ...doc.data() };
+    const user = (typeof currentUser !== 'undefined') ? currentUser : null;
+    const liked = user && Array.isArray(p.likedBy) && p.likedBy.includes(user.uid);
+    const isOwner = user && p.uid === user.uid;
+
+    const raw  = p.createdAt?.toDate ? p.createdAt.toDate() : (p.createdAt ? new Date(p.createdAt) : null);
+    const dateStr = raw ? raw.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+
+    document.title = (p.title || '게시글') + ' — Fighting Path Patch';
+
+    main.innerHTML = `
+      <div style="padding-bottom:80px">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+          <button id="boardDetailBack" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span style="font-size:15px;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(p.title || '제목 없음')}</span>
+          ${isOwner ? `<button id="boardDetailDelete" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:4px 8px;border-radius:var(--radius);border:1px solid var(--border)">삭제</button>` : ''}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            ${p.avatar ? `<img src="${escHtml(p.avatar)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">` : `<div style="width:36px;height:36px;border-radius:50%;background:var(--bg-hover);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:16px">👤</div>`}
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--accent)">${escHtml(p.author || '익명')}</div>
+              ${dateStr ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">${dateStr}</div>` : ''}
+            </div>
+          </div>
+          <div class="board-post-content" style="font-size:14px;color:var(--text);line-height:1.7;word-break:break-word">${p.text || ''}</div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0">
+          <button id="boardLikeBtn" style="display:flex;align-items:center;gap:6px;padding:8px 20px;border-radius:20px;border:1px solid ${liked ? 'var(--accent)' : 'var(--border)'};background:${liked ? 'rgba(77,159,255,0.12)' : 'var(--bg-card)'};color:${liked ? 'var(--accent)' : 'var(--text-muted)'};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="${liked ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg>
+            추천 <span id="boardLikeCount">${p.likeCount || 0}</span>
+          </button>
+        </div>
+      </div>`;
+
+    document.getElementById('boardDetailBack')?.addEventListener('click', _renderBoardList);
+
+    document.getElementById('boardLikeBtn')?.addEventListener('click', async () => {
+      const u = (typeof currentUser !== 'undefined') ? currentUser : null;
+      if (!u) { document.getElementById('loginModalOverlay')?.classList.add('open'); return; }
+      const likeBtn = document.getElementById('boardLikeBtn');
+      if (likeBtn) likeBtn.disabled = true;
+      try {
+        const snap2  = await db.collection('boards').doc(boardId).get();
+        const data2  = snap2.data() || {};
+        const arr    = Array.isArray(data2.likedBy) ? data2.likedBy : [];
+        const isNowLiked = arr.includes(u.uid);
+        const newArr = isNowLiked ? arr.filter(id => id !== u.uid) : [...arr, u.uid];
+        await db.collection('boards').doc(boardId).update({ likedBy: newArr, likeCount: newArr.length });
+        const countEl = document.getElementById('boardLikeCount');
+        if (countEl) countEl.textContent = newArr.length;
+        if (likeBtn) {
+          const nowLiked = !isNowLiked;
+          likeBtn.style.borderColor  = nowLiked ? 'var(--accent)' : 'var(--border)';
+          likeBtn.style.background   = nowLiked ? 'rgba(77,159,255,0.12)' : 'var(--bg-card)';
+          likeBtn.style.color        = nowLiked ? 'var(--accent)' : 'var(--text-muted)';
+          likeBtn.querySelector('svg').setAttribute('fill', nowLiked ? 'currentColor' : 'none');
+        }
+      } catch (e) { console.error('추천 실패:', e); }
+      finally { if (likeBtn) likeBtn.disabled = false; }
+    });
+
+    document.getElementById('boardDetailDelete')?.addEventListener('click', async () => {
+      if (!confirm('게시글을 삭제하시겠습니까?')) return;
+      try {
+        await db.collection('boards').doc(boardId).delete();
+        _renderBoardList();
+      } catch (e) { console.error('삭제 실패:', e); alert('삭제에 실패했습니다.'); }
+    });
+
+  } catch (e) {
+    console.error('게시글 로드 실패:', e);
+    main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글을 불러오지 못했습니다.</div>`;
+  }
+
+  window.scrollTo({ top: 0 });
+}
+
 /* ── 홈 렌더링 ── */
 function _renderHome() {
   const main = document.getElementById('detailMain');
@@ -2027,7 +2203,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       _renderEventDetail(id);
     }
   } else if (type === 'board') {
-    _renderBoardList();
+    const mode = params.get('mode');
+    if (mode === 'write') {
+      _renderBoardWrite();
+    } else if (id) {
+      _renderBoardDetail(id);
+    } else {
+      _renderBoardList();
+    }
   } else {
     /* type 없음 = 홈 */
     _renderHome();
