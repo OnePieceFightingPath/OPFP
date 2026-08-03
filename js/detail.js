@@ -1349,7 +1349,7 @@ async function submitDetailComment() {
   }
 
   const html = _getEditorContent('main');
-  if (!_getEditorText('main')) return;
+  if (!_hasEditorContent('main')) return;
   const btn = document.getElementById('editor-submit-main');
   if (btn) btn.disabled = true;
 
@@ -1462,8 +1462,7 @@ async function _saveCommentEdit(cid) {
   if (!user) return;
   const editorId = 'edit-' + cid;
   const html = _getEditorContent(editorId);
-  const text = _getEditorText(editorId);
-  if (!text.trim()) return;
+  if (!_hasEditorContent(editorId)) return;
   const saveBtn = document.getElementById('editor-submit-' + editorId);
   if (saveBtn) saveBtn.disabled = true;
   try {
@@ -1542,8 +1541,7 @@ async function _submitReply(parentId) {
   const profile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
   if (!user || !profile) { document.getElementById('loginModalOverlay')?.classList.add('open'); return; }
   const html = _getEditorContent('reply-' + parentId);
-  const text  = _getEditorText('reply-' + parentId);
-  if (!text) return;
+  if (!_hasEditorContent('reply-' + parentId)) return;
   const btn = document.querySelector('.evt-comment-reply-submit[data-parent="' + parentId + '"]');
   if (btn) btn.disabled = true;
   try {
@@ -1619,6 +1617,13 @@ function _getEditorContent(editorId) {
 function _getEditorText(editorId) {
   var el = document.getElementById('editor-' + editorId);
   return el ? (el.innerText || el.textContent || '').trim() : '';
+}
+
+function _hasEditorContent(editorId) {
+  var el = document.getElementById('editor-' + editorId);
+  if (!el) return false;
+  if ((el.innerText || el.textContent || '').trim()) return true;
+  return el.querySelector('img') !== null;
 }
 
 function _clearEditor(editorId) {
