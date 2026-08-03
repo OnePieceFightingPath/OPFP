@@ -5963,6 +5963,13 @@ html.is-pwa .site-footer {
     font-size: 20px;
   }
 
+  /* 알림 벨: 모바일에서 오른쪽 상단으로 이동 (아바타 겹침 방지) */
+  .comm-profile-card-bell {
+    left: auto;
+    right: 12px;
+    top: 12px;
+  }
+
   /* 글쓰기 버튼 / 검색 */
   .comm-write-btn { display: flex; width: auto; padding: 7px 10px; font-size: 12px; margin-top: 0; flex-shrink: 0; border-radius: 6px; }
   .comm-search-wrap { display: none; }
