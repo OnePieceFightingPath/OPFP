@@ -128,9 +128,14 @@ async function _fetchFromFirestore() {
     if (data.patchDate)    return data.patchDate.slice(0, 10);
     if (data.displayStart) return data.displayStart.slice(0, 10);
     const ts = data.updatedAt;
-    return ts
-      ? (ts.toDate ? ts.toDate().toISOString().split('T')[0] : new Date(ts).toISOString().split('T')[0])
-      : new Date().toISOString().split('T')[0];
+    if (!ts) return new Date().toISOString().split('T')[0];
+    try {
+      const d = ts.toDate ? ts.toDate() : new Date(ts.seconds ? ts.seconds * 1000 : ts);
+      if (isNaN(d.getTime())) return new Date().toISOString().split('T')[0];
+      return d.toISOString().split('T')[0];
+    } catch {
+      return new Date().toISOString().split('T')[0];
+    }
   }
 
   pvpSnap.docs.forEach(doc => {

@@ -1035,7 +1035,9 @@ async function _renderEventDetail(id) {
   try {
     const snap = await db.collection('events').doc(id).get();
     if (!snap.exists) throw new Error('not found');
-    const evt = { id: snap.id, ...snap.data() };
+    const snapData = snap.data();
+    if (!snapData) throw new Error('snap.data() null');
+    const evt = { id: snap.id, ...snapData };
     document.title = `${evt.title || '이벤트'} — Fighting Path Patch`;
     _buildEventHtml(evt);
     _trackEventView(id).catch(err => console.error('이벤트 조회수 오류:', err));
