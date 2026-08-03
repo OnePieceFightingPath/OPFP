@@ -243,7 +243,17 @@ async function initData() {
 
   _inflightPromise = _fetchFromFirestore()
     .then(fresh => { _applyData(fresh); _saveCache(fresh); })
-    .catch(err => { console.error('Firestore load error:', err); CHAR_DATA_LOADED = true; })
+    .catch(err => {
+      console.error('Firestore load error:', err);
+      CHAR_DATA_LOADED = true;
+      // 사용자에게 데이터 로드 실패 알림
+      if (typeof showToast === 'function') {
+        showToast('데이터를 불러오지 못했습니다. 새로고침 해주세요.', 'error');
+      } else {
+        // showToast 미로드 시 커스텀 이벤트로 위임
+        window.dispatchEvent(new CustomEvent('dataLoadError', { detail: err }));
+      }
+    })
     .finally(() => { _inflightPromise = null; });
 
   return _inflightPromise;

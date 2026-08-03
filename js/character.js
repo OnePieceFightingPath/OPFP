@@ -313,7 +313,12 @@ async function switchCharTab(tab, charId) {
         const snap2 = await db.collection('userTips').where('charId', '==', cid).get();
         userTipsList = snap2.docs.map(d => ({ _id: d.id, ...d.data() }))
           .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      } catch (_2) { /* 네트워크 오류 시 빈 배열 유지 */ }
+      } catch (err2) {
+        console.error('꿀팁 로드 실패 (재시도 포함):', err2);
+        // 탭 컨테이너에 오류 메시지 표시
+        const tipsWrap = document.getElementById('charTipsWrap');
+        if (tipsWrap) tipsWrap.innerHTML = '<p style="color:var(--nerf);padding:16px 0;text-align:center">꿀팁을 불러오지 못했습니다.<br>네트워크 상태를 확인 후 다시 시도해주세요.</p>';
+      }
     }
 
     const uid = typeof currentUser !== 'undefined' ? currentUser?.uid : null;

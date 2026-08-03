@@ -102,12 +102,24 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        if (response && response.status === 200) {
+        // 정상 응답만 캐시에 저장 (404, 500 등 오류 응답은 캐시 오염 방지)
+        if (response && response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
         }
-        return response;
+        // 서버 오류 응답 → 캐시에 유효한 버전이 있으면 그것을 우선 반환
+        return caches.match(event.request).then(cached => cached || response);
       })
-      .catch(() => caches.match(event.request))
+      .catch(() =>
+        // 오프라인 또는 네트워크 오류 → 캐시 폴백, 없으면 기본 오프라인 응답
+        caches.match(event.request).then(cached => {
+          if (cached) return cached;
+          return new Response(
+            '<html><body style="font-family:sans-serif;text-align:center;padding:60px"><h2>오프라인 상태입니다</h2><p>인터넷 연결을 확인하고 다시 시도해주세요.</p></body></html>',
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          );
+        })
+      )
   );
 });
