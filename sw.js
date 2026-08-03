@@ -71,7 +71,11 @@ self.addEventListener('activate', event => {
 // ── 메인 스레드 메시지: 아이콘 변경 ──
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SET_ICON') {
-    setIconPref(event.data.iconKey);
+    // iconKey 유효성 검증 — 'dark'/'light' 외 임의 값 저장 방지
+    const iconKey = event.data.iconKey;
+    if (iconKey !== 'dark' && iconKey !== 'light') return;
+    // event.waitUntil 없이 호출하면 비동기 쓰기가 SW 종료로 중단될 수 있음 → waitUntil로 완료 보장
+    event.waitUntil(setIconPref(iconKey));
   }
 });
 
@@ -102,7 +106,8 @@ self.addEventListener('fetch', event => {
         const res = await fetch(iconUrl);
         if (res && res.ok) {
           const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, res.clone());
+          // await 없으면 SW 종료 시 캐시 쓰기 미완료 → await로 보장
+          await cache.put(event.request, res.clone());
           return res;
         }
       } catch(e) {}
@@ -126,7 +131,8 @@ self.addEventListener('fetch', event => {
         // 정상 GET 응답만 캐시에 저장 (404, 500 등 오류 응답은 캐시 오염 방지)
         if (response && response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          // event.waitUntil로 캐시 쓰기 완료를 SW에 알림 (fire-and-forget 방지)
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)));
           return response;
         }
         // 서버 오류 응답 → 캐시에 유효한 버전이 있으면 그것을 우선 반환

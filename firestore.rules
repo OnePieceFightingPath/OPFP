@@ -24,6 +24,7 @@ service cloud.firestore {
     // - canManageContent == false 이면 거부
     // - sectionPerms[sectionKey] 가 있으면 operation별로 검증
     function canWriteSection(sectionKey) {
+      // email 클레임 미존재 시(익명 인증 등) 즉시 거부
       let email = request.auth.token.email;
       let permRef = /databases/$(database)/documents/adminPermissions/$(email);
       let hasPerm = exists(permRef);
@@ -41,7 +42,7 @@ service cloud.firestore {
         )) ||
         (request.method == 'delete' && secPerm.get('delete', true) == true)
       );
-      return isSuperAdmin() || (isAdmin() && canManage && opOk);
+      return email != null && (isSuperAdmin() || (isAdmin() && canManage && opOk));
     }
 
     match /characters/{docId} {
@@ -83,10 +84,18 @@ service cloud.firestore {
       allow read:  if request.auth != null &&
                       (request.auth.uid == uid || isAdmin());
       // 이메일/비밀번호 가입자는 인증 완료 후에만 쓰기 허용 (Google 로그인은 항상 허용)
-      allow write: if request.auth != null &&
-                      (request.auth.uid == uid || isAdmin()) &&
-                      (request.auth.token.firebase.sign_in_provider != 'password' ||
-                       request.auth.token.email_verified == true);
+      allow create: if request.auth != null &&
+                       request.auth.uid == uid &&
+                       (request.auth.token.firebase.sign_in_provider != 'password' ||
+                        request.auth.token.email_verified == true);
+      // update 시 uid·createdAt 불변 보호 — 소유자가 식별 필드를 변조하는 것을 방지
+      allow update: if request.auth != null &&
+                       (request.auth.uid == uid || isAdmin()) &&
+                       (request.auth.token.firebase.sign_in_provider != 'password' ||
+                        request.auth.token.email_verified == true) &&
+                       !request.resource.data.diff(resource.data)
+                          .affectedKeys().hasAny(['uid', 'createdAt']);
+      allow delete: if isAdmin();
     }
 
     // 탈퇴 후 24시간 재가입 제한 — 이메일 해시 문서만 단건 조회 허용
