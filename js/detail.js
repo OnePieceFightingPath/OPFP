@@ -653,7 +653,7 @@ function _applyDlBoardFilter(main) {
         <div class="dl-board-card" data-boardid="${escHtml(p.docId)}">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:8px">
             ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
-            ${p.prefix ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
+            ${p.prefix ? `<span style="flex-shrink:0;font-size:13px;font-weight:700;color:var(--text-muted)">[${escHtml(p.prefix)}]</span>` : ""}
             <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;min-width:0;line-height:1.4">${escHtml(p.title || '제목 없음')}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -672,7 +672,7 @@ function _applyDlBoardFilter(main) {
           <div data-boardid="${escHtml(p.docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
             <div style="display:flex;align-items:center;gap:6px;min-width:0">
               ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
-              ${p.prefix ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
+              ${p.prefix ? `<span style="flex-shrink:0;font-size:13px;font-weight:700;color:var(--text-muted)">[${escHtml(p.prefix)}]</span>` : ""}
               <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
@@ -845,7 +845,7 @@ async function _renderBoardDetail(boardId) {
           <div class="evt-detail-header">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
               <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;flex-wrap:wrap">
-                ${p.prefix ? `<span style="flex-shrink:0;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
+                ${p.prefix ? `<span style="flex-shrink:0;font-size:15px;font-weight:700;color:var(--text-muted)">[${escHtml(p.prefix)}]</span>` : ""}
                 <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</h1>
               </div>
               ${isOwner ? `<button id="boardDetailDelete" style="flex-shrink:0;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:var(--radius-sm)">삭제</button>` : ''}
