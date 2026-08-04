@@ -2470,8 +2470,7 @@ function _buildEditorHtml(editorId, opts) {
     '        <div class="evt-editor-emoji-page-info" id="emoji-pinfo-' + editorId + '">1 / ' + totalEmojiPg + '</div>',
     '      </div>',
     '    </span>',
-    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>',
-    '    <button type="button" class="evt-editor-tool evt-editor-video-btn" data-editor-id="' + editorId + '" title="동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg></button>',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>',
     '    <span class="evt-editor-toolbar-spacer"></span>',
     '  </div>',
     '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 입력하세요') + '"></div>',
@@ -2706,16 +2705,18 @@ function _initEditor(editorId, opts) {
     });
   }
 
-  /* 이미지 */
+  /* 이미지 / 동영상 */
   var imageBtn = wrap.querySelector('.evt-editor-image-btn');
   if (imageBtn) {
     var fileInput = document.getElementById('img-file-' + editorId);
     if (!fileInput) {
       fileInput = document.createElement('input');
-      fileInput.type = 'file'; fileInput.accept = 'image/*';
+      fileInput.type = 'file'; fileInput.accept = 'image/*,video/*';
       fileInput.id = 'img-file-' + editorId;
       fileInput.style.display = 'none';
       document.body.appendChild(fileInput);
+    } else {
+      fileInput.accept = 'image/*,video/*';
     }
     imageBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     imageBtn.addEventListener('click', function() { fileInput.click(); });
@@ -2725,29 +2726,17 @@ function _initEditor(editorId, opts) {
       var reader = new FileReader();
       reader.onload = function(ev) {
         restoreRange();
-        document.execCommand('insertImage', false, ev.target.result);
-        area.querySelectorAll('img').forEach(function(img) { img.style.maxWidth = '100%'; });
+        if (file.type.startsWith('video/')) {
+          document.execCommand('insertHTML', false,
+            '<video src="' + ev.target.result + '" controls style="max-width:100%;display:block;margin:4px 0"></video>');
+        } else {
+          document.execCommand('insertImage', false, ev.target.result);
+          area.querySelectorAll('img').forEach(function(img) { img.style.maxWidth = '100%'; });
+        }
         area.focus(); updateCount();
       };
       reader.readAsDataURL(file);
       fileInput.value = '';
-    });
-  }
-
-  /* 동영상 */
-  var videoBtn = wrap.querySelector('.evt-editor-video-btn');
-  if (videoBtn) {
-    videoBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
-    videoBtn.addEventListener('click', async function() {
-      var url = await _showUrlPrompt('동영상 URL (YouTube 등)', 'https://');
-      if (!url) return;
-      restoreRange();
-      var embedUrl = url;
-      var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
-      if (ytMatch) embedUrl = 'https://www.youtube.com/embed/' + ytMatch[1];
-      document.execCommand('insertHTML', false,
-        '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen style="max-width:100%;width:560px;height:315px;display:block;margin:4px 0"></iframe>');
-      area.focus();
     });
   }
 
