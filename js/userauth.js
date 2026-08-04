@@ -62,10 +62,16 @@ let currentUser        = null;
 let currentUserProfile = null;
 let _profileUnsub      = null;
 
+// Firebase 인증 상태가 처음 확정될 때까지 기다리는 Promise
+// (새로고침 시 onAuthStateChanged가 비동기로 오기 전에 라우팅이 실행되는 문제 방지)
+let _authReadyResolve;
+window.authReady = new Promise(resolve => { _authReadyResolve = resolve; });
+
 // =====================================================================
 //  Firebase Auth 상태 감지
 // =====================================================================
 auth.onAuthStateChanged(user => {
+  _authReadyResolve(); // 인증 상태 최초 확정 → authReady 이행
   currentUser = user;
 
   if (_profileUnsub) { _profileUnsub(); _profileUnsub = null; }

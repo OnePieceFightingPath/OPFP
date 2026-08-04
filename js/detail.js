@@ -2393,6 +2393,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     _renderHome();
   });
 
+  /* Firebase 인증 상태가 확정될 때까지 대기 (새로고침 시 로그인 팝업 오동작 방지) */
+  if (window.authReady) await window.authReady;
+
   /* URL 파라미터 */
   const params = new URLSearchParams(location.search);
   const type   = params.get('type');
