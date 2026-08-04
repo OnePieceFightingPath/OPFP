@@ -1921,9 +1921,14 @@ function _initEditor(editorId, opts) {
   var _fmtCmds = ['bold','italic','underline','strikeThrough'];
   var _fmtBtns = {};
   _fmtCmds.forEach(function(cmd) { _fmtBtns[cmd] = wrap.querySelector('.evt-editor-tool[data-cmd="' + cmd + '"]'); });
+  function _isSelectionInArea() {
+    var sel = window.getSelection();
+    return sel && sel.rangeCount > 0 && area.contains(sel.getRangeAt(0).commonAncestorContainer);
+  }
   function _updateFmtActive() {
+    var inArea = _isSelectionInArea();
     _fmtCmds.forEach(function(cmd) {
-      if (_fmtBtns[cmd]) _fmtBtns[cmd].classList.toggle('active', document.queryCommandState(cmd));
+      if (_fmtBtns[cmd]) _fmtBtns[cmd].classList.toggle('active', inArea && document.queryCommandState(cmd));
     });
   }
   area.addEventListener('keydown', _updateFmtActive);
