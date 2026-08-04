@@ -556,7 +556,7 @@ function _setNavActive(type) {
 /* ── 게시판 목록 뷰 상태 ── */
 let _dlBoardViewMode = 'list'; // 'card' | 'list'
 let _dlBoardSortBy   = 'recent'; // 'recent' | 'oldest' | 'recommended'
-let _dlBoardCategory = 'all';   // 'all' | '자유' | '정보' | '질문' | '영상'
+let _dlBoardCategory = 'all';   // 'all' | '자유' | '정보' | '질문'
 let _allBoardPosts   = [];
 
 async function _renderBoardList() {
@@ -593,7 +593,6 @@ async function _renderBoardList() {
               <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
               <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
               <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
-              <button class="dl-evt-status-btn${_dlBoardCategory==='영상'?' active':''}" data-bcat="영상">영상</button>
             </div>
             <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
@@ -625,7 +624,6 @@ async function _renderBoardList() {
             <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
             <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
             <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
-            <button class="dl-evt-status-btn${_dlBoardCategory==='영상'?' active':''}" data-bcat="영상">영상</button>
           </div>
           <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
@@ -805,7 +803,6 @@ function _renderBoardWrite() {
             <option value="자유">자유</option>
             <option value="정보">정보</option>
             <option value="질문">질문</option>
-            <option value="영상">영상</option>
           </select>
           <svg class="bwm-chevron" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"/></svg>
         </div>
@@ -927,7 +924,6 @@ function _renderBoardWrite() {
               <option value="자유">자유</option>
               <option value="정보">정보</option>
               <option value="질문">질문</option>
-              <option value="영상">영상</option>
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
@@ -1018,7 +1014,6 @@ function _renderBoardEdit(boardId, p) {
               <option value="자유" ${p.prefix==='자유'?'selected':''}>자유</option>
               <option value="정보" ${p.prefix==='정보'?'selected':''}>정보</option>
               <option value="질문" ${p.prefix==='질문'?'selected':''}>질문</option>
-              <option value="영상" ${p.prefix==='영상'?'selected':''}>영상</option>
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
