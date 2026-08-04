@@ -6617,3 +6617,190 @@ html.is-pwa .site-footer {
   #detailEventGrid[style*="repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
   #detailBoardList[style*="repeat(3"] { grid-template-columns: repeat(2,1fr) !important; }
 }
+
+
+/* ============================================================
+   모바일 게시판 글쓰기 오버레이 (board-write mobile)
+   ============================================================ */
+
+/* body에 bwm-active 클래스가 붙으면 스크롤 막기 */
+body.bwm-active { overflow: hidden; }
+
+/* 풀스크린 오버레이 */
+.bwm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: var(--bg, #1e1e2e);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* iOS 안전영역 대응 */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 상단 헤더 */
+.bwm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg, #1e1e2e);
+  flex-shrink: 0;
+}
+
+.bwm-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text, #cdd6f4);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
+}
+.bwm-close-btn:active { background: var(--bg-hover, #242436); }
+
+.bwm-submit-btn {
+  background: var(--accent, #89b4fa);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.bwm-submit-btn:active { opacity: 0.8; }
+.bwm-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 말머리 + 제목 필드 영역 */
+.bwm-fields {
+  flex-shrink: 0;
+  background: var(--bg, #1e1e2e);
+}
+
+.bwm-prefix-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+.bwm-prefix-select {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text, #cdd6f4);
+  padding: 14px 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.bwm-prefix-select option { background: var(--bg-card, #181825); }
+.bwm-chevron {
+  color: var(--text-muted, #7f849c);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.bwm-divider {
+  height: 1px;
+  background: var(--border, #313244);
+  margin: 0 16px;
+}
+
+.bwm-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #cdd6f4);
+  padding: 14px 16px;
+}
+.bwm-title-input::placeholder { color: var(--text-muted, #7f849c); font-weight: 400; }
+
+/* 본문 에디터 영역 (스크롤) */
+.bwm-content-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+/* 오버레이 안에서 에디터 스타일 재정의 */
+.bwm-overlay .evt-editor-wrap {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.bwm-overlay .evt-editor-toolbar {
+  display: none; /* 원본 위치 툴바 숨김 — 하단 도크로 이동됨 */
+}
+.bwm-overlay .evt-editor-area {
+  flex: 1;
+  min-height: 200px;
+  padding: 16px;
+  font-size: 16px;
+  line-height: 1.7;
+  border: none;
+  background: transparent;
+}
+.bwm-overlay .evt-editor-footer {
+  display: none;
+}
+
+/* 하단 툴바 도크 — 키보드 위에 고정 */
+.bwm-toolbar-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9010;
+  background: var(--bg-card, #181825);
+  border-top: 1px solid var(--border, #313244);
+  /* iOS 안전영역 */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 도크 안의 툴바: 가로 스크롤 가능하게 */
+.bwm-toolbar-dock .evt-editor-toolbar {
+  display: flex !important;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 6px 8px;
+  gap: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+.bwm-toolbar-dock .evt-editor-toolbar::-webkit-scrollbar { display: none; }
+.bwm-toolbar-dock .evt-editor-toolbar-row-break { display: none; }
+.bwm-toolbar-dock .evt-editor-sep {
+  flex-shrink: 0;
+}
+.bwm-toolbar-dock .evt-editor-tool {
+  flex-shrink: 0;
+  min-width: 38px;
+  height: 38px;
+}
+
+/* 컨텐츠 영역 하단 패딩 (툴바 높이만큼) */
+.bwm-content-area {
+  padding-bottom: 56px;
+}
