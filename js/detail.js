@@ -695,8 +695,11 @@ function _renderBoardWrite() {
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
-          <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
-            style="flex:1;min-width:0;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+            <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
+            <div style="text-align:right;font-size:11px;color:var(--text-muted)"><span id="boardWriteTitleCount">0</span> / 100</div>
+          </div>
         </div>
       </div>
 
@@ -714,6 +717,10 @@ function _renderBoardWrite() {
 
   document.getElementById('boardWriteBack')?.addEventListener('click', _renderBoardList);
   document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
+  document.getElementById('boardWriteTitle')?.addEventListener('input', function() {
+    const counter = document.getElementById('boardWriteTitleCount');
+    if (counter) counter.textContent = this.value.length;
+  });
   document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
     const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
     if (!prefix) { _showPrefixAlertPopup(); return; }
