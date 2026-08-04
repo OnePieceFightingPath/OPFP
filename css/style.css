@@ -5173,6 +5173,55 @@ html.is-pwa .site-footer {
   transition: background 0.12s;
 }
 .evt-editor-align-item:hover { background: var(--bg-hover, #242436); }
+/* 글자 크기 드롭다운 */
+.evt-editor-fontsize-wrap { position: relative; display: inline-flex; }
+.evt-editor-fontsize-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-width: 44px;
+  padding: 0 6px;
+}
+.evt-editor-fontsize-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  min-width: 20px;
+  text-align: center;
+}
+.evt-editor-fontsize-dd {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 300;
+  background: var(--bg-card, #1e1e2e);
+  border: 1px solid var(--border, #313244);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  min-width: 72px;
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #313244) transparent;
+}
+.evt-editor-fontsize-dd::-webkit-scrollbar { width: 4px; }
+.evt-editor-fontsize-dd::-webkit-scrollbar-thumb { background: var(--border, #313244); border-radius: 4px; }
+.evt-editor-fontsize-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: var(--text, #cdd6f4);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.evt-editor-fontsize-item:hover { background: var(--bg-hover, #242436); }
 /* 이모지 피커 */
 .evt-editor-emoji-wrap { position: relative; display: inline-flex; }
 .evt-editor-emoji-picker {
@@ -5184,15 +5233,23 @@ html.is-pwa .site-footer {
   border: 1px solid var(--border, #313244);
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-  padding: 8px 6px 6px;
+  padding: 8px 6px;
   width: 224px;
 }
-.evt-editor-emoji-grid {
+.evt-editor-emoji-scroll {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 3px;
   user-select: none;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, #313244) transparent;
 }
+.evt-editor-emoji-scroll::-webkit-scrollbar { width: 4px; }
+.evt-editor-emoji-scroll::-webkit-scrollbar-track { background: transparent; }
+.evt-editor-emoji-scroll::-webkit-scrollbar-thumb { background: var(--border, #313244); border-radius: 4px; }
 .evt-editor-emoji-item {
   cursor: pointer;
   padding: 3px;
@@ -5204,20 +5261,13 @@ html.is-pwa .site-footer {
   user-select: none;
 }
 .evt-editor-emoji-item img {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   display: block;
   pointer-events: none;
 }
 .evt-editor-emoji-item:hover { background: var(--bg-hover, #242436); }
-.evt-editor-emoji-page-info {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-sub, #6c7086);
-  margin-top: 5px;
-  letter-spacing: 0.5px;
-}
 /* 댓글에 삽입된 커스텀 이모지 */
 .evt-comment-emoji-img {
   max-width: 100%;
@@ -6378,8 +6428,8 @@ html.is-pwa .site-footer {
 /* ===== 에디터 툴바 모바일 ===== */
 @media (max-width: 480px) {
   .evt-editor-toolbar {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 1px;
     padding: 6px 8px;
   }

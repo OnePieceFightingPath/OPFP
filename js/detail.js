@@ -2423,11 +2423,19 @@ function _buildEditorHtml(editorId, opts) {
     ? '<button type="button" class="evt-comment-cancel-btn-sm evt-editor-cancel" data-editor-id="' + editorId + '">취소</button>'
     : '';
   var CUSTOM_EMOJIS = (function(){ var a=[]; for(var i=1;i<=39;i++) a.push('img/emoji/emogi'+i+'.png'); return a; })();
-  var emojiItems = CUSTOM_EMOJIS.slice(0,9).map(function(src,i){ return '<span class="evt-editor-emoji-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(i+1)+'"></span>'; }).join('');
-  var totalEmojiPg = Math.ceil(CUSTOM_EMOJIS.length / 9);
+  var emojiItems = CUSTOM_EMOJIS.map(function(src,i){ return '<span class="evt-editor-emoji-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(i+1)+'"></span>'; }).join('');
+  var fontSizes = [11,13,15,16,19,24,28,30,34,38];
+  var fontSizeItems = fontSizes.map(function(s){ return '<button type="button" class="evt-editor-fontsize-item" data-size="'+s+'">'+s+'</button>'; }).join('');
   return [
     '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
     '  <div class="evt-editor-toolbar">',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12 3.2 3.2 0 0 1 12 15.2M12 7a5 5 0 0 0-5 5 5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m0-4L9.17 6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-5.17L12 3z"/></svg></button>',
+    '    <span class="evt-editor-fontsize-wrap">',
+    '      <button type="button" class="evt-editor-tool evt-editor-fontsize-btn" data-editor-id="' + editorId + '" title="글자 크기"><span class="evt-editor-fontsize-label" id="fontsize-label-' + editorId + '">15</span><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="margin-left:2px;flex-shrink:0"><path d="M7 10l5 5 5-5H7z"/></svg></button>',
+    '      <div class="evt-editor-fontsize-dd" id="fontsize-dd-' + editorId + '" style="display:none">',
+    fontSizeItems,
+    '      </div>',
+    '    </span>',
     '    <button type="button" class="evt-editor-tool" data-cmd="bold"          title="굵게"><b>B</b></button>',
     '    <button type="button" class="evt-editor-tool" data-cmd="italic"        title="기울임"><i>i</i></button>',
     '    <button type="button" class="evt-editor-tool" data-cmd="underline"     title="밑줄"><u>U</u></button>',
@@ -2454,24 +2462,17 @@ function _buildEditorHtml(editorId, opts) {
     '        <button type="button" class="evt-editor-align-item" data-cmd="justifyLeft"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg>왼쪽 정렬</button>',
     '        <button type="button" class="evt-editor-align-item" data-cmd="justifyCenter"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3V5zm3 4h12v2H6V9zm-3 4h18v2H3v-2zm3 4h12v2H6v-2z"/></svg>가운데 정렬</button>',
     '        <button type="button" class="evt-editor-align-item" data-cmd="justifyRight"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3V5zm6 4h12v2H9V9zm-6 4h18v2H3v-2zm6 4h12v2H9v-2z"/></svg>오른쪽 정렬</button>',
-    '        <button type="button" class="evt-editor-align-item" data-cmd="justifyFull"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/></svg>양쪽 정렬</button>',
+    '        <button type="button" class="evt-editor-align-item" data-cmd="justifyFull"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/></svg>양끝 정렬</button>',
     '      </div>',
     '    </span>',
-    '    <button type="button" class="evt-editor-tool" data-cmd="insertOrderedList"   title="번호 목록"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg></button>',
-    '    <button type="button" class="evt-editor-tool" data-cmd="insertUnorderedList" title="점 목록"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg></button>',
-    '    <div class="evt-editor-toolbar-row-break"></div>',
-    '    <span class="evt-editor-sep"></span>',
-    '    <button type="button" class="evt-editor-tool" data-cmd="insertHorizontalRule" title="가로줄"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 11H5c-.55 0-1 .45-1 1s.45 1 1 1h14c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg></button>',
-    '    <button type="button" class="evt-editor-tool evt-editor-link-btn" data-editor-id="' + editorId + '" title="링크"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg></button>',
     '    <span class="evt-editor-emoji-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-emoji-btn" data-editor-id="' + editorId + '" title="이모지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>',
     '      <div class="evt-editor-emoji-picker" id="emoji-picker-' + editorId + '" style="display:none">',
-    '        <div class="evt-editor-emoji-grid" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
-    '        <div class="evt-editor-emoji-page-info" id="emoji-pinfo-' + editorId + '">1 / ' + totalEmojiPg + '</div>',
+    '        <div class="evt-editor-emoji-scroll" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
     '      </div>',
     '    </span>',
-    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></button>',
-    '    <span class="evt-editor-toolbar-spacer"></span>',
+    '    <button type="button" class="evt-editor-tool evt-editor-link-btn" data-editor-id="' + editorId + '" title="링크"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg></button>',
+    '    <button type="button" class="evt-editor-tool" data-cmd="insertHorizontalRule" title="구분선"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 11H5c-.55 0-1 .45-1 1s.45 1 1 1h14c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg></button>',
     '  </div>',
     '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 입력하세요') + '"></div>',
     '  <div class="evt-editor-footer">',
@@ -2574,6 +2575,37 @@ function _initEditor(editorId, opts) {
     });
   }
 
+  /* 글자 크기 드롭다운 */
+  var fontsizeBtn   = wrap.querySelector('.evt-editor-fontsize-btn');
+  var fontsizeDd    = document.getElementById('fontsize-dd-' + editorId);
+  var fontsizeLabel = document.getElementById('fontsize-label-' + editorId);
+  if (fontsizeBtn && fontsizeDd) {
+    fontsizeBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
+    fontsizeBtn.addEventListener('click', function() {
+      fontsizeDd.style.display = fontsizeDd.style.display === 'none' ? 'block' : 'none';
+    });
+    fontsizeDd.querySelectorAll('.evt-editor-fontsize-item').forEach(function(item) {
+      item.addEventListener('mousedown', function(e) { e.preventDefault(); });
+      item.addEventListener('click', function() {
+        var px = item.dataset.size;
+        restoreRange();
+        /* font size 마커(7) 사용 후 실제 px 값으로 교체 */
+        document.execCommand('fontSize', false, '7');
+        area.querySelectorAll('font[size="7"]').forEach(function(el) {
+          el.removeAttribute('size');
+          el.style.fontSize = px + 'px';
+        });
+        if (fontsizeLabel) fontsizeLabel.textContent = px;
+        fontsizeDd.style.display = 'none';
+        area.focus(); updateCount();
+      });
+    });
+    document.addEventListener('click', function(e) {
+      if (!fontsizeBtn.contains(e.target) && !fontsizeDd.contains(e.target))
+        fontsizeDd.style.display = 'none';
+    });
+  }
+
   /* 글자색 */
   var colorBtn      = wrap.querySelector('.evt-editor-color-btn');
   var colorPalette  = document.getElementById('color-palette-'  + editorId);
@@ -2654,19 +2686,10 @@ function _initEditor(editorId, opts) {
   var emojiBtn    = wrap.querySelector('.evt-editor-emoji-btn');
   var emojiPicker = document.getElementById('emoji-picker-' + editorId);
   if (emojiBtn && emojiPicker) {
-    var _eSrcs = (function(){ var a=[]; for(var i=1;i<=39;i++) a.push('img/emoji/emogi'+i+'.png'); return a; })();
-    var _ePgSz = 9, _ePg = 0, _eTotalPg = Math.ceil(_eSrcs.length / _ePgSz);
-    var emojiGrid  = document.getElementById('emoji-grid-'  + editorId);
-    var emojiPInfo = document.getElementById('emoji-pinfo-' + editorId);
-    function _renderEPg() {
-      var start = _ePg * _ePgSz;
-      emojiGrid.innerHTML = _eSrcs.slice(start, start + _ePgSz).map(function(src, i) {
-        return '<span class="evt-editor-emoji-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(start+i+1)+'"></span>';
-      }).join('');
-      if (emojiPInfo) emojiPInfo.textContent = (_ePg + 1) + ' / ' + _eTotalPg;
+    var emojiGrid = document.getElementById('emoji-grid-' + editorId);
+    if (emojiGrid) {
       emojiGrid.querySelectorAll('.evt-editor-emoji-item').forEach(function(item) {
-        item.addEventListener('click', function(e) {
-          if (emojiGrid._dragged) return;
+        item.addEventListener('click', function() {
           restoreRange();
           document.execCommand('insertHTML', false, '<img src="'+item.dataset.src+'" class="evt-comment-emoji-img" alt="이모지">');
           emojiPicker.style.display = 'none';
@@ -2674,31 +2697,10 @@ function _initEditor(editorId, opts) {
         });
       });
     }
-    /* 마우스 휠로 페이지 이동 */
-    var _wheelLock = false;
-    emojiPicker.addEventListener('wheel', function(e) {
-      e.preventDefault();
-      if (_wheelLock) return;
-      _wheelLock = true;
-      setTimeout(function() { _wheelLock = false; }, 300);
-      _ePg = e.deltaY > 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
-      _renderEPg();
-    }, { passive: false });
-    /* 터치 스와이프 (모바일용) */
-    var _touchStartY = 0;
-    emojiGrid.addEventListener('touchstart', function(e) { _touchStartY = e.touches[0].clientY; emojiGrid._dragged = false; }, { passive: true });
-    emojiGrid.addEventListener('touchend', function(e) {
-      var dy = e.changedTouches[0].clientY - _touchStartY;
-      if (Math.abs(dy) < 30) return;
-      emojiGrid._dragged = true;
-      _ePg = dy < 0 ? (_ePg + 1) % _eTotalPg : (_ePg - 1 + _eTotalPg) % _eTotalPg;
-      _renderEPg();
-    });
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
       emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
     });
-    _renderEPg();
     document.addEventListener('click', function(e) {
       if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target))
         emojiPicker.style.display = 'none';
