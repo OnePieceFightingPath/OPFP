@@ -681,6 +681,10 @@ function _renderBoardWrite() {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         </button>
         <span style="font-size:15px;font-weight:700;color:var(--text)">글쓰기</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="boardWriteCancelBtn" style="padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:13px;cursor:pointer">취소</button>
+          <button id="boardWriteSubmitBtn" style="padding:7px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록</button>
+        </div>
       </div>
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
@@ -707,10 +711,6 @@ function _renderBoardWrite() {
         ${_buildEditorHtml('board-write', { bodyMode: true })}
       </div>
 
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button id="boardWriteCancelBtn" style="padding:10px 20px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:14px;cursor:pointer">취소</button>
-        <button id="boardWriteSubmitBtn" style="padding:10px 24px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer">등록</button>
-      </div>
     </div>`;
 
   _initEditor('board-write', {});
