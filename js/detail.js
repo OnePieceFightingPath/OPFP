@@ -556,6 +556,7 @@ function _setNavActive(type) {
 /* ── 게시판 목록 뷰 상태 ── */
 let _dlBoardViewMode = 'list'; // 'card' | 'list'
 let _dlBoardSortBy   = 'recent'; // 'recent' | 'oldest' | 'recommended'
+let _dlBoardCategory = 'all';   // 'all' | '자유' | '정보' | '질문' | '영상'
 let _allBoardPosts   = [];
 
 async function _renderBoardList() {
@@ -587,6 +588,13 @@ async function _renderBoardList() {
             <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
           </div>
           <div class="dl-evt-toolbar">
+            <div class="dl-evt-status-filter">
+              <button class="dl-evt-status-btn${_dlBoardCategory==='all'?' active':''}" data-bcat="all">전체</button>
+              <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
+              <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
+              <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
+              <button class="dl-evt-status-btn${_dlBoardCategory==='영상'?' active':''}" data-bcat="영상">영상</button>
+            </div>
             <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
             </button>
@@ -612,6 +620,13 @@ async function _renderBoardList() {
           <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
         </div>
         <div class="dl-evt-toolbar">
+          <div class="dl-evt-status-filter">
+            <button class="dl-evt-status-btn${_dlBoardCategory==='all'?' active':''}" data-bcat="all">전체</button>
+            <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
+            <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
+            <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
+            <button class="dl-evt-status-btn${_dlBoardCategory==='영상'?' active':''}" data-bcat="영상">영상</button>
+          </div>
           <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
           </button>
@@ -630,6 +645,13 @@ async function _renderBoardList() {
 
     _applyDlBoardFilter(main);
 
+    main.querySelectorAll('.dl-evt-status-btn[data-bcat]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        _dlBoardCategory = btn.dataset.bcat;
+        main.querySelectorAll('.dl-evt-status-btn[data-bcat]').forEach(b => b.classList.toggle('active', b === btn));
+        _applyDlBoardFilter(main);
+      });
+    });
     main.querySelectorAll('.dl-evt-view-btn[data-bview]').forEach(btn => {
       btn.addEventListener('click', () => {
         _dlBoardViewMode = btn.dataset.bview;
@@ -659,7 +681,10 @@ function _applyDlBoardFilter(main) {
   const container = document.getElementById('detailBoardList');
   if (!container) return;
 
-  let sorted = [..._allBoardPosts];
+  let sorted = _dlBoardCategory === 'all'
+    ? [..._allBoardPosts]
+    : _allBoardPosts.filter(p => (p.prefix || '') === _dlBoardCategory);
+
   if (_dlBoardSortBy === 'recent') {
     sorted.sort((a, b) => {
       const da = a.createdAt?.toDate?.() ?? (a.createdAt ? new Date(a.createdAt) : new Date(0));
