@@ -755,125 +755,177 @@ function _renderBoardWrite() {
 
   const isMobile = window.innerWidth <= 768;
 
-  /* ── 모바일: 풀스크린 오버레이 ── */
+  /* ── 모바일: body에 풀스크린 오버레이 직접 마운트 ── */
   if (isMobile) {
-    main.innerHTML = `
-      <div id="bwMobileOverlay" class="bwm-overlay">
-        <div class="bwm-header">
-          <button id="boardWriteBack" class="bwm-close-btn" aria-label="닫기">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-          <button id="boardWriteSubmitBtn" class="bwm-submit-btn">등록</button>
+    // 기존 오버레이 제거 방어
+    document.getElementById('bwMobileOverlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'bwMobileOverlay';
+    overlay.className = 'bwm-overlay';
+    overlay.innerHTML = `
+      <div class="bwm-header">
+        <button id="boardWriteBack" class="bwm-close-btn" aria-label="닫기">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="22" height="22">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <button id="boardWriteSubmitBtn" class="bwm-submit-btn">등록</button>
+      </div>
+
+      <div class="bwm-fields">
+        <div class="bwm-prefix-row">
+          <select id="boardWritePrefix" class="bwm-prefix-select">
+            <option value="">말머리 선택</option>
+            <option value="자유">자유</option>
+            <option value="정보">정보</option>
+            <option value="질문">질문</option>
+            <option value="영상">영상</option>
+          </select>
+          <svg class="bwm-chevron" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"/></svg>
         </div>
+        <div class="bwm-divider"></div>
+        <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목" class="bwm-title-input">
+        <div class="bwm-divider"></div>
+      </div>
 
-        <div class="bwm-fields">
-          <div class="bwm-prefix-row">
-            <select id="boardWritePrefix" class="bwm-prefix-select">
-              <option value="">말머리 선택</option>
-              <option value="자유">자유</option>
-              <option value="정보">정보</option>
-              <option value="질문">질문</option>
-              <option value="영상">영상</option>
-            </select>
-            <svg class="bwm-chevron" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"/></svg>
-          </div>
-          <div class="bwm-divider"></div>
-          <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목" class="bwm-title-input">
-          <div class="bwm-divider"></div>
-        </div>
+      <div class="bwm-content-area">
+        ${_buildEditorHtml('board-write', { bodyMode: true })}
+      </div>
 
-        <div class="bwm-content-area">
-          ${_buildEditorHtml('board-write', { bodyMode: true })}
-        </div>
+      <div class="bwm-toolbar-dock" id="bwmToolbarDock"></div>
+    `;
 
-        <div class="bwm-toolbar-dock" id="bwmToolbarDock"></div>
-      </div>`;
-
+    // body에 직접 마운트 (comm-wrap 스태킹 컨텍스트 밖)
+    document.body.appendChild(overlay);
     document.body.classList.add('bwm-active');
+
+    // GNB + 하단 탭바 숨김
+    const gnb     = document.querySelector('.gnb');
+    const tabBar  = document.querySelector('.detail-bottom-tab');
+    if (gnb)    gnb.style.visibility    = 'hidden';
+    if (tabBar) tabBar.style.visibility = 'hidden';
+
     _initEditor('board-write', {});
 
     /* 툴바를 하단 도크로 이동 */
-    const editorWrap = document.querySelector('.evt-editor-wrap[data-editor-id="board-write"]');
+    const editorWrap = overlay.querySelector('.evt-editor-wrap[data-editor-id="board-write"]');
     const toolbar    = editorWrap?.querySelector('.evt-editor-toolbar');
     const dock       = document.getElementById('bwmToolbarDock');
     if (toolbar && dock) dock.appendChild(toolbar);
 
-    /* visualViewport로 키보드 위에 툴바 고정 */
+    /* visualViewport — 키보드 위에 툴바 고정 */
     function _bwmAdjust() {
       const dock = document.getElementById('bwmToolbarDock');
-      if (!dock) return;
-      if (window.visualViewport) {
-        const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
-        dock.style.bottom = Math.max(0, Math.round(offset)) + 'px';
-      }
+      if (!dock || !window.visualViewport) return;
+      const offset = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+      dock.style.bottom = Math.max(0, Math.round(offset)) + 'px';
     }
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', _bwmAdjust);
       window.visualViewport.addEventListener('scroll', _bwmAdjust);
     }
 
-    /* 페이지 이탈 시 정리 */
+    /* 정리 함수 */
     function _bwmCleanup() {
+      document.getElementById('bwMobileOverlay')?.remove();
       document.body.classList.remove('bwm-active');
+      if (gnb)    gnb.style.visibility    = '';
+      if (tabBar) tabBar.style.visibility = '';
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', _bwmAdjust);
         window.visualViewport.removeEventListener('scroll', _bwmAdjust);
       }
     }
-    document.getElementById('boardWriteBack')?.addEventListener('click', () => { _bwmCleanup(); _renderBoardList(); });
 
-  } else {
-    /* ── 데스크탑: 기존 레이아웃 ── */
-    main.innerHTML = `
-      <div style="padding-bottom:80px">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
-          <button id="boardWriteBack" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-          </button>
-          <span style="font-size:15px;font-weight:700;color:var(--text)">글쓰기</span>
-          <div style="margin-left:auto;display:flex;gap:8px">
-            <button id="boardWriteCancelBtn" style="padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:13px;cursor:pointer">취소</button>
-            <button id="boardWriteSubmitBtn" style="padding:7px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록</button>
-          </div>
-        </div>
-
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="flex-shrink:0;position:relative;display:inline-flex;align-items:center">
-              <select id="boardWritePrefix" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 28px 10px 12px;font-size:14px;font-weight:600;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;height:42px;appearance:none;-webkit-appearance:none">
-                <option value="">말머리 선택</option>
-                <option value="자유">자유</option>
-                <option value="정보">정보</option>
-                <option value="질문">질문</option>
-                <option value="영상">영상</option>
-              </select>
-              <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
-            </div>
-            <div style="flex:1;min-width:0;position:relative">
-              <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
-                style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 56px 10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
-              <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;white-space:nowrap"><span id="boardWriteTitleCount">0</span> / 100</span>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
-          ${_buildEditorHtml('board-write', { bodyMode: true })}
-        </div>
-      </div>`;
-
-    _initEditor('board-write', {});
-    document.getElementById('boardWriteBack')?.addEventListener('click', _renderBoardList);
-    document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
-    document.getElementById('boardWriteTitle')?.addEventListener('input', function() {
-      const counter = document.getElementById('boardWriteTitleCount');
-      if (counter) counter.textContent = this.value.length;
+    document.getElementById('boardWriteBack')?.addEventListener('click', () => {
+      _bwmCleanup();
+      _renderBoardList();
     });
+
+    /* 등록 버튼 */
+    document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
+      const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
+      if (!prefix) { _showPrefixAlertPopup(); return; }
+      const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
+      if (!title) { showToast('제목을 입력해주세요.', 'error'); document.getElementById('boardWriteTitle')?.focus(); return; }
+      if (!_hasEditorContent('board-write')) { showToast('내용을 입력해주세요.', 'error'); return; }
+
+      const html = _getEditorContent('board-write');
+      const submitBtn = document.getElementById('boardWriteSubmitBtn');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        const ref = await db.collection('boards').add({
+          prefix     : prefix,
+          title      : title,
+          text       : html,
+          uid        : user.uid,
+          author     : profile.nickname || '익명',
+          avatar     : profile.avatar   || '',
+          likedBy    : [],
+          likeCount  : 0,
+          commentCount: 0,
+          createdAt  : firebase.firestore.FieldValue.serverTimestamp(),
+        });
+        _bwmCleanup();
+        _renderBoardDetail(ref.id);
+      } catch (e) {
+        console.error('게시글 작성 실패:', e);
+        showToast('게시글 작성에 실패했습니다. 다시 시도해주세요.', 'error');
+        if (submitBtn) submitBtn.disabled = false;
+      }
+    });
+
+    return; // 모바일은 여기서 종료
   }
 
-  /* ── 공통: 등록 ── */
+  /* ── 데스크탑: 기존 레이아웃 ── */
+  main.innerHTML = `
+    <div style="padding-bottom:80px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+        <button id="boardWriteBack" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <span style="font-size:15px;font-weight:700;color:var(--text)">글쓰기</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="boardWriteCancelBtn" style="padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:13px;cursor:pointer">취소</button>
+          <button id="boardWriteSubmitBtn" style="padding:7px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer">등록</button>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex-shrink:0;position:relative;display:inline-flex;align-items:center">
+            <select id="boardWritePrefix" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 28px 10px 12px;font-size:14px;font-weight:600;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;height:42px;appearance:none;-webkit-appearance:none">
+              <option value="">말머리 선택</option>
+              <option value="자유">자유</option>
+              <option value="정보">정보</option>
+              <option value="질문">질문</option>
+              <option value="영상">영상</option>
+            </select>
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
+          </div>
+          <div style="flex:1;min-width:0;position:relative">
+            <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 56px 10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;white-space:nowrap"><span id="boardWriteTitleCount">0</span> / 100</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
+        ${_buildEditorHtml('board-write', { bodyMode: true })}
+      </div>
+    </div>`;
+
+  _initEditor('board-write', {});
+  document.getElementById('boardWriteBack')?.addEventListener('click', _renderBoardList);
+  document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
+  document.getElementById('boardWriteTitle')?.addEventListener('input', function() {
+    const counter = document.getElementById('boardWriteTitleCount');
+    if (counter) counter.textContent = this.value.length;
+  });
   document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
     const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
     if (!prefix) { _showPrefixAlertPopup(); return; }
@@ -898,12 +950,6 @@ function _renderBoardWrite() {
         commentCount: 0,
         createdAt  : firebase.firestore.FieldValue.serverTimestamp(),
       });
-      if (isMobile) {
-        document.body.classList.remove('bwm-active');
-        if (window.visualViewport) {
-          window.visualViewport.removeEventListener('resize', ()=>{});
-        }
-      }
       _renderBoardDetail(ref.id);
     } catch (e) {
       console.error('게시글 작성 실패:', e);
