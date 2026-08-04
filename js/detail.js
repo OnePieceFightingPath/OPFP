@@ -171,7 +171,6 @@ function _renderPatchDetail(id) {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:8px">
 
       <div class="evt-detail-header">
-        ${patch.version || patch.ver ? `<div class="evt-detail-header-top"><span class="evt-detail-tag">${escHtml(patch.version || patch.ver)}</span></div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           ${isNew ? `<span class="evt-detail-status-badge active" style="flex-shrink:0">NEW</span>` : ''}
           <h1 class="evt-detail-title" style="margin:0">${escHtml(patch.title)}</h1>
