@@ -685,13 +685,16 @@ function _renderBoardWrite() {
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
         <div style="display:flex;align-items:center;gap:8px">
-          <select id="boardWritePrefix" style="flex-shrink:0;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:14px;font-weight:600;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;height:42px">
-            <option value="">말머리 선택 *</option>
-            <option value="자유">자유</option>
-            <option value="정보">정보</option>
-            <option value="질문">질문</option>
-            <option value="영상">영상</option>
-          </select>
+          <div style="flex-shrink:0;position:relative;display:inline-flex;align-items:center">
+            <select id="boardWritePrefix" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 28px 10px 12px;font-size:14px;font-weight:600;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;height:42px;appearance:none;-webkit-appearance:none">
+              <option value="">말머리 선택</option>
+              <option value="자유">자유</option>
+              <option value="정보">정보</option>
+              <option value="질문">질문</option>
+              <option value="영상">영상</option>
+            </select>
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
+          </div>
           <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
             style="flex:1;min-width:0;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
         </div>
