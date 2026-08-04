@@ -97,6 +97,24 @@ function _showReplyLoginPopup() {
   document.getElementById('replyLoginOverlay')?.classList.add('open');
 }
 
+/* ── 말머리 선택 안내 팝업 ── */
+document.addEventListener('DOMContentLoaded', function _initPrefixAlertPopup() {
+  const overlay    = document.getElementById('prefixAlertOverlay');
+  const closeBtn   = document.getElementById('prefixAlertClose');
+  const confirmBtn = document.getElementById('prefixAlertConfirmBtn');
+  if (!overlay) return;
+
+  function _close() { overlay.classList.remove('open'); }
+
+  closeBtn?.addEventListener('click', _close);
+  confirmBtn?.addEventListener('click', _close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) _close(); });
+});
+
+function _showPrefixAlertPopup() {
+  document.getElementById('prefixAlertOverlay')?.classList.add('open');
+}
+
 /* ── 좋아요 초기화 ── */
 async function _initLikeBtn(type, id, btnEl, countEl) {
   if (!btnEl || !countEl) return;
@@ -698,7 +716,7 @@ function _renderBoardWrite() {
   document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
   document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
     const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
-    if (!prefix) { alert('말머리를 선택해주세요.'); document.getElementById('boardWritePrefix')?.focus(); return; }
+    if (!prefix) { _showPrefixAlertPopup(); return; }
     const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
     if (!title) { alert('제목을 입력해주세요.'); document.getElementById('boardWriteTitle')?.focus(); return; }
     if (!_hasEditorContent('board-write')) { alert('내용을 입력해주세요.'); return; }
