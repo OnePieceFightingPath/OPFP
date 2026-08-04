@@ -1885,7 +1885,9 @@ function _initEditor(editorId, opts) {
   var count = document.getElementById('editor-count-' + editorId);
   if (!area) return;
 
-  var MAX = 1000;
+  var isBody = wrap.dataset.body === 'true';
+  var MAX = isBody ? Infinity : 1000;
+  if (isBody && count) count.style.display = 'none';
   var _savedRange = null;
 
   function saveRange() {
@@ -1902,14 +1904,17 @@ function _initEditor(editorId, opts) {
     sel.addRange(_savedRange);
   }
   function updateCount() {
+    if (isBody) return;
     var len = (area.innerText || area.textContent || '').replace(/\n$/, '').length;
     if (count) count.textContent = Math.min(len, MAX) + ' / 1,000';
   }
 
   area.addEventListener('input', function() {
-    var txt = area.innerText || area.textContent || '';
-    if (txt.length > MAX) document.execCommand('undo');
-    updateCount();
+    if (!isBody) {
+      var txt = area.innerText || area.textContent || '';
+      if (txt.length > MAX) document.execCommand('undo');
+      updateCount();
+    }
   });
 
   /* 포맷 버튼 활성 상태 표시 (B/i/U/S) */
