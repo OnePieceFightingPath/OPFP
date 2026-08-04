@@ -797,6 +797,92 @@ function _renderBoardWrite() {
   window.scrollTo({ top: 0 });
 }
 
+/* ── 게시판 글 수정 ── */
+function _renderBoardEdit(boardId, p) {
+  const user    = (typeof currentUser !== 'undefined') ? currentUser : null;
+  const profile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
+  if (!user || !profile) return;
+
+  const main = document.getElementById('detailMain');
+  if (!main) return;
+  document.title = '글 수정 — Fighting Path Patch';
+  history.pushState({}, '', 'detail.html?type=board&mode=edit&id=' + boardId);
+  _setNavActive('board');
+
+  main.innerHTML = `
+    <div style="padding-bottom:80px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px">
+        <button id="boardEditBack" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <span style="font-size:15px;font-weight:700;color:var(--text)">글 수정</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button id="boardEditCancelBtn" style="padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);color:var(--text-muted);font-size:13px;cursor:pointer">취소</button>
+          <button id="boardEditSubmitBtn" style="padding:7px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer">저장</button>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="flex-shrink:0;position:relative;display:inline-flex;align-items:center">
+            <select id="boardEditPrefix" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 28px 10px 12px;font-size:14px;font-weight:600;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;height:42px;appearance:none;-webkit-appearance:none">
+              <option value="">말머리 선택</option>
+              <option value="자유" ${p.prefix==='자유'?'selected':''}>자유</option>
+              <option value="정보" ${p.prefix==='정보'?'selected':''}>정보</option>
+              <option value="질문" ${p.prefix==='질문'?'selected':''}>질문</option>
+              <option value="영상" ${p.prefix==='영상'?'selected':''}>영상</option>
+            </select>
+            <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
+          </div>
+          <div style="flex:1;min-width:0;position:relative">
+            <input id="boardEditTitle" type="text" maxlength="100" value="${escHtml(p.title || '')}" placeholder="제목을 입력하세요"
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 56px 10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;white-space:nowrap"><span id="boardEditTitleCount">${(p.title||'').length}</span> / 100</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
+        ${_buildEditorHtml('board-edit', { bodyMode: true })}
+      </div>
+    </div>`;
+
+  _initEditor('board-edit', { initialHtml: p.text || '' });
+
+  document.getElementById('boardEditBack')?.addEventListener('click', () => _renderBoardDetail(boardId));
+  document.getElementById('boardEditCancelBtn')?.addEventListener('click', () => _renderBoardDetail(boardId));
+  document.getElementById('boardEditTitle')?.addEventListener('input', function() {
+    const counter = document.getElementById('boardEditTitleCount');
+    if (counter) counter.textContent = this.value.length;
+  });
+  document.getElementById('boardEditSubmitBtn')?.addEventListener('click', async () => {
+    const prefix = (document.getElementById('boardEditPrefix')?.value || '').trim();
+    if (!prefix) { _showPrefixAlertPopup(); return; }
+    const title = (document.getElementById('boardEditTitle')?.value || '').trim();
+    if (!title) { showToast('제목을 입력해주세요.', 'error'); document.getElementById('boardEditTitle')?.focus(); return; }
+    if (!_hasEditorContent('board-edit')) { showToast('내용을 입력해주세요.', 'error'); return; }
+
+    const html = _getEditorContent('board-edit');
+    const submitBtn = document.getElementById('boardEditSubmitBtn');
+    if (submitBtn) submitBtn.disabled = true;
+    try {
+      await db.collection('boards').doc(boardId).update({
+        prefix   : prefix,
+        title    : title,
+        text     : html,
+        editedAt : firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      _renderBoardDetail(boardId);
+    } catch (e) {
+      console.error('게시글 수정 실패:', e);
+      showToast('수정에 실패했습니다. 다시 시도해주세요.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
+    }
+  });
+
+  window.scrollTo({ top: 0 });
+}
+
 /* ── 게시판 글 상세 ── */
 async function _renderBoardDetail(boardId) {
   const main = document.getElementById('detailMain');
@@ -848,7 +934,16 @@ async function _renderBoardDetail(boardId) {
                 ${p.prefix ? `<span style="flex-shrink:0;font-size:15px;font-weight:700;color:var(--text-muted)">[${escHtml(p.prefix)}]</span>` : ""}
                 <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</h1>
               </div>
-              ${isOwner ? `<button id="boardDetailDelete" style="flex-shrink:0;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:var(--radius-sm)">삭제</button>` : ''}
+              <div class="board-detail-more-wrap" style="position:relative;flex-shrink:0">
+                <button id="boardDetailMoreBtn" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 6px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center" title="더보기">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+                </button>
+                <div class="evt-comment-dropdown board-detail-dropdown" id="boardDetailDropdown" style="display:none;min-width:90px">
+                  ${isOwner ? `<button class="evt-comment-dropdown-item" id="boardDetailEdit">수정</button>` : ''}
+                  ${isOwner ? `<button class="evt-comment-dropdown-item evt-comment-delete-btn" id="boardDetailDelete">삭제</button>` : ''}
+                  <button class="evt-comment-dropdown-item" id="boardDetailShare">공유</button>
+                </div>
+              </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
               ${avatarHtml}
@@ -929,13 +1024,51 @@ async function _renderBoardDetail(boardId) {
       finally { if (likeBtn) likeBtn.disabled = false; }
     });
 
+    /* ⋮ 드롭다운 */
+    const _moreBtn = document.getElementById('boardDetailMoreBtn');
+    const _dropdown = document.getElementById('boardDetailDropdown');
+    if (_moreBtn && _dropdown) {
+      _moreBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const isOpen = _dropdown.style.display !== 'none';
+        _dropdown.style.display = isOpen ? 'none' : 'block';
+      });
+      document.addEventListener('click', function _closeBoardDropdown(e) {
+        if (!_moreBtn.contains(e.target) && !_dropdown.contains(e.target)) {
+          _dropdown.style.display = 'none';
+          document.removeEventListener('click', _closeBoardDropdown);
+        }
+      });
+    }
+
+    /* 수정 */
+    document.getElementById('boardDetailEdit')?.addEventListener('click', () => {
+      if (_dropdown) _dropdown.style.display = 'none';
+      _renderBoardEdit(boardId, p);
+    });
+
     /* 삭제 */
     document.getElementById('boardDetailDelete')?.addEventListener('click', async () => {
+      if (_dropdown) _dropdown.style.display = 'none';
       if (!await _gnbConfirm('게시글을 삭제하시겠습니까?', '삭제된 게시글은 복구할 수 없습니다.')) return;
       try {
         await db.collection('boards').doc(boardId).delete();
         _renderBoardList();
       } catch (e) { console.error('삭제 실패:', e); showToast('삭제에 실패했습니다.', 'error'); }
+    });
+
+    /* 공유 */
+    document.getElementById('boardDetailShare')?.addEventListener('click', () => {
+      if (_dropdown) _dropdown.style.display = 'none';
+      const url = location.href.split('?')[0] + '?type=board&id=' + encodeURIComponent(boardId);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('링크가 복사되었습니다.', 'success'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        showToast('링크가 복사되었습니다.', 'success');
+      }
     });
 
     /* 게시판 댓글 */
@@ -2392,6 +2525,12 @@ function _initEditor(editorId, opts) {
         '<iframe src="' + embedUrl + '" frameborder="0" allowfullscreen style="max-width:100%;width:560px;height:315px;display:block;margin:4px 0"></iframe>');
       area.focus();
     });
+  }
+
+  /* 초기 HTML (수정 모드) */
+  if (opts.initialHtml) {
+    area.innerHTML = opts.initialHtml;
+    updateCount();
   }
 
   /* 취소 버튼 */
