@@ -931,7 +931,7 @@ async function _renderBoardDetail(boardId) {
 
     /* 삭제 */
     document.getElementById('boardDetailDelete')?.addEventListener('click', async () => {
-      if (!await _gnbConfirm('게시글 삭제', '게시글을 삭제하시겠습니까?')) return;
+      if (!await _gnbConfirm('게시글 삭제', '게시글을 삭제하시겠습니까?\n삭제된 게시글은 복구할 수 없습니다.')) return;
       try {
         await db.collection('boards').doc(boardId).delete();
         _renderBoardList();

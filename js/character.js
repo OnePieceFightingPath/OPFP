@@ -668,7 +668,7 @@ async function toggleTipVote(tipId, charId, type) {
 }
 
 async function deleteUserTip(tipId, charId) {
-  if (!await _gnbConfirm('꿀팁 삭제', '이 꿀팁을 삭제하시겠습니까?')) return;
+  if (!await _gnbConfirm('꿀팁 삭제', '꿀팁을 삭제하시겠습니까?\n삭제된 꿀팁은 복구할 수 없습니다.')) return;
   try {
     await db.collection('userTips').doc(tipId).delete();
     await switchCharTab('tips', charId);
