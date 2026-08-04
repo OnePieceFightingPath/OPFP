@@ -154,6 +154,12 @@ service cloud.firestore {
       allow create: if true;
     }
 
+    // 게시판 조회수 — 누구나 읽기/쓰기 허용 (익명 카운팅용)
+    match /boardViews/{docId} {
+      allow read:  if true;
+      allow write: if true;
+    }
+
     // 이벤트 댓글 — 읽기 공개, 쓰기는 로그인 사용자만
     match /eventComments/{docId} {
       allow read:   if true;
