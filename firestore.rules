@@ -198,11 +198,11 @@ service cloud.firestore {
     match /boards/{docId} {
       allow read:   if true;
       allow create: if request.auth != null;
-      // 본인 게시물은 title·content·editedAt·images만 수정 가능 (uid 등 식별 필드 변조 방지)
+      // 본인 게시물은 title·text·prefix·editedAt·images만 수정 가능 (uid 등 식별 필드 변조 방지)
       allow update: if request.auth != null && (
                       (resource.data.uid == request.auth.uid &&
                        request.resource.data.diff(resource.data)
-                         .affectedKeys().hasOnly(['title', 'content', 'editedAt', 'images']))
+                         .affectedKeys().hasOnly(['title', 'text', 'prefix', 'editedAt', 'images']))
                       ||
                       request.resource.data.diff(resource.data)
                         .affectedKeys().hasOnly(['likedBy', 'dislikedBy', 'likeCount', 'commentCount'])

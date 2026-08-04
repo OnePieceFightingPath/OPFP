@@ -4369,9 +4369,9 @@ html.is-pwa .site-footer {
 /* ===== 토스트 알림 ===== */
 .toast-notification {
   position: fixed;
-  bottom: 32px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  transform: translate(-50%, calc(-50% + 20px));
   padding: 12px 22px;
   border-radius: 10px;
   font-size: 14px;
@@ -4385,7 +4385,7 @@ html.is-pwa .site-footer {
 }
 .toast-notification.toast-show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translate(-50%, -50%);
   pointer-events: auto;
 }
 .toast-notification.toast-error { background: #e53e3e; }
