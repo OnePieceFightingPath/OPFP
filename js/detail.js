@@ -594,6 +594,7 @@ function _applyDlBoardFilter(main) {
         <div class="dl-board-card" data-boardid="${escHtml(p.docId)}">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;margin-bottom:8px">
             ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
+            ${p.prefix ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
             <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex:1;min-width:0;line-height:1.4">${escHtml(p.title || '제목 없음')}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
@@ -612,6 +613,7 @@ function _applyDlBoardFilter(main) {
           <div data-boardid="${escHtml(p.docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
             <div style="display:flex;align-items:center;gap:6px;min-width:0">
               ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
+              ${p.prefix ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
               <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
@@ -664,8 +666,20 @@ function _renderBoardWrite() {
       </div>
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:10px">
-        <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
-          style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none">
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <div style="flex-shrink:0">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">말머리 <span style="color:#e85959;font-weight:700">*</span></div>
+            <select id="boardWritePrefix" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 8px;font-size:13px;font-weight:600;color:var(--text);outline:none;cursor:pointer;height:42px">
+              <option value="">선택</option>
+              <option value="자유">자유</option>
+              <option value="정보">정보</option>
+              <option value="질문">질문</option>
+              <option value="영상">영상</option>
+            </select>
+          </div>
+          <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
+            style="flex:1;min-width:0;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none">
+        </div>
       </div>
 
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:12px">
@@ -683,6 +697,8 @@ function _renderBoardWrite() {
   document.getElementById('boardWriteBack')?.addEventListener('click', _renderBoardList);
   document.getElementById('boardWriteCancelBtn')?.addEventListener('click', _renderBoardList);
   document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
+    const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
+    if (!prefix) { alert('말머리를 선택해주세요.'); document.getElementById('boardWritePrefix')?.focus(); return; }
     const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
     if (!title) { alert('제목을 입력해주세요.'); document.getElementById('boardWriteTitle')?.focus(); return; }
     if (!_hasEditorContent('board-write')) { alert('내용을 입력해주세요.'); return; }
@@ -693,6 +709,7 @@ function _renderBoardWrite() {
 
     try {
       const ref = await db.collection('boards').add({
+        prefix     : prefix,
         title      : title,
         text       : html,
         uid        : user.uid,
@@ -761,7 +778,10 @@ async function _renderBoardDetail(boardId) {
 
           <div class="evt-detail-header">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
-              <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</h1>
+              <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;flex-wrap:wrap">
+                ${p.prefix ? `<span style="flex-shrink:0;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(77,159,255,0.15);color:var(--accent)">${escHtml(p.prefix)}</span>` : ""}
+                <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</h1>
+              </div>
               ${isOwner ? `<button id="boardDetailDelete" style="flex-shrink:0;background:none;border:1px solid var(--border);cursor:pointer;color:var(--text-muted);font-size:11px;padding:3px 8px;border-radius:var(--radius-sm)">삭제</button>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
