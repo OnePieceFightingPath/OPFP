@@ -171,11 +171,11 @@ function _renderPatchDetail(id) {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:8px">
 
       <div class="evt-detail-header">
-        <div class="evt-detail-header-top">
-          ${patch.version || patch.ver ? `<span class="evt-detail-tag">${escHtml(patch.version || patch.ver)}</span>` : ''}
-          ${isNew ? `<span class="evt-detail-status-badge active">NEW</span>` : ''}
+        ${patch.version || patch.ver ? `<div class="evt-detail-header-top"><span class="evt-detail-tag">${escHtml(patch.version || patch.ver)}</span></div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          ${isNew ? `<span class="evt-detail-status-badge active" style="flex-shrink:0">NEW</span>` : ''}
+          <h1 class="evt-detail-title" style="margin:0">${escHtml(patch.title)}</h1>
         </div>
-        <h1 class="evt-detail-title">${escHtml(patch.title)}</h1>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${patch.date ? `<div class="evt-detail-period" style="margin-top:0">📅 ${_dFmtPatchDate(patch.date)}</div>` : '<div></div>'}
           <span class="patch-detail-read-count" id="patchDetailReadCount" style="display:none">
