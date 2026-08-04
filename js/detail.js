@@ -230,9 +230,19 @@ function _renderPatchDetail(id) {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:8px">
 
       <div class="evt-detail-header">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-          ${isNew ? `<span class="evt-detail-status-badge active" style="flex-shrink:0">NEW</span>` : ''}
-          <h1 class="evt-detail-title" style="margin:0">${escHtml(patch.title)}</h1>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0">
+            ${isNew ? `<span class="evt-detail-status-badge active" style="flex-shrink:0">NEW</span>` : ''}
+            <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(patch.title)}</h1>
+          </div>
+          <div class="board-detail-more-wrap" style="position:relative;flex-shrink:0">
+            <button id="patchDetailMoreBtn" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 6px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center" title="더보기">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+            </button>
+            <div class="evt-comment-dropdown board-detail-dropdown" id="patchDetailDropdown" style="display:none;min-width:90px">
+              <button class="evt-comment-dropdown-item" id="patchDetailShare">공유</button>
+            </div>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${patch.date ? `<div class="evt-detail-period" style="margin-top:0">📅 ${_dFmtPatchDate(patch.date)}</div>` : '<div></div>'}
@@ -280,6 +290,34 @@ function _renderPatchDetail(id) {
   });
   document.getElementById('patchToListBtn')?.addEventListener('click', () => {
     _renderPatchList();
+  });
+
+  /* ⋮ 드롭다운 (패치노트) */
+  const _patchMoreBtn = document.getElementById('patchDetailMoreBtn');
+  const _patchDropdown = document.getElementById('patchDetailDropdown');
+  if (_patchMoreBtn && _patchDropdown) {
+    _patchMoreBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      _patchDropdown.style.display = _patchDropdown.style.display !== 'none' ? 'none' : 'block';
+    });
+    document.addEventListener('click', function _closePatchDropdown(e) {
+      if (!_patchMoreBtn.contains(e.target) && !_patchDropdown.contains(e.target)) {
+        _patchDropdown.style.display = 'none';
+        document.removeEventListener('click', _closePatchDropdown);
+      }
+    });
+  }
+  document.getElementById('patchDetailShare')?.addEventListener('click', () => {
+    if (_patchDropdown) _patchDropdown.style.display = 'none';
+    const url = location.href.split('?')[0] + '?type=patch&id=' + encodeURIComponent(id);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => showToast('링크가 복사되었습니다.', 'success'));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('링크가 복사되었습니다.', 'success');
+    }
   });
 
   /* 하단 목록 페이지네이션 초기화 */
@@ -1641,7 +1679,17 @@ function _buildEventHtml(evt) {
           ${evt.tag ? `<span class="evt-detail-tag">${escHtml(evt.tag)}</span>` : ''}
           <span class="evt-detail-status-badge ${active ? 'active' : 'ended'}">${active ? '진행 중' : '종료'}</span>
         </div>
-        <h1 class="evt-detail-title">${escHtml(evt.title || '제목 없음')}</h1>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <h1 class="evt-detail-title" style="flex:1;min-width:0">${escHtml(evt.title || '제목 없음')}</h1>
+          <div class="board-detail-more-wrap" style="position:relative;flex-shrink:0">
+            <button id="evtDetailMoreBtn" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 6px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center" title="더보기">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+            </button>
+            <div class="evt-comment-dropdown board-detail-dropdown" id="evtDetailDropdown" style="display:none;min-width:90px">
+              <button class="evt-comment-dropdown-item" id="evtDetailShare">공유</button>
+            </div>
+          </div>
+        </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${period ? `<div class="evt-detail-period" style="margin-top:0">📅 ${escHtml(period)}</div>` : '<div></div>'}
           <span class="evt-detail-read-count" id="evtDetailReadCount" style="display:none">
@@ -1706,6 +1754,34 @@ function _buildEventHtml(evt) {
   document.getElementById('evtDetailBackBtn')?.addEventListener('click', () => {
     if (_evtCommentUnsub) { _evtCommentUnsub(); _evtCommentUnsub = null; }
     _renderEventList();
+  });
+
+  /* ⋮ 드롭다운 (이벤트) */
+  const _evtMoreBtn = document.getElementById('evtDetailMoreBtn');
+  const _evtDropdown = document.getElementById('evtDetailDropdown');
+  if (_evtMoreBtn && _evtDropdown) {
+    _evtMoreBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      _evtDropdown.style.display = _evtDropdown.style.display !== 'none' ? 'none' : 'block';
+    });
+    document.addEventListener('click', function _closeEvtDropdown(e) {
+      if (!_evtMoreBtn.contains(e.target) && !_evtDropdown.contains(e.target)) {
+        _evtDropdown.style.display = 'none';
+        document.removeEventListener('click', _closeEvtDropdown);
+      }
+    });
+  }
+  document.getElementById('evtDetailShare')?.addEventListener('click', () => {
+    if (_evtDropdown) _evtDropdown.style.display = 'none';
+    const url = location.href.split('?')[0] + '?type=event&id=' + encodeURIComponent(_detailEventId);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => showToast('링크가 복사되었습니다.', 'success'));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('링크가 복사되었습니다.', 'success');
+    }
   });
 
   if (typeof currentUser !== 'undefined' && currentUser) {
