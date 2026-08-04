@@ -182,7 +182,7 @@ function _renderPatchDetail(id) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
-            <span id="patchDetailReadCountNum">0</span>명이 읽었습니다
+            <span id="patchDetailReadCountNum">0</span>
           </span>
         </div>
       </div>
@@ -584,6 +584,8 @@ function _applyDlBoardFilter(main) {
     return raw ? raw.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '';
   }
 
+  const eyeSvg = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+
   if (_dlBoardViewMode === 'card') {
     container.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:10px';
     container.innerHTML = sorted.map((p, i) => {
@@ -597,6 +599,7 @@ function _applyDlBoardFilter(main) {
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             <span style="font-size:10px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">${escHtml(p.author || '익명')}</span>
             ${date ? `<span style="font-size:11px;color:var(--text-dim)">${date}</span>` : ''}
+            <span class="patch-list-item-views" id="bv-${escHtml(p.docId)}">${eyeSvg}<span>-</span></span>
           </div>
         </div>`;
     }).join('');
@@ -614,6 +617,7 @@ function _applyDlBoardFilter(main) {
             <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
               <span style="font-size:11px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">${escHtml(p.author || '익명')}</span>
               ${date ? `<span style="font-size:11px;color:var(--text-dim)">${date}</span>` : ''}
+              <span class="patch-list-item-views" id="bv-${escHtml(p.docId)}">${eyeSvg}<span>-</span></span>
             </div>
           </div>`;
       }).join('') + `</div>`;
@@ -622,6 +626,17 @@ function _applyDlBoardFilter(main) {
   container.querySelectorAll('[data-boardid]').forEach(el => {
     el.addEventListener('click', () => _renderBoardDetail(el.dataset.boardid));
   });
+
+  /* 게시판 목록 조회수 배치 로드 */
+  try {
+    const ids = sorted.map(p => p.docId);
+    Promise.all(ids.map(id => db.collection('boardViews').doc(id).get())).then(snaps => {
+      snaps.forEach((snap, i) => {
+        const numEl = document.querySelector(`#bv-${ids[i]} span`);
+        if (numEl) numEl.textContent = snap.exists ? (snap.data().count || 0).toLocaleString() : '0';
+      });
+    }).catch(() => {});
+  } catch {}
 }
 
 /* ── 게시판 글쓰기 ── */
@@ -754,6 +769,10 @@ async function _renderBoardDetail(boardId) {
               <div>
                 <span style="font-size:12px;font-weight:600;color:var(--accent)">${escHtml(p.author || '익명')}</span>
                 ${dateStr ? `<span style="font-size:11px;color:var(--text-dim);margin-left:6px">${dateStr}</span>` : ''}
+                <span class="patch-detail-read-count" id="boardDetailReadCount" style="display:none;margin-left:8px">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span id="boardDetailReadCountNum">0</span>
+                </span>
               </div>
             </div>
           </div>
@@ -820,12 +839,53 @@ async function _renderBoardDetail(boardId) {
     /* 하단 최근 게시글 목록 */
     _renderBoardRecentList(boardId);
 
+    /* 게시판 조회수 추적 */
+    _trackBoardView(boardId).catch(err => console.error('게시판 조회수 오류:', err));
+
   } catch (e) {
     console.error('게시글 로드 실패:', e);
     main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글을 불러오지 못했습니다.</div>`;
   }
 
   window.scrollTo({ top: 0 });
+}
+
+/* ── 게시판 조회수 ── */
+async function _trackBoardView(boardId) {
+  const countEl = document.getElementById('boardDetailReadCount');
+  const numEl   = document.getElementById('boardDetailReadCountNum');
+  if (!countEl || !numEl) return;
+
+  const lsKey = `board_read_${boardId}`;
+  const alreadyRead = localStorage.getItem(lsKey);
+
+  async function fetchAndShowCount() {
+    try {
+      const snap = await db.collection('boardViews').doc(boardId).get();
+      numEl.textContent = (snap.exists ? (snap.data().count || 0) : 0).toLocaleString();
+      countEl.style.display = 'inline-flex';
+    } catch { countEl.style.display = 'none'; }
+  }
+
+  if (alreadyRead) { await fetchAndShowCount(); return; }
+
+  countEl.classList.add('counting');
+  countEl.style.display = 'inline-flex';
+  numEl.textContent = '...';
+
+  try {
+    const viewRef = db.collection('boardViews').doc(boardId);
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(viewRef);
+      const cur  = snap.exists ? (snap.data().count || 0) : 0;
+      tx.set(viewRef, { count: cur + 1 }, { merge: true });
+    });
+    localStorage.setItem(lsKey, '1');
+    await fetchAndShowCount();
+  } catch {
+    await fetchAndShowCount();
+  }
+  countEl.classList.remove('counting');
 }
 
 /* ── 게시판 상세 하단 목록 ── */
@@ -841,17 +901,29 @@ async function _renderBoardRecentList(currentId) {
       const raw2 = post.createdAt?.toDate ? post.createdAt.toDate() : (post.createdAt ? new Date(post.createdAt) : null);
       const d2   = raw2 ? raw2.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '';
       const isCurrent = post.docId === currentId;
+      const eyeSvgSm = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
       return `<div class="patch-recent-item${isCurrent ? ' current' : ''}" ${isCurrent ? '' : `data-boardid="${escHtml(post.docId)}"`}>
         <div class="patch-recent-item-title">${escHtml(post.title || '제목 없음')}</div>
         <div class="patch-recent-item-meta">
           <span class="patch-recent-item-author">${escHtml(post.author || '익명')}</span>
           ${d2 ? `<span class="patch-recent-item-date">${d2}</span>` : ''}
+          <span class="patch-recent-item-views" id="bvrec-${escHtml(post.docId)}">${eyeSvgSm}<span>-</span></span>
         </div>
       </div>`;
     }).join('');
     listEl.querySelectorAll('[data-boardid]').forEach(el => {
       el.addEventListener('click', () => _renderBoardDetail(el.dataset.boardid));
     });
+    /* 하단 목록 조회수 배치 로드 */
+    try {
+      const ids2 = posts.map(p => p.docId);
+      Promise.all(ids2.map(id => db.collection('boardViews').doc(id).get())).then(snaps => {
+        snaps.forEach((snap, i) => {
+          const numEl = document.querySelector(`#bvrec-${ids2[i]} span`);
+          if (numEl) numEl.textContent = snap.exists ? (snap.data().count || 0).toLocaleString() : '0';
+        });
+      }).catch(() => {});
+    } catch {}
   } catch (e) { console.error('게시판 목록 로드 실패:', e); }
 }
 /* ── 홈 렌더링 ── */
@@ -1320,7 +1392,7 @@ function _buildEventHtml(evt) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
             </svg>
-            <span id="evtDetailReadCountNum">0</span>명이 읽었습니다
+            <span id="evtDetailReadCountNum">0</span>
           </span>
         </div>
       </div>
