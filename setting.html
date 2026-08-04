@@ -14,7 +14,14 @@
     <link rel="apple-touch-icon" href="img/logo-dark.png" id="appTouchIcon" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+    <!-- Firebase 도메인 DNS prefetch: SDK 다운로드 지연 완화 -->
+    <link rel="dns-prefetch" href="https://www.gstatic.com" />
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+    <!-- Google Fonts: 비차단 preload로 렌더 블로킹 제거 -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" /></noscript>
     <link rel="icon" type="image/png" href="img/logo-dark.png" id="appFaviconIcon" />
     <link rel="stylesheet" href="css/style.css?v=6" />
     <style>
