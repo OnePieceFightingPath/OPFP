@@ -803,8 +803,8 @@ function _renderBoardWrite() {
     // GNB + 하단 탭바 숨김
     const gnb     = document.querySelector('.gnb');
     const tabBar  = document.querySelector('.detail-bottom-tab');
-    if (gnb)    gnb.style.visibility    = 'hidden';
-    if (tabBar) tabBar.style.visibility = 'hidden';
+    if (gnb)    gnb.style.display    = 'none';
+    if (tabBar) tabBar.style.display = 'none';
 
     _initEditor('board-write', {});
 
@@ -830,29 +830,29 @@ function _renderBoardWrite() {
     function _bwmCleanup() {
       document.getElementById('bwMobileOverlay')?.remove();
       document.body.classList.remove('bwm-active');
-      if (gnb)    gnb.style.visibility    = '';
-      if (tabBar) tabBar.style.visibility = '';
+      if (gnb)    gnb.style.display    = '';
+      if (tabBar) tabBar.style.display = '';
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', _bwmAdjust);
         window.visualViewport.removeEventListener('scroll', _bwmAdjust);
       }
     }
 
-    document.getElementById('boardWriteBack')?.addEventListener('click', () => {
+    overlay.querySelector('.bwm-close-btn')?.addEventListener('click', () => {
       _bwmCleanup();
       _renderBoardList();
     });
 
     /* 등록 버튼 */
-    document.getElementById('boardWriteSubmitBtn')?.addEventListener('click', async () => {
-      const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
+    overlay.querySelector('.bwm-submit-btn')?.addEventListener('click', async () => {
+      const prefix = (overlay.querySelector('.bwm-prefix-select')?.value || '').trim();
       if (!prefix) { _showPrefixAlertPopup(); return; }
-      const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
-      if (!title) { showToast('제목을 입력해주세요.', 'error'); document.getElementById('boardWriteTitle')?.focus(); return; }
+      const title = (overlay.querySelector('.bwm-title-input')?.value || '').trim();
+      if (!title) { showToast('제목을 입력해주세요.', 'error'); overlay.querySelector('.bwm-title-input')?.focus(); return; }
       if (!_hasEditorContent('board-write')) { showToast('내용을 입력해주세요.', 'error'); return; }
 
       const html = _getEditorContent('board-write');
-      const submitBtn = document.getElementById('boardWriteSubmitBtn');
+      const submitBtn = overlay.querySelector('.bwm-submit-btn');
       if (submitBtn) submitBtn.disabled = true;
 
       try {
