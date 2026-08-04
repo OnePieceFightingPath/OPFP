@@ -112,7 +112,10 @@ document.addEventListener('DOMContentLoaded', function _initPrefixAlertPopup() {
 });
 
 function _showPrefixAlertPopup() {
-  document.getElementById('prefixAlertOverlay')?.classList.add('open');
+  const el = document.getElementById('prefixAlertOverlay');
+  if (!el) return;
+  el.style.zIndex = '9100';
+  el.classList.add('open');
 }
 
 /* ── URL 입력 프롬프트 (prompt() 대체) ── */
