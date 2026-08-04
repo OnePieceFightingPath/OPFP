@@ -790,6 +790,18 @@ async function _renderBoardDetail(boardId) {
 
         </div>
 
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:12px">
+          <div class="evt-comment-section" style="margin-top:0">
+            <div class="evt-comment-section-title">
+              댓글 <span class="evt-comment-count-badge" id="boardCommentCount">0</span>
+            </div>
+            ${ user ? _buildEditorHtml('board-cmt', {}) : `<div class="evt-comment-login-notice">글을 작성하시려면 <button class="evt-comment-login-link" id="boardCommentLoginBtn">로그인</button> 해주세요.</div>` }
+            <div class="evt-comment-list" id="boardCommentList">
+              <div class="evt-comment-empty">댓글을 불러오는 중...</div>
+            </div>
+          </div>
+        </div>
+
         <div class="patch-nav-section">
           <div class="patch-nav-header">
             <span class="patch-nav-header-title">게시판</span>
@@ -801,8 +813,12 @@ async function _renderBoardDetail(boardId) {
       </div>`;
 
     /* 버튼 이벤트 */
-    document.getElementById('boardDetailBackBtn')?.addEventListener('click', _renderBoardList);
-    document.getElementById('boardToListBtn')?.addEventListener('click', _renderBoardList);
+    const _goBackFromBoard = () => {
+      if (_evtCommentUnsub) { _evtCommentUnsub(); _evtCommentUnsub = null; }
+      _renderBoardList();
+    };
+    document.getElementById('boardDetailBackBtn')?.addEventListener('click', _goBackFromBoard);
+    document.getElementById('boardToListBtn')?.addEventListener('click', _goBackFromBoard);
 
     /* 좋아요 */
     document.getElementById('boardLikeBtn')?.addEventListener('click', async () => {
@@ -835,6 +851,16 @@ async function _renderBoardDetail(boardId) {
         _renderBoardList();
       } catch (e) { console.error('삭제 실패:', e); alert('삭제에 실패했습니다.'); }
     });
+
+    /* 게시판 댓글 */
+    _cmtCtx = { commentCol: 'boardComments', parentCol: 'boards', parentId: boardId, queryField: 'boardId', listElId: 'boardCommentList', countElId: 'boardCommentCount', editorId: 'board-cmt' };
+    if (user) {
+      _initEditor('board-cmt', { onSubmit: submitDetailComment });
+    }
+    document.getElementById('boardCommentLoginBtn')?.addEventListener('click', () => {
+      document.getElementById('loginModalOverlay')?.classList.add('open');
+    });
+    loadDetailComments(boardId);
 
     /* 하단 최근 게시글 목록 */
     _renderBoardRecentList(boardId);
@@ -1320,6 +1346,17 @@ async function _loadDlEventCounts() {
 let _evtCommentUnsub = null;
 let _detailEventId   = null;
 
+/* 댓글 컨텍스트 — 이벤트/게시판 댓글 공용 */
+let _cmtCtx = {
+  commentCol : 'eventComments',
+  parentCol  : 'events',
+  parentId   : null,
+  queryField : 'eventId',
+  listElId   : 'evtCommentList',
+  countElId  : 'evtCommentCount',
+  editorId   : 'main',
+};
+
 async function _renderEventDetail(id) {
   _detailEventId = id;
   const main = document.getElementById('detailMain');
@@ -1345,6 +1382,7 @@ async function _renderEventDetail(id) {
     document.title = `${evt.title || '이벤트'} — Fighting Path Patch`;
     _buildEventHtml(evt);
     _trackEventView(id).catch(err => console.error('이벤트 조회수 오류:', err));
+    _cmtCtx = { commentCol: 'eventComments', parentCol: 'events', parentId: id, queryField: 'eventId', listElId: 'evtCommentList', countElId: 'evtCommentCount', editorId: 'main' };
     loadDetailComments(id);
   } catch (e) {
     console.error('이벤트 로드 실패:', e);
@@ -1462,15 +1500,15 @@ function _buildEventHtml(evt) {
 }
 
 /* ── 댓글 로드 ── */
-function loadDetailComments(eventId) {
-  const list = document.getElementById('evtCommentList');
+function loadDetailComments(parentId) {
+  const list = document.getElementById(_cmtCtx.listElId);
   if (!list) return;
 
   if (_evtCommentUnsub) { _evtCommentUnsub(); _evtCommentUnsub = null; }
   list.innerHTML = '<div class="evt-comment-empty">댓글을 불러오는 중...</div>';
 
-  _evtCommentUnsub = db.collection('eventComments')
-    .where('eventId', '==', eventId)
+  _evtCommentUnsub = db.collection(_cmtCtx.commentCol)
+    .where(_cmtCtx.queryField, '==', parentId)
     .onSnapshot(snap => {
       const comments = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -1482,7 +1520,7 @@ function loadDetailComments(eventId) {
       _renderDetailComments(comments);
     }, err => {
       console.error('댓글 로드 실패:', err);
-      const l = document.getElementById('evtCommentList');
+      const l = document.getElementById(_cmtCtx.listElId);
       if (l) l.innerHTML = '<div class="evt-comment-empty"><div class="evt-comment-empty-title">등록 된 댓글이 없습니다.</div><div class="evt-comment-empty-sub">첫번째 댓글을 작성해보세요!</div></div>';
     });
 }
@@ -1586,15 +1624,15 @@ function _buildCommentHtml(c, isReply, replies) {
 }
 
 function _renderDetailComments(comments) {
-  const list    = document.getElementById('evtCommentList');
-  const countEl = document.getElementById('evtCommentCount');
+  const list    = document.getElementById(_cmtCtx.listElId);
+  const countEl = document.getElementById(_cmtCtx.countElId);
   if (!list) return;
 
   const topLevel = comments.filter(c => !c.replyTo);
   const replies  = comments.filter(c => !!c.replyTo);
   if (countEl) countEl.textContent = comments.length;
   // 이벤트 카드 댓글 수 배지도 실제 값으로 갱신
-  if (_detailEventId) {
+  if (_detailEventId && _cmtCtx.commentCol === 'eventComments') {
     const cardCmtEl = document.getElementById('ec-' + _detailEventId);
     if (cardCmtEl) {
       const numSpan = cardCmtEl.querySelector('span');
@@ -1640,7 +1678,7 @@ function _renderDetailComments(comments) {
 
 /* ── 댓글 작성 ── */
 async function submitDetailComment() {
-  if (!_detailEventId) return;
+  if (!_cmtCtx.parentId) return;
   const user    = (typeof currentUser !== 'undefined') ? currentUser : null;
   const profile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
 
@@ -1649,14 +1687,13 @@ async function submitDetailComment() {
     return;
   }
 
-  const html = _getEditorContent('main');
-  if (!_hasEditorContent('main')) return;
-  const btn = document.getElementById('editor-submit-main');
+  const html = _getEditorContent(_cmtCtx.editorId);
+  if (!_hasEditorContent(_cmtCtx.editorId)) return;
+  const btn = document.getElementById('editor-submit-' + _cmtCtx.editorId);
   if (btn) btn.disabled = true;
 
   try {
-    await db.collection('eventComments').add({
-      eventId   : _detailEventId,
+    const commentData = {
       replyTo   : null,
       text      : html,
       uid       : user.uid,
@@ -1665,11 +1702,13 @@ async function submitDetailComment() {
       likedBy   : [],
       dislikedBy: [],
       createdAt : firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    await db.collection('events').doc(_detailEventId).update({
+    };
+    commentData[_cmtCtx.queryField] = _cmtCtx.parentId;
+    await db.collection(_cmtCtx.commentCol).add(commentData);
+    await db.collection(_cmtCtx.parentCol).doc(_cmtCtx.parentId).update({
       commentCount: firebase.firestore.FieldValue.increment(1),
     });
-    _clearEditor('main');
+    _clearEditor(_cmtCtx.editorId);
   } catch (e) {
     console.error('댓글 작성 실패:', e);
     alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
@@ -1703,8 +1742,8 @@ function _deleteDetailComment(cid) {
   newConfirm.addEventListener('click', async () => {
     close();
     try {
-      await db.collection('eventComments').doc(cid).delete();
-      await db.collection('events').doc(_detailEventId).update({
+      await db.collection(_cmtCtx.commentCol).doc(cid).delete();
+      await db.collection(_cmtCtx.parentCol).doc(_cmtCtx.parentId).update({
         commentCount: firebase.firestore.FieldValue.increment(-1),
       });
     } catch (e) {
@@ -1767,7 +1806,7 @@ async function _saveCommentEdit(cid) {
   const saveBtn = document.getElementById('editor-submit-' + editorId);
   if (saveBtn) saveBtn.disabled = true;
   try {
-    await db.collection('eventComments').doc(cid).update({
+    await db.collection(_cmtCtx.commentCol).doc(cid).update({
       text    : html,
       editedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -1786,7 +1825,7 @@ async function _toggleCommentReaction(cid, action) {
   if (!user) { document.getElementById('loginModalOverlay')?.classList.add('open'); return; }
   const uid = user.uid;
   try {
-    const ref  = db.collection('eventComments').doc(cid);
+    const ref  = db.collection(_cmtCtx.commentCol).doc(cid);
     const snap = await ref.get();
     if (!snap.exists) return;
     const data       = snap.data();
@@ -1846,8 +1885,7 @@ async function _submitReply(parentId) {
   const btn = document.querySelector('.evt-comment-reply-submit[data-parent="' + parentId + '"]');
   if (btn) btn.disabled = true;
   try {
-    await db.collection('eventComments').add({
-      eventId   : _detailEventId,
+    const replyData = {
       replyTo   : parentId,
       text      : html,
       uid       : user.uid,
@@ -1856,8 +1894,10 @@ async function _submitReply(parentId) {
       likedBy   : [],
       dislikedBy: [],
       createdAt : firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    await db.collection('events').doc(_detailEventId).update({
+    };
+    replyData[_cmtCtx.queryField] = _cmtCtx.parentId;
+    await db.collection(_cmtCtx.commentCol).add(replyData);
+    await db.collection(_cmtCtx.parentCol).doc(_cmtCtx.parentId).update({
       commentCount: firebase.firestore.FieldValue.increment(1),
     });
     _clearEditor('reply-' + parentId);
