@@ -739,7 +739,7 @@ async function _renderBoardDetail(boardId) {
     const isOwner = user && p.uid === user.uid;
 
     const raw     = p.createdAt?.toDate ? p.createdAt.toDate() : (p.createdAt ? new Date(p.createdAt) : null);
-    const dateStr = raw ? raw.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+    const dateStr = raw ? `${raw.getFullYear()}.${String(raw.getMonth()+1).padStart(2,'0')}.${String(raw.getDate()).padStart(2,'0')}` : '';
 
     document.title = (p.title || '게시글') + ' — Fighting Path Patch';
 
