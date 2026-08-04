@@ -695,10 +695,10 @@ function _renderBoardWrite() {
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+          <div style="flex:1;min-width:0;position:relative">
             <input id="boardWriteTitle" type="text" maxlength="100" placeholder="제목을 입력하세요"
-              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
-            <div style="text-align:right;font-size:11px;color:var(--text-muted)"><span id="boardWriteTitleCount">0</span> / 100</div>
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 56px 10px 12px;font-size:15px;font-weight:600;color:var(--text);outline:none;height:42px">
+            <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none;white-space:nowrap"><span id="boardWriteTitleCount">0</span> / 100</span>
           </div>
         </div>
       </div>
