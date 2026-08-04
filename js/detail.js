@@ -115,6 +115,47 @@ function _showPrefixAlertPopup() {
   document.getElementById('prefixAlertOverlay')?.classList.add('open');
 }
 
+/* ── URL 입력 프롬프트 (prompt() 대체) ── */
+function _showUrlPrompt(title, placeholder, defaultVal) {
+  return new Promise(function(resolve) {
+    var overlay    = document.getElementById('urlInputOverlay');
+    var titleEl    = document.getElementById('urlInputTitle');
+    var inputEl    = document.getElementById('urlInputField');
+    var confirmBtn = document.getElementById('urlInputConfirm');
+    var cancelBtn  = document.getElementById('urlInputCancel');
+    var closeBtn   = document.getElementById('urlInputClose');
+    if (!overlay || !inputEl) { resolve(window.prompt(title, defaultVal)); return; }
+
+    if (titleEl)  titleEl.textContent = title      || 'URL을 입력하세요';
+    inputEl.placeholder               = placeholder || 'https://';
+    inputEl.value                     = defaultVal  || '';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function() { inputEl.focus(); inputEl.select(); }, 80);
+
+    function finish(val) {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      confirmBtn.removeEventListener('click', onConfirm);
+      cancelBtn.removeEventListener('click',  onCancel);
+      if (closeBtn) closeBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click',    onOverlay);
+      inputEl.removeEventListener('keydown',  onKey);
+      resolve(val);
+    }
+    function onConfirm()  { finish(inputEl.value.trim() || null); }
+    function onCancel()   { finish(null); }
+    function onOverlay(e) { if (e.target === overlay) finish(null); }
+    function onKey(e)     { if (e.key === 'Enter') { e.preventDefault(); finish(inputEl.value.trim() || null); } else if (e.key === 'Escape') finish(null); }
+
+    confirmBtn.addEventListener('click', onConfirm);
+    cancelBtn.addEventListener('click',  onCancel);
+    if (closeBtn) closeBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click',    onOverlay);
+    inputEl.addEventListener('keydown',  onKey);
+  });
+}
+
 /* ── 좋아요 초기화 ── */
 async function _initLikeBtn(type, id, btnEl, countEl) {
   if (!btnEl || !countEl) return;
@@ -725,8 +766,8 @@ function _renderBoardWrite() {
     const prefix = (document.getElementById('boardWritePrefix')?.value || '').trim();
     if (!prefix) { _showPrefixAlertPopup(); return; }
     const title = (document.getElementById('boardWriteTitle')?.value || '').trim();
-    if (!title) { alert('제목을 입력해주세요.'); document.getElementById('boardWriteTitle')?.focus(); return; }
-    if (!_hasEditorContent('board-write')) { alert('내용을 입력해주세요.'); return; }
+    if (!title) { showToast('제목을 입력해주세요.', 'error'); document.getElementById('boardWriteTitle')?.focus(); return; }
+    if (!_hasEditorContent('board-write')) { showToast('내용을 입력해주세요.', 'error'); return; }
 
     const html = _getEditorContent('board-write');
     const submitBtn = document.getElementById('boardWriteSubmitBtn');
@@ -748,7 +789,7 @@ function _renderBoardWrite() {
       _renderBoardDetail(ref.id);
     } catch (e) {
       console.error('게시글 작성 실패:', e);
-      alert('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+      showToast('게시글 작성에 실패했습니다. 다시 시도해주세요.', 'error');
       if (submitBtn) submitBtn.disabled = false;
     }
   });
@@ -890,11 +931,11 @@ async function _renderBoardDetail(boardId) {
 
     /* 삭제 */
     document.getElementById('boardDetailDelete')?.addEventListener('click', async () => {
-      if (!confirm('게시글을 삭제하시겠습니까?')) return;
+      if (!await _gnbConfirm('게시글 삭제', '게시글을 삭제하시겠습니까?')) return;
       try {
         await db.collection('boards').doc(boardId).delete();
         _renderBoardList();
-      } catch (e) { console.error('삭제 실패:', e); alert('삭제에 실패했습니다.'); }
+      } catch (e) { console.error('삭제 실패:', e); showToast('삭제에 실패했습니다.', 'error'); }
     });
 
     /* 게시판 댓글 */
@@ -1756,7 +1797,7 @@ async function submitDetailComment() {
     _clearEditor(_cmtCtx.editorId);
   } catch (e) {
     console.error('댓글 작성 실패:', e);
-    alert('댓글 작성에 실패했습니다. 다시 시도해주세요.');
+    showToast('댓글 작성에 실패했습니다. 다시 시도해주세요.', 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -1793,7 +1834,7 @@ function _deleteDetailComment(cid) {
       });
     } catch (e) {
       console.error('댓글 삭제 실패:', e);
-      alert('댓글 삭제에 실패했습니다.');
+      showToast('댓글 삭제에 실패했습니다.', 'error');
     }
   });
   newCancel.addEventListener('click', close);
@@ -1858,7 +1899,7 @@ async function _saveCommentEdit(cid) {
     _closeCommentEdit(cid);
   } catch (e) {
     console.error('댓글 수정 실패:', e);
-    alert('댓글 수정에 실패했습니다.');
+    showToast('댓글 수정에 실패했습니다.', 'error');
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
@@ -1949,7 +1990,7 @@ async function _submitReply(parentId) {
     _toggleReplyArea(parentId);
   } catch (e) {
     console.error('대댓글 작성 실패:', e);
-    alert('대댓글 작성에 실패했습니다.');
+    showToast('대댓글 작성에 실패했습니다.', 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
@@ -2243,8 +2284,8 @@ function _initEditor(editorId, opts) {
   var linkBtn = wrap.querySelector('.evt-editor-link-btn');
   if (linkBtn) {
     linkBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
-    linkBtn.addEventListener('click', function() {
-      var url = prompt('링크 URL을 입력하세요:', 'https://');
+    linkBtn.addEventListener('click', async function() {
+      var url = await _showUrlPrompt('링크 URL을 입력하세요', 'https://');
       if (!url) return;
       restoreRange();
       document.execCommand('createLink', false, url);
@@ -2340,8 +2381,8 @@ function _initEditor(editorId, opts) {
   var videoBtn = wrap.querySelector('.evt-editor-video-btn');
   if (videoBtn) {
     videoBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
-    videoBtn.addEventListener('click', function() {
-      var url = prompt('동영상 URL (YouTube 등):', 'https://');
+    videoBtn.addEventListener('click', async function() {
+      var url = await _showUrlPrompt('동영상 URL (YouTube 등)', 'https://');
       if (!url) return;
       restoreRange();
       var embedUrl = url;

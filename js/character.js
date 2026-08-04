@@ -556,7 +556,7 @@ async function submitUserTip(charId) {
   } catch (err) {
     console.error('꿀팁 등록 실패:', err);
     if (btn) { btn.disabled = false; btn.textContent = '등록하기'; }
-    alert('등록에 실패했습니다.\n\n[Firestore 규칙] userTips 컬렉션에 인증된 사용자의 쓰기 권한이 필요합니다.');
+    if (typeof showToast === 'function') showToast('꿀팁 등록에 실패했습니다. 다시 시도해주세요.', 'error');
   }
 }
 
@@ -668,7 +668,7 @@ async function toggleTipVote(tipId, charId, type) {
 }
 
 async function deleteUserTip(tipId, charId) {
-  if (!confirm('이 꿀팁을 삭제하시겠습니까?')) return;
+  if (!await _gnbConfirm('꿀팁 삭제', '이 꿀팁을 삭제하시겠습니까?')) return;
   try {
     await db.collection('userTips').doc(tipId).delete();
     await switchCharTab('tips', charId);
