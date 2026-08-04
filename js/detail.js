@@ -2430,7 +2430,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else if (type === 'board') {
     const mode = params.get('mode');
     if (mode === 'write') {
-      _renderBoardWrite();
+      // 새로고침/강력 새로고침 시 write URL로 진입하면 authReady 직후에도
+      // Firestore onSnapshot(currentUserProfile)이 아직 미도착이라 profile=null →
+      // 로그인 팝업 오노출 버그 발생. 어차피 새로고침하면 작성 내용도 유실되므로
+      // 게시판 목록으로 리다이렉트한다.
+      history.replaceState({}, '', 'detail.html?type=board');
+      _renderBoardList();
     } else if (id) {
       _renderBoardDetail(id);
     } else {
