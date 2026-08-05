@@ -1913,10 +1913,12 @@ function _openCommentEdit(cid) {
   if (contentEl) {
     contentEl.innerHTML = textEl.innerHTML || '';
     const countEl = document.getElementById('editor-count-' + editorId);
+    const saveBtn = document.getElementById('editor-submit-' + editorId);
     if (countEl) {
       const len = (contentEl.innerText || contentEl.textContent || '').length;
       countEl.textContent = len + ' / 1,000';
     }
+    if (saveBtn) saveBtn.disabled = false;
     contentEl.focus();
     const range = document.createRange();
     const sel = window.getSelection();
@@ -2109,6 +2111,8 @@ function _clearEditor(editorId) {
   var cnt = document.getElementById('editor-count-' + editorId);
   if (el)  el.innerHTML = '';
   if (cnt) cnt.textContent = '0 / 1,000';
+  var btn = document.getElementById('editor-submit-' + editorId);
+  if (btn) btn.disabled = true;
 }
 
 /* ── Cloudinary 업로드 (게시판/댓글 에디터 공용) ── */
@@ -2185,6 +2189,16 @@ async function _uploadToCloudinary(file, area, restoreRange, updateCount) {
 
 function _buildEditorHtml(editorId, opts) {
   opts = opts || {};
+  var isCommentEditor = !opts.bodyMode;
+  var authorHtml = '';
+  if (isCommentEditor) {
+    var authorProfile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
+    var authorUser = (typeof currentUser !== 'undefined') ? currentUser : null;
+    var authorName = (authorProfile && authorProfile.nickname)
+      || (authorUser && authorUser.displayName)
+      || '익명';
+    authorHtml = '<div class="evt-comment-editor-author">' + escHtml(authorName) + '</div>';
+  }
   var cancelHtml = opts.showCancel
     ? '<button type="button" class="evt-comment-cancel-btn-sm evt-editor-cancel" data-editor-id="' + editorId + '">취소</button>'
     : '';
@@ -2193,7 +2207,7 @@ function _buildEditorHtml(editorId, opts) {
   var fontSizes = [11,13,15,16,19,24,28,30,34,38];
   var fontSizeItems = fontSizes.map(function(s){ return '<button type="button" class="evt-editor-fontsize-item" data-size="'+s+'">'+s+'</button>'; }).join('');
 
-  /* ── 툴바: bodyMode = 전체 도구 / 댓글 = 이모지 + 카메라만 (우측 정렬) ── */
+  /* ── 툴바: bodyMode = 전체 도구 / 댓글 = 이모지 + 카메라만 ── */
   var toolbar = opts.bodyMode ? [
     '  <div class="evt-editor-toolbar">',
     '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
@@ -2242,7 +2256,7 @@ function _buildEditorHtml(editorId, opts) {
     '    <button type="button" class="evt-editor-tool" data-cmd="insertHorizontalRule" title="구분선"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 11H5c-.55 0-1 .45-1 1s.45 1 1 1h14c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg></button>',
     '  </div>',
   ].join('\n') : [
-    '  <div class="evt-editor-toolbar" style="justify-content:flex-end">',
+    '  <div class="evt-editor-toolbar evt-comment-editor-toolbar" style="justify-content:flex-start">',
     '    <span class="evt-editor-emoji-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-emoji-btn" data-editor-id="' + editorId + '" title="이모지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>',
     '      <div class="evt-editor-emoji-picker" id="emoji-picker-' + editorId + '" style="display:none">',
@@ -2254,14 +2268,15 @@ function _buildEditorHtml(editorId, opts) {
   ].join('\n');
 
   return [
-    '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
+    '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : ' evt-comment-editor') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
+    authorHtml,
     toolbar,
-    '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 입력하세요') + '"></div>',
-    '  <div class="evt-editor-footer">',
+    '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 남겨보세요') + '"></div>',
+    '  <div class="evt-editor-footer' + (isCommentEditor ? ' evt-comment-editor-footer' : '') + '">',
     '    <span class="evt-editor-charcount" id="editor-count-' + editorId + '">0 / 1,000</span>',
     opts.bodyMode
       ? '    <div class="evt-editor-actions"></div>'
-      : '    <div class="evt-editor-actions">' + cancelHtml + '<button type="button" class="evt-comment-submit-btn" id="editor-submit-' + editorId + '">' + (opts.submitLabel || '등록') + '</button></div>',
+      : '    <div class="evt-editor-actions">' + cancelHtml + '<button type="button" class="evt-comment-submit-btn" id="editor-submit-' + editorId + '"' + (opts.initialHtml ? '' : ' disabled') + '>' + (opts.submitLabel || '등록') + '</button></div>',
     '  </div>',
     '</div>',
   ].join('\n');
@@ -2308,8 +2323,10 @@ function _initEditor(editorId, opts) {
     if (isBody) return;
     var len = (area.innerText || area.textContent || '').replace(/\n$/, '').length;
     if (count) count.textContent = Math.min(len, MAX) + ' / 1,000';
+    if (submitBtn) submitBtn.disabled = !_hasEditorContent(editorId);
   }
 
+  var submitBtn = document.getElementById('editor-submit-' + editorId);
   area.addEventListener('input', function() {
     if (!isBody) {
       var txt = area.innerText || area.textContent || '';
@@ -2675,7 +2692,6 @@ function _initEditor(editorId, opts) {
   if (cancelBtn && opts.onCancel) cancelBtn.addEventListener('click', opts.onCancel);
 
   /* 등록 버튼 */
-  var submitBtn = document.getElementById('editor-submit-' + editorId);
   if (submitBtn && opts.onSubmit) submitBtn.addEventListener('click', opts.onSubmit);
 
   /* ── 모바일 전용 도크 툴바 (bwm 오버레이에서만) ── */

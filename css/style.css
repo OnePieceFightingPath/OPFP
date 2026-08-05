@@ -4740,22 +4740,29 @@ html.is-pwa .site-footer {
 .evt-comment-textarea::placeholder { color: var(--text-dim, #6c7086); }
 
 .evt-comment-submit-btn {
-  background: var(--accent, #4d9fff);
-  color: #fff;
+  background: var(--bg-hover);
+  color: var(--text-muted);
   border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
+  border-radius: 7px;
+  padding: 8px 13px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.15s;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
   font-family: inherit;
   flex-shrink: 0;
   align-self: flex-end;
 }
-.evt-comment-submit-btn:hover:not(:disabled) { opacity: 0.85; }
-.evt-comment-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.evt-comment-submit-btn:hover:not(:disabled) { opacity: 0.86; }
+.evt-comment-submit-btn:not(:disabled) {
+  background: #d9f7e8;
+  color: #168a58;
+}
+.evt-comment-submit-btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
 
 /* 댓글 목록 */
 .evt-comment-list {
@@ -4989,6 +4996,78 @@ html.is-pwa .site-footer {
   background: var(--bg-card, #1e1e2e);
   margin-bottom: 20px;
   position: relative;
+}
+
+/* 댓글 및 답글 작성 에디터 */
+.evt-comment-editor {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+.evt-comment-editor-author {
+  padding: 16px 18px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.evt-comment-editor .evt-editor-area {
+  min-height: 78px;
+  max-height: 220px;
+  padding: 10px 18px 14px;
+  color: var(--text);
+}
+.evt-comment-editor .evt-editor-area:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-dim);
+}
+.evt-comment-editor-footer {
+  min-height: 48px;
+  padding: 4px 12px 8px 14px;
+  border-top: none;
+  gap: 10px;
+}
+.evt-comment-editor-toolbar {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  padding: 0;
+  border-bottom: none;
+  gap: 2px;
+  z-index: 1;
+}
+.evt-comment-editor .evt-editor-tool {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text-muted);
+  border-radius: 6px;
+}
+.evt-comment-editor .evt-editor-tool:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+.evt-comment-editor .evt-editor-emoji-wrap {
+  display: inline-flex;
+  order: 2;
+}
+.evt-comment-editor .evt-editor-image-btn {
+  order: 1;
+}
+.evt-comment-editor .evt-editor-emoji-picker {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.evt-comment-editor .evt-editor-charcount {
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-left: auto;
+  margin-right: 0;
+  padding-left: 68px;
+  white-space: nowrap;
+}
+.evt-comment-editor .evt-editor-actions {
+  gap: 0;
 }
 .evt-editor-toolbar {
   display: flex;
@@ -5923,6 +6002,23 @@ html.is-pwa .site-footer {
 
 /* ── 반응형: 모바일에서 단열 ── */
 @media (max-width: 768px) {
+  .evt-comment-editor .evt-editor-area {
+    min-height: 72px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .evt-comment-editor-author {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .evt-comment-editor-footer {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .evt-comment-editor .evt-editor-charcount {
+    padding-left: 56px;
+  }
+
   /* ── 전체 래퍼: 세로 스택 ── */
   /* GNB: 모바일에서 타이틀 숨김 → 아이콘 바로 옆에 ROOM 표시 */
   .gnb-title {
