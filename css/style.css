@@ -4740,11 +4740,11 @@ html.is-pwa .site-footer {
 .evt-comment-textarea::placeholder { color: var(--text-dim, #6c7086); }
 
 .evt-comment-submit-btn {
-  background: var(--bg-hover);
+  background: #161b22;
   color: var(--text-muted);
-  border: none;
-  border-radius: 7px;
-  padding: 8px 13px;
+  border: 1px solid var(--border, #313244);
+  border-radius: 99px;
+  padding: 10px 16px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -5526,7 +5526,7 @@ html.is-pwa .site-footer {
   border: 1px solid var(--border, #313244);
   padding: 10px 16px;
   font-size: 13px;
-  border-radius: 10px;
+  border-radius: 99px;
 }
 .evt-comment-cancel-btn-sm:hover { background: var(--bg-hover, #242436); }
 
