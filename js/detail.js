@@ -3113,12 +3113,17 @@ function _initEditor(editorId, opts) {
       mLinkBtn.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
       mLinkBtn.addEventListener('click', async function(){
         var sel = window.getSelection();
-        if (!sel || sel.isCollapsed) { showToast('텍스트를 먼저 선택해주세요.', 'error'); return; }
+        var hasSelection = sel && !sel.isCollapsed;
         saveRange();
         var url = await _showUrlPrompt('링크 URL을 입력하세요', 'https://');
         if (!url) return;
         restoreRange();
-        document.execCommand('createLink', false, url);
+        if (hasSelection) {
+          document.execCommand('createLink', false, url);
+        } else {
+          document.execCommand('insertHTML', false,
+            '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>');
+        }
         area.querySelectorAll('a:not([target])').forEach(function(a){ a.target='_blank'; a.rel='noopener noreferrer'; });
         area.focus();
       });
