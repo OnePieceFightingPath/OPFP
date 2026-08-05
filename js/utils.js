@@ -18,10 +18,15 @@ function escHtml(s) {
  * 기존 데이터에 저장된 &lt;br&gt; 형식도 함께 지원합니다.
  */
 function escHtmlBr(s) {
-  const brPlaceholder = '\uE000BR\uE000';
-  const normalized = String(s || '').replace(
-    /(?:<br\s*\/?>|(?:&amp;)*&lt;br\s*\/?(?:&gt;|&amp;gt;))/gi,
-    brPlaceholder
-  );
-  return escHtml(normalized).replace(new RegExp(brPlaceholder, 'g'), '<br>');
+  // 저장 시 한 번 이상 이스케이프된 데이터도 먼저 원래 태그로 정규화합니다.
+  // (예: <br>, &lt;br&gt;, &amp;lt;br&amp;gt;)
+  let normalized = String(s || '');
+  for (let i = 0; i < 3; i++) {
+    normalized = normalized.replace(
+      /&(?:amp;)*lt;br\s*\/?&(?:amp;)*gt;/gi,
+      '<br>'
+    );
+  }
+  return escHtml(normalized)
+    .replace(/&lt;br\s*\/?&gt;/gi, '<br>');
 }

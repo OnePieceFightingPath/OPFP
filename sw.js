@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opfp-v6';
+const CACHE_NAME = 'opfp-v7';
 const PREFS_CACHE = 'opfp-prefs';
 const STATIC_ASSETS = [
   './',
