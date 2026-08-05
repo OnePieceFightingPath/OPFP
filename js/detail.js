@@ -833,11 +833,7 @@ function _renderBoardWrite() {
 
     _initEditor('board-write', {});
 
-    /* 툴바를 하단 도크로 이동 */
-    const editorWrap = overlay.querySelector('.evt-editor-wrap[data-editor-id="board-write"]');
-    const toolbar    = editorWrap?.querySelector('.evt-editor-toolbar');
-    const dock       = document.getElementById('bwmToolbarDock');
-    if (toolbar && dock) dock.appendChild(toolbar);
+    /* 모바일 전용 툴바는 _initEditor 내부에서 bwmToolbarDock에 직접 주입됨 */
 
     /* visualViewport — 키보드 위에 툴바 고정 */
     function _bwmAdjust() {
@@ -2769,7 +2765,28 @@ function _initEditor(editorId, opts) {
     });
   }
 
-  /* 이모지 */
+  /* 이모지 — _getOrCreateEmojiKbPanel은 모바일 툴바에서도 사용 */
+  function _getOrCreateEmojiKbPanel() {
+    var panel = document.getElementById('evt-emoji-kb-panel');
+    if (panel) return panel;
+    panel = document.createElement('div');
+    panel.id = 'evt-emoji-kb-panel';
+    panel.className = 'evt-emoji-kb-panel';
+    var srcs = [];
+    for (var k = 1; k <= 39; k++) srcs.push('img/emoji/emogi'+k+'.png');
+    var items = srcs.map(function(src, idx) {
+      return '<span class="evt-ekb-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(idx+1)+'" loading="lazy"></span>';
+    }).join('');
+    panel.innerHTML =
+      '<div class="evt-ekb-header"><span class="evt-ekb-title">이모지</span><button type="button" class="evt-ekb-close-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>' +
+      '<div class="evt-ekb-grid">'+items+'</div>';
+    panel.querySelector('.evt-ekb-close-btn').addEventListener('click', function() {
+      panel.classList.remove('open');
+    });
+    document.body.appendChild(panel);
+    return panel;
+  }
+
   var emojiBtn    = wrap.querySelector('.evt-editor-emoji-btn');
   var emojiPicker = document.getElementById('emoji-picker-' + editorId);
   if (emojiBtn && emojiPicker) {
@@ -2784,26 +2801,6 @@ function _initEditor(editorId, opts) {
           updateCount();
         });
       });
-    }
-    function _getOrCreateEmojiKbPanel() {
-      var panel = document.getElementById('evt-emoji-kb-panel');
-      if (panel) return panel;
-      panel = document.createElement('div');
-      panel.id = 'evt-emoji-kb-panel';
-      panel.className = 'evt-emoji-kb-panel';
-      var srcs = [];
-      for (var k = 1; k <= 39; k++) srcs.push('img/emoji/emogi'+k+'.png');
-      var items = srcs.map(function(src, idx) {
-        return '<span class="evt-ekb-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(idx+1)+'" loading="lazy"></span>';
-      }).join('');
-      panel.innerHTML =
-        '<div class="evt-ekb-header"><span class="evt-ekb-title">이모지</span><button type="button" class="evt-ekb-close-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>' +
-        '<div class="evt-ekb-grid">'+items+'</div>';
-      panel.querySelector('.evt-ekb-close-btn').addEventListener('click', function() {
-        panel.classList.remove('open');
-      });
-      document.body.appendChild(panel);
-      return panel;
     }
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
@@ -2890,6 +2887,254 @@ function _initEditor(editorId, opts) {
   /* 등록 버튼 */
   var submitBtn = document.getElementById('editor-submit-' + editorId);
   if (submitBtn && opts.onSubmit) submitBtn.addEventListener('click', opts.onSubmit);
+
+  /* ── 모바일 전용 도크 툴바 (bwm 오버레이에서만) ── */
+  (function() {
+    if (!wrap.closest('.bwm-overlay')) return;
+    var mDock = document.getElementById('bwmToolbarDock');
+    if (!mDock) return;
+
+    var SIZES = [11,13,15,16,19,24,28,30,34,38];
+    var SWATCHES = [
+      {label:'색 없음', value:''},
+      {label:'흰색',   value:'#ffffff'},
+      {label:'회색',   value:'#888888'},
+      {label:'검은색', value:'#000000'},
+      {label:'빨강',   value:'#ff4444'},
+      {label:'주황',   value:'#ff8c00'},
+      {label:'노랑',   value:'#ffd600'},
+      {label:'연두',   value:'#a8e06d'},
+      {label:'초록',   value:'#22c55e'},
+      {label:'청록',   value:'#00b4b4'},
+      {label:'하늘',   value:'#5bc4ef'},
+      {label:'파랑',   value:'#3b7aff'},
+      {label:'보라',   value:'#9b59b6'},
+      {label:'핑크',   value:'#ff69b4'}
+    ];
+    var BACK_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>';
+
+    mDock.innerHTML = [
+      '<div class="bwm-mtb">',
+      '  <div class="bwm-fmt-tray" id="bwmFmtTray"><div class="bwm-tray-panel" id="bwmTrayPanel"></div></div>',
+      '  <div class="bwm-main-tb">',
+      '    <button type="button" class="bwm-mtb-btn" id="bwmMMediaBtn" title="미디어">',
+      '      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg>',
+      '    </button>',
+      '    <button type="button" class="bwm-mtb-btn bwm-fmt-toggle" id="bwmFmtToggle" title="서식">',
+      '      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>',
+      '    </button>',
+      '    <button type="button" class="bwm-mtb-btn" id="bwmMEmojiBtn" title="이모지">',
+      '      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>',
+      '    </button>',
+      '    <button type="button" class="bwm-mtb-btn" id="bwmMLinkBtn" title="링크">',
+      '      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>',
+      '    </button>',
+      '    <button type="button" class="bwm-mtb-btn" id="bwmMHrBtn" title="구분선">',
+      '      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M19 11H5c-.55 0-1 .45-1 1s.45 1 1 1h14c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg>',
+      '    </button>',
+      '  </div>',
+      '</div>'
+    ].join('');
+
+    var fmtTray   = document.getElementById('bwmFmtTray');
+    var trayPanel = document.getElementById('bwmTrayPanel');
+    var fmtToggle = document.getElementById('bwmFmtToggle');
+    var fmtOpen   = false;
+    var trayView  = '';
+
+    function _isDark() {
+      var th = document.documentElement.getAttribute('data-theme');
+      if (th === 'dark') return true;
+      if (th === 'light') return false;
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    function _swatchesHtml() {
+      return SWATCHES.map(function(sw) {
+        if (!sw.value) return '<button type="button" class="bwm-tray-sw bwm-sw-none" data-color="" title="'+sw.label+'">없음</button>';
+        return '<button type="button" class="bwm-tray-sw" data-color="'+sw.value+'" title="'+sw.label+'" style="background:'+sw.value+'"></button>';
+      }).join('');
+    }
+
+    function _viewHtml(v) {
+      if (v === 'fmt') return [
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="size"><span class="bwm-sizelabel">15</span></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="align"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="bold"><b>B</b></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="underline"><u>U</u></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="color"><span class="bwm-colorlabel">T</span></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="bgcolor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="strikeThrough"><s>S</s></button>',
+      ].join('');
+
+      if (v === 'size') return '<button type="button" class="bwm-tray-btn bwm-back">'+BACK_SVG+'</button>' +
+        SIZES.map(function(s){ return '<button type="button" class="bwm-tray-btn bwm-ts" data-size="'+s+'">'+s+'</button>'; }).join('');
+
+      if (v === 'align') return '<button type="button" class="bwm-tray-btn bwm-back">'+BACK_SVG+'</button>' + [
+        ['justifyLeft',  '왼쪽',  'M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z'],
+        ['justifyCenter','가운데','M3 5h18v2H3V5zm3 4h12v2H6V9zm-3 4h18v2H3v-2zm3 4h12v2H6v-2z'],
+        ['justifyRight', '오른쪽','M3 5h18v2H3V5zm6 4h12v2H9V9zm-6 4h18v2H3v-2zm6 4h12v2H9v-2z'],
+        ['justifyFull',  '양쪽',  'M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z'],
+      ].map(function(a){
+        return '<button type="button" class="bwm-tray-btn bwm-ta" data-cmd="'+a[0]+'" title="'+a[1]+'">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="'+a[2]+'"/></svg>' +
+          '<span class="bwm-ta-lbl">'+a[1]+'</span></button>';
+      }).join('');
+
+      if (v === 'color' || v === 'bgcolor')
+        return '<button type="button" class="bwm-tray-btn bwm-back">'+BACK_SVG+'</button>' + _swatchesHtml();
+
+      return '';
+    }
+
+    function _bindView() {
+      /* back → fmt */
+      trayPanel.querySelectorAll('.bwm-back').forEach(function(b) {
+        b.addEventListener('mousedown', function(e){ e.preventDefault(); });
+        b.addEventListener('click', function(){ _showView('fmt'); });
+      });
+      /* view switch (size/align/color/bgcolor) */
+      trayPanel.querySelectorAll('.bwm-tv').forEach(function(b) {
+        b.addEventListener('mousedown', function(e){ e.preventDefault(); });
+        b.addEventListener('click', function(){ _showView(b.dataset.view); });
+      });
+      /* direct format cmd: B, U, S */
+      trayPanel.querySelectorAll('.bwm-tc').forEach(function(b) {
+        b.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+        b.addEventListener('click', function(){
+          restoreRange();
+          document.execCommand(b.dataset.cmd, false, null);
+          area.focus();
+        });
+      });
+      /* align items */
+      trayPanel.querySelectorAll('.bwm-ta').forEach(function(b) {
+        b.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+        b.addEventListener('click', function(){
+          restoreRange();
+          document.execCommand(b.dataset.cmd, false, null);
+          area.focus();
+          _showView('fmt');
+        });
+      });
+      /* font size */
+      trayPanel.querySelectorAll('.bwm-ts').forEach(function(b) {
+        b.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+        b.addEventListener('click', function(){
+          restoreRange();
+          document.execCommand('fontSize', false, '7');
+          area.querySelectorAll('font[size="7"]').forEach(function(el){
+            el.removeAttribute('size');
+            el.style.fontSize = b.dataset.size + 'px';
+          });
+          area.focus();
+          _showView('fmt');
+        });
+      });
+      /* color swatches */
+      if (trayView === 'color') {
+        trayPanel.querySelectorAll('.bwm-tray-sw').forEach(function(b) {
+          b.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+          b.addEventListener('click', function(){
+            restoreRange();
+            var c = b.dataset.color || (_isDark() ? '#ffffff' : '#000000');
+            document.execCommand('foreColor', false, c);
+            area.focus();
+            _showView('fmt');
+          });
+        });
+      }
+      /* bgcolor swatches */
+      if (trayView === 'bgcolor') {
+        trayPanel.querySelectorAll('.bwm-tray-sw').forEach(function(b) {
+          b.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+          b.addEventListener('click', function(){
+            restoreRange();
+            var c = b.dataset.color;
+            document.execCommand('hiliteColor', false, c || 'transparent');
+            area.focus();
+            _showView('fmt');
+          });
+        });
+      }
+    }
+
+    function _showView(v) {
+      trayView = v;
+      trayPanel.innerHTML = _viewHtml(v);
+      _bindView();
+    }
+
+    /* 서식 토글 */
+    fmtToggle.addEventListener('mousedown', function(e){ e.preventDefault(); });
+    fmtToggle.addEventListener('click', function(){
+      fmtOpen = !fmtOpen;
+      fmtToggle.classList.toggle('active', fmtOpen);
+      fmtTray.classList.toggle('open', fmtOpen);
+      if (fmtOpen) _showView('fmt');
+    });
+
+    /* 📷 미디어 */
+    var mMediaBtn = document.getElementById('bwmMMediaBtn');
+    if (mMediaBtn) {
+      mMediaBtn.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+      mMediaBtn.addEventListener('click', function(){
+        var fi = document.getElementById('img-file-' + editorId);
+        if (fi) fi.click();
+      });
+    }
+
+    /* 😊 이모지 */
+    var mEmojiBtn = document.getElementById('bwmMEmojiBtn');
+    if (mEmojiBtn) {
+      mEmojiBtn.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+      mEmojiBtn.addEventListener('click', function(){
+        area.blur();
+        var panel = _getOrCreateEmojiKbPanel();
+        if (panel.classList.contains('open') && panel._eid === editorId) {
+          panel.classList.remove('open'); return;
+        }
+        panel._eid = editorId;
+        panel.onclick = function(e) {
+          var it = e.target.closest('.evt-ekb-item');
+          if (!it) return;
+          restoreRange();
+          document.execCommand('insertHTML', false, '<img src="'+it.dataset.src+'" class="evt-comment-emoji-img" alt="이모지">');
+          updateCount();
+        };
+        void panel.offsetWidth;
+        panel.classList.add('open');
+      });
+    }
+
+    /* 🔗 링크 */
+    var mLinkBtn = document.getElementById('bwmMLinkBtn');
+    if (mLinkBtn) {
+      mLinkBtn.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
+      mLinkBtn.addEventListener('click', async function(){
+        var sel = window.getSelection();
+        if (!sel || sel.isCollapsed) { showToast('텍스트를 먼저 선택해주세요.', 'error'); return; }
+        saveRange();
+        var url = await _showUrlPrompt('링크 URL을 입력하세요', 'https://');
+        if (!url) return;
+        restoreRange();
+        document.execCommand('createLink', false, url);
+        area.querySelectorAll('a:not([target])').forEach(function(a){ a.target='_blank'; a.rel='noopener noreferrer'; });
+        area.focus();
+      });
+    }
+
+    /* ─ 구분선 */
+    var mHrBtn = document.getElementById('bwmMHrBtn');
+    if (mHrBtn) {
+      mHrBtn.addEventListener('mousedown', function(e){ e.preventDefault(); });
+      mHrBtn.addEventListener('click', function(){
+        restoreRange();
+        document.execCommand('insertHorizontalRule', false, null);
+        area.focus();
+      });
+    }
+  })();
 }
 
 /* ── 초기화 ── */

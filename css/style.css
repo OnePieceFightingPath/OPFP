@@ -6955,3 +6955,171 @@ body.bwm-active { overflow: hidden; }
   display: block;
   pointer-events: none;
 }
+
+/* ══════════════════════════════════════════════
+   모바일 전용 에디터 툴바 (bwm 오버레이)
+   PC/데스크탑에는 적용되지 않음
+   ══════════════════════════════════════════════ */
+
+/* 전체 컨테이너 */
+.bwm-mtb {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ── 메인 툴바 (하단 고정 행: 📷 T 😊 🔗 ─) ── */
+.bwm-main-tb {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 8px;
+  padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  background: var(--bg-card, #181825);
+  min-height: 50px;
+}
+
+/* 메인 툴바 버튼 */
+.bwm-mtb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: none;
+  background: none;
+  color: var(--text, #cdd6f4);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.12s, color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.bwm-mtb-btn:active { background: var(--bg-hover, #242436); }
+.bwm-mtb-btn.active {
+  color: var(--accent, #89b4fa);
+  background: rgba(137, 180, 250, 0.12);
+}
+
+/* ── 서식 트레이 (T 버튼으로 열리는 슬라이드 패널) ── */
+.bwm-fmt-tray {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg, #11111b);
+  border-top: 1px solid var(--border, #313244);
+}
+.bwm-fmt-tray.open {
+  max-height: 56px;
+}
+
+/* 트레이 내부 패널 (가로 스크롤) */
+.bwm-tray-panel {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.bwm-tray-panel::-webkit-scrollbar { display: none; }
+
+/* 트레이 버튼 공통 */
+.bwm-tray-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 6px;
+  border: none;
+  background: none;
+  color: var(--text, #cdd6f4);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.bwm-tray-btn:active { background: var(--bg-hover, #242436); }
+
+/* 뒤로가기 버튼 */
+.bwm-back {
+  color: var(--text-muted, #9399b2);
+  min-width: 34px;
+}
+
+/* 글자 크기 레이블 */
+.bwm-sizelabel {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 글자색 T 레이블 */
+.bwm-colorlabel {
+  font-size: 15px;
+  font-weight: 700;
+  border-bottom: 3px solid #ffffff;
+  padding-bottom: 1px;
+  line-height: 1;
+}
+
+/* 폰트 크기 항목 */
+.bwm-ts {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 36px;
+}
+
+/* 정렬 항목 (아이콘 + 라벨) */
+.bwm-ta {
+  flex-direction: column;
+  gap: 1px;
+  min-width: 48px;
+  height: 40px;
+  padding: 2px 6px;
+}
+.bwm-ta-lbl {
+  font-size: 9px;
+  color: var(--text-muted, #9399b2);
+  line-height: 1;
+  display: block;
+}
+
+/* 색상 스와치 */
+.bwm-tray-sw {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s, box-shadow 0.1s;
+  padding: 0;
+  background: none;
+  font-family: inherit;
+}
+.bwm-tray-sw:active { transform: scale(1.2); box-shadow: 0 0 0 2px var(--accent, #89b4fa); }
+
+/* '없음' 스와치 */
+.bwm-sw-none {
+  width: auto;
+  min-width: 36px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted, #9399b2);
+  border-color: var(--border, #313244);
+  background: none;
+}
