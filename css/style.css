@@ -7106,9 +7106,34 @@ body.bwm-active { overflow: hidden; }
 .bwm-colorlabel {
   font-size: 15px;
   font-weight: 700;
-  border-bottom: 3px solid #ffffff;
-  padding-bottom: 1px;
   line-height: 1;
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+.bwm-color-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+.bwm-bglabel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border, #555);
+  border-radius: 3px;
+  padding: 2px 3px;
+}
+.bwm-bg-area {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 2px;
+  padding: 0 2px;
+  min-width: 14px;
+  text-align: center;
 }
 
 /* 폰트 크기 항목 */

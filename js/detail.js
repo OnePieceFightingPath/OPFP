@@ -2949,7 +2949,7 @@ function _initEditor(editorId, opts) {
     /* 서식 상태 — BWM 트레이 ↔ 서식 툴바 동기화용 */
     var _curFontSize = 15;
     var _curAlignCmd = 'justifyLeft';
-    var _curColor    = '#ffffff';
+    var _curColor    = _isDark() ? '#ffffff' : '#000000';
     var _curBgColor  = '';
 
     function _isDark() {
@@ -2980,8 +2980,8 @@ function _initEditor(editorId, opts) {
         '<button type="button" class="bwm-tray-btn bwm-tv" data-view="align"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="' + alignPath + '"/></svg></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="bold"><b>B</b></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="underline"><u>U</u></button>',
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="color"><span class="bwm-colorlabel" style="color:' + _curColor + ';-webkit-text-stroke:' + (_curColor === '#ffffff' || _curColor === '' ? '0.5px #888' : '0') + '">T</span></button>',
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="bgcolor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="4" y="4" width="16" height="16" rx="2"' + bgStyle + '/></svg></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="color"><span class="bwm-colorlabel">T<span class="bwm-color-dot" style="background:' + _curColor + '"></span></span></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="bgcolor"><span class="bwm-bglabel"><span class="bwm-bg-area"' + (_curBgColor ? ' style="background:' + _curBgColor + '"' : '') + '>T</span></span></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="strikeThrough"><s>S</s></button>',
       ].join('');
 
