@@ -6854,3 +6854,104 @@ body.bwm-active { overflow: hidden; }
 .bwm-content-area {
   padding-bottom: 56px;
 }
+
+/* ── 모바일 드롭다운 → 툴바 위 슬라이드 트레이 ── */
+.evt-mobile-tray {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-card, #181825);
+  border-bottom: 1px solid var(--border, #313244);
+}
+.evt-mobile-tray.open {
+  max-height: 54px;
+}
+.evt-tray-inner {
+  display: flex;
+  align-items: center;
+  padding: 5px 8px;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  min-height: 44px;
+}
+.evt-tray-inner::-webkit-scrollbar { display: none; }
+.evt-tray-color-sw {
+  flex-shrink: 0;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.evt-tray-color-sw:active { transform: scale(1.2); box-shadow: 0 0 0 2px #fff; }
+
+/* ── 이모지 키보드 패널 (키보드 자리에 표시) ── */
+.evt-emoji-kb-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9025;
+  background: var(--bg-card, #181825);
+  border-top: 2px solid var(--border, #313244);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-bottom: env(safe-area-inset-bottom);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+}
+.evt-emoji-kb-panel.open {
+  transform: translateY(0);
+}
+.evt-ekb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+.evt-ekb-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #9399b2);
+}
+.evt-ekb-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #9399b2);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background 0.1s;
+}
+.evt-ekb-close-btn:active { background: var(--bg-hover, #242436); }
+.evt-ekb-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 4px 8px 12px;
+  max-height: 240px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.evt-ekb-grid::-webkit-scrollbar { display: none; }
+.evt-ekb-item {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.evt-ekb-item:active { background: var(--bg-hover, #242436); }
+.evt-ekb-item img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}

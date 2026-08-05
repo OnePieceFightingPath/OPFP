@@ -2553,12 +2553,64 @@ function _initEditor(editorId, opts) {
     });
   });
 
+  /* ── 모바일 트레이 헬퍼 (드롭다운 → 툴바 위 슬라이드 트레이) ── */
+  function _getMTray(btn) {
+    var dock = btn.closest('.bwm-toolbar-dock');
+    if (!dock) return null;
+    var tray = dock.querySelector('.evt-mobile-tray');
+    if (!tray) {
+      tray = document.createElement('div');
+      tray.className = 'evt-mobile-tray';
+      var tb = dock.querySelector('.evt-editor-toolbar');
+      dock.insertBefore(tray, tb || dock.firstChild);
+      document.addEventListener('click', function(e) {
+        if (!dock.contains(e.target)) _closeMTray(tray);
+      });
+    }
+    return tray;
+  }
+  function _closeMTray(tray) {
+    if (!tray) return;
+    tray.classList.remove('open');
+    setTimeout(function() { if (!tray.classList.contains('open')) tray.innerHTML = ''; }, 250);
+  }
+  function _openMTray(btn, key, innerHtml, onReady) {
+    var tray = _getMTray(btn);
+    if (!tray) return false;
+    var already = tray.classList.contains('open') && tray.dataset.tk === key;
+    _closeMTray(tray);
+    if (!already) {
+      tray.dataset.tk = key;
+      tray.innerHTML = '<div class="evt-tray-inner">' + innerHtml + '</div>';
+      void tray.offsetWidth;
+      tray.classList.add('open');
+      if (onReady) onReady(tray.querySelector('.evt-tray-inner'));
+    }
+    return true;
+  }
+
   /* 정렬 드롭다운 */
   var alignBtn = wrap.querySelector('.evt-editor-align-btn');
   var alignDd  = document.getElementById('align-dd-' + editorId);
   if (alignBtn && alignDd) {
-    alignBtn.addEventListener('mousedown', function(e) {
-      e.preventDefault();
+    alignBtn.addEventListener('mousedown', function(e) { e.preventDefault(); });
+    alignBtn.addEventListener('click', function() {
+      var tHtml = [
+        '<button class="evt-editor-tool evt-tray-item" data-cmd="justifyLeft" title="왼쪽 정렬"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg></button>',
+        '<button class="evt-editor-tool evt-tray-item" data-cmd="justifyCenter" title="가운데 정렬"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm3 4h12v2H6V9zm-3 4h18v2H3v-2zm3 4h12v2H6v-2z"/></svg></button>',
+        '<button class="evt-editor-tool evt-tray-item" data-cmd="justifyRight" title="오른쪽 정렬"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm6 4h12v2H9V9zm-6 4h18v2H3v-2zm6 4h12v2H9v-2z"/></svg></button>',
+        '<button class="evt-editor-tool evt-tray-item" data-cmd="justifyFull" title="양끝 정렬"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/></svg></button>'
+      ].join('');
+      if (_openMTray(alignBtn, 'align', tHtml, function(inner) {
+        inner.querySelectorAll('.evt-tray-item[data-cmd]').forEach(function(it) {
+          it.addEventListener('mousedown', function(e) { e.preventDefault(); });
+          it.addEventListener('click', function() {
+            document.execCommand(it.dataset.cmd, false, null);
+            _closeMTray(_getMTray(alignBtn));
+            area.focus();
+          });
+        });
+      })) return;
       alignDd.style.display = alignDd.style.display === 'none' ? 'block' : 'none';
     });
     alignDd.querySelectorAll('.evt-editor-align-item').forEach(function(item) {
@@ -2580,24 +2632,38 @@ function _initEditor(editorId, opts) {
   var fontsizeDd    = document.getElementById('fontsize-dd-' + editorId);
   var fontsizeLabel = document.getElementById('fontsize-label-' + editorId);
   if (fontsizeBtn && fontsizeDd) {
+    function _applyFontSize(px) {
+      restoreRange();
+      document.execCommand('fontSize', false, '7');
+      area.querySelectorAll('font[size="7"]').forEach(function(el) {
+        el.removeAttribute('size');
+        el.style.fontSize = px + 'px';
+      });
+      if (fontsizeLabel) fontsizeLabel.textContent = px;
+      area.focus(); updateCount();
+    }
     fontsizeBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     fontsizeBtn.addEventListener('click', function() {
+      var sizes = [11,13,15,16,19,24,28,30,34,38];
+      var tHtml = sizes.map(function(s) {
+        return '<button class="evt-editor-tool evt-tray-fs-item" data-size="'+s+'" style="min-width:34px;font-size:12px;font-weight:600;">'+s+'</button>';
+      }).join('');
+      if (_openMTray(fontsizeBtn, 'fontsize', tHtml, function(inner) {
+        inner.querySelectorAll('.evt-tray-fs-item').forEach(function(it) {
+          it.addEventListener('mousedown', function(e) { e.preventDefault(); });
+          it.addEventListener('click', function() {
+            _applyFontSize(it.dataset.size);
+            _closeMTray(_getMTray(fontsizeBtn));
+          });
+        });
+      })) return;
       fontsizeDd.style.display = fontsizeDd.style.display === 'none' ? 'block' : 'none';
     });
     fontsizeDd.querySelectorAll('.evt-editor-fontsize-item').forEach(function(item) {
       item.addEventListener('mousedown', function(e) { e.preventDefault(); });
       item.addEventListener('click', function() {
-        var px = item.dataset.size;
-        restoreRange();
-        /* font size 마커(7) 사용 후 실제 px 값으로 교체 */
-        document.execCommand('fontSize', false, '7');
-        area.querySelectorAll('font[size="7"]').forEach(function(el) {
-          el.removeAttribute('size');
-          el.style.fontSize = px + 'px';
-        });
-        if (fontsizeLabel) fontsizeLabel.textContent = px;
+        _applyFontSize(item.dataset.size);
         fontsizeDd.style.display = 'none';
-        area.focus(); updateCount();
       });
     });
     document.addEventListener('click', function(e) {
@@ -2635,6 +2701,27 @@ function _initEditor(editorId, opts) {
     }
     colorBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     colorBtn.addEventListener('click', function() {
+      var tHtml = _palette.map(function(c) {
+        return '<span class="evt-tray-color-sw" data-color="'+c+'" style="background:'+c+';width:26px;height:26px;border-radius:3px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);flex-shrink:0;display:inline-block;"></span>';
+      }).join('') +
+      '<span class="evt-tray-color-clear" style="cursor:pointer;padding:0 6px;display:flex;align-items:center;flex-shrink:0;" title="색상 제거"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></span>';
+      if (_openMTray(colorBtn, 'color', tHtml, function(inner) {
+        inner.querySelectorAll('.evt-tray-color-sw').forEach(function(sw) {
+          sw.addEventListener('mousedown', function(e) { e.preventDefault(); });
+          sw.addEventListener('click', function() { _applyColor(sw.dataset.color); _closeMTray(_getMTray(colorBtn)); });
+        });
+        var clr = inner.querySelector('.evt-tray-color-clear');
+        if (clr) {
+          clr.addEventListener('mousedown', function(e) { e.preventDefault(); });
+          clr.addEventListener('click', function() {
+            restoreRange();
+            document.execCommand('removeFormat', false, null);
+            if (colorPreview) colorPreview.style.background = '#ffffff';
+            _closeMTray(_getMTray(colorBtn));
+            area.focus();
+          });
+        }
+      })) return;
       colorPalette.style.display = colorPalette.style.display === 'none' ? 'block' : 'none';
     });
     colorSwatches.querySelectorAll('.evt-editor-color-swatch').forEach(function(sw) {
@@ -2686,6 +2773,7 @@ function _initEditor(editorId, opts) {
   var emojiBtn    = wrap.querySelector('.evt-editor-emoji-btn');
   var emojiPicker = document.getElementById('emoji-picker-' + editorId);
   if (emojiBtn && emojiPicker) {
+    /* 데스크탑용 팝업 아이템 클릭 핸들러 */
     var emojiGrid = document.getElementById('emoji-grid-' + editorId);
     if (emojiGrid) {
       emojiGrid.querySelectorAll('.evt-editor-emoji-item').forEach(function(item) {
@@ -2697,13 +2785,60 @@ function _initEditor(editorId, opts) {
         });
       });
     }
+    function _getOrCreateEmojiKbPanel() {
+      var panel = document.getElementById('evt-emoji-kb-panel');
+      if (panel) return panel;
+      panel = document.createElement('div');
+      panel.id = 'evt-emoji-kb-panel';
+      panel.className = 'evt-emoji-kb-panel';
+      var srcs = [];
+      for (var k = 1; k <= 39; k++) srcs.push('img/emoji/emogi'+k+'.png');
+      var items = srcs.map(function(src, idx) {
+        return '<span class="evt-ekb-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(idx+1)+'" loading="lazy"></span>';
+      }).join('');
+      panel.innerHTML =
+        '<div class="evt-ekb-header"><span class="evt-ekb-title">이모지</span><button type="button" class="evt-ekb-close-btn" aria-label="닫기"><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>' +
+        '<div class="evt-ekb-grid">'+items+'</div>';
+      panel.querySelector('.evt-ekb-close-btn').addEventListener('click', function() {
+        panel.classList.remove('open');
+      });
+      document.body.appendChild(panel);
+      return panel;
+    }
     emojiBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     emojiBtn.addEventListener('click', function() {
+      var isMob = ('ontouchstart' in window) || window.innerWidth <= 768;
+      if (isMob) {
+        area.blur(); /* 키보드 내리기 */
+        var panel = _getOrCreateEmojiKbPanel();
+        if (panel.classList.contains('open') && panel._eid === editorId) {
+          panel.classList.remove('open');
+          return;
+        }
+        panel._eid = editorId;
+        /* 이모지 클릭 → 현재 에디터에 삽입 */
+        panel.onclick = function(e) {
+          var it = e.target.closest('.evt-ekb-item');
+          if (!it) return;
+          restoreRange();
+          document.execCommand('insertHTML', false, '<img src="'+it.dataset.src+'" class="evt-comment-emoji-img" alt="이모지">');
+          updateCount();
+        };
+        void panel.offsetWidth;
+        panel.classList.add('open');
+        return;
+      }
+      /* 데스크탑: 기존 팝업 */
       emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
     });
     document.addEventListener('click', function(e) {
       if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target))
         emojiPicker.style.display = 'none';
+    });
+    /* 에디터 포커스 시 이모지 패널 닫기 */
+    area.addEventListener('focus', function() {
+      var panel = document.getElementById('evt-emoji-kb-panel');
+      if (panel) panel.classList.remove('open');
     });
   }
 
