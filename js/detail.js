@@ -2782,6 +2782,9 @@ function _initEditor(editorId, opts) {
       '<div class="evt-ekb-grid">'+items+'</div>';
     panel.querySelector('.evt-ekb-close-btn').addEventListener('click', function() {
       panel.classList.remove('open');
+      panel.style.bottom = '';
+      var eb = document.getElementById('bwmMEmojiBtn');
+      if (eb) eb.classList.remove('active');
     });
     document.body.appendChild(panel);
     return panel;
@@ -2835,7 +2838,9 @@ function _initEditor(editorId, opts) {
     /* 에디터 포커스 시 이모지 패널 닫기 */
     area.addEventListener('focus', function() {
       var panel = document.getElementById('evt-emoji-kb-panel');
-      if (panel) panel.classList.remove('open');
+      if (panel) { panel.classList.remove('open'); panel.style.bottom = ''; }
+      var eb2 = document.getElementById('bwmMEmojiBtn');
+      if (eb2) eb2.classList.remove('active');
     });
   }
 
@@ -3059,11 +3064,30 @@ function _initEditor(editorId, opts) {
       }
     }
 
+    function _updateFmtTrayActive() {
+      if (trayView !== 'fmt') return;
+      var inArea = _isSelectionInArea();
+      trayPanel.querySelectorAll('.bwm-tc').forEach(function(b) {
+        var active = inArea && document.queryCommandState(b.dataset.cmd);
+        b.classList.toggle('active', active);
+      });
+    }
     function _showView(v) {
       trayView = v;
       trayPanel.innerHTML = _viewHtml(v);
+      /* fmt 뷰: 아이콘 균등 배치 클래스 */
+      if (v === 'fmt') {
+        trayPanel.classList.add('bwm-panel-fmt');
+        _updateFmtTrayActive();
+      } else {
+        trayPanel.classList.remove('bwm-panel-fmt');
+      }
       _bindView();
     }
+    /* 선택 변경 시 B/U/S 활성 상태 동기화 */
+    document.addEventListener('selectionchange', function() {
+      if (fmtOpen && trayView === 'fmt') _updateFmtTrayActive();
+    });
 
     /* 서식 토글 */
     fmtToggle.addEventListener('mousedown', function(e){ e.preventDefault(); });
@@ -3071,6 +3095,11 @@ function _initEditor(editorId, opts) {
       fmtOpen = !fmtOpen;
       fmtToggle.classList.toggle('active', fmtOpen);
       fmtTray.classList.toggle('open', fmtOpen);
+      /* 서식 트레이가 열리면 content-area 패딩 확장해서 내용 가려짐 방지 */
+      var contentArea = document.querySelector('.bwm-content-area');
+      if (contentArea) {
+        contentArea.style.paddingBottom = fmtOpen ? '108px' : '58px';
+      }
       if (fmtOpen) _showView('fmt');
     });
 
@@ -3087,13 +3116,28 @@ function _initEditor(editorId, opts) {
     /* 😊 이모지 */
     var mEmojiBtn = document.getElementById('bwmMEmojiBtn');
     if (mEmojiBtn) {
+      /* 이모지 패널 닫기 (도크 위치 복원) */
+      function _closeEmojiPanel() {
+        var panel = document.getElementById('evt-emoji-kb-panel');
+        if (!panel) return;
+        panel.classList.remove('open');
+        panel.style.bottom = '';
+        mEmojiBtn.classList.remove('active');
+      }
+      /* 에디터 포커스 시 패널 자동 닫기 */
+      area.addEventListener('focus', function() { _closeEmojiPanel(); });
+
       mEmojiBtn.addEventListener('mousedown', function(e){ e.preventDefault(); saveRange(); });
       mEmojiBtn.addEventListener('click', function(){
-        area.blur();
         var panel = _getOrCreateEmojiKbPanel();
+        /* 토글: 열려 있으면 닫고 키보드 복귀 */
         if (panel.classList.contains('open') && panel._eid === editorId) {
-          panel.classList.remove('open'); return;
+          _closeEmojiPanel();
+          setTimeout(function(){ area.focus(); }, 50);
+          return;
         }
+        area.blur(); /* 키보드 내리기 */
+        mEmojiBtn.classList.add('active');
         panel._eid = editorId;
         panel.onclick = function(e) {
           var it = e.target.closest('.evt-ekb-item');
@@ -3102,8 +3146,13 @@ function _initEditor(editorId, opts) {
           document.execCommand('insertHTML', false, '<img src="'+it.dataset.src+'" class="evt-comment-emoji-img" alt="이모지">');
           updateCount();
         };
-        void panel.offsetWidth;
-        panel.classList.add('open');
+        /* 키보드 사라진 후 도크 높이 계산해서 패널을 도크 바로 위에 배치 */
+        setTimeout(function() {
+          var dockH = mDock.getBoundingClientRect().height;
+          panel.style.bottom = (dockH > 0 ? dockH : 54) + 'px';
+          void panel.offsetWidth;
+          panel.classList.add('open');
+        }, 60);
       });
     }
 

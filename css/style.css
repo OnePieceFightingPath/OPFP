@@ -6684,13 +6684,14 @@ body.bwm-active { overflow: hidden; }
   background: var(--bg, #1e1e2e);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   /* iOS 안전영역 대응 */
   padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: 0;
 }
 
-/* 상단 헤더 */
+/* 상단 헤더 — 항상 최상단 고정 */
 .bwm-header {
   display: flex;
   align-items: center;
@@ -6698,6 +6699,9 @@ body.bwm-active { overflow: hidden; }
   padding: 12px 16px;
   background: var(--bg, #1e1e2e);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .bwm-close-btn {
@@ -6731,6 +6735,9 @@ body.bwm-active { overflow: hidden; }
 .bwm-fields {
   flex-shrink: 0;
   background: var(--bg, #1e1e2e);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .bwm-prefix-row {
@@ -6956,6 +6963,21 @@ body.bwm-active { overflow: hidden; }
   pointer-events: none;
 }
 
+/* 링크 URL 팝업 — 모바일 글쓰기 화면에서 bwm-overlay 위로 표시 */
+@media (max-width: 768px) {
+  body.bwm-active #urlInputOverlay {
+    z-index: 9030;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  body.bwm-active #urlInputOverlay .confirm-modal {
+    width: 100%;
+    max-width: 320px;
+    margin: auto;
+  }
+}
+
 /* ══════════════════════════════════════════════
    모바일 전용 에디터 툴바 (bwm 오버레이)
    PC/데스크탑에는 적용되지 않음
@@ -6975,8 +6997,10 @@ body.bwm-active { overflow: hidden; }
   justify-content: space-around;
   padding: 4px 8px;
   padding-bottom: calc(4px + env(safe-area-inset-bottom));
-  background: var(--bg-card, #181825);
+  background: var(--bg, #1e1e2e);
   min-height: 50px;
+  height: 50px;
+  box-sizing: content-box;
 }
 
 /* 메인 툴바 버튼 */
@@ -7006,25 +7030,27 @@ body.bwm-active { overflow: hidden; }
   overflow: hidden;
   max-height: 0;
   transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--bg, #11111b);
+  background: var(--bg, #1e1e2e);
   border-top: 1px solid var(--border, #313244);
 }
 .bwm-fmt-tray.open {
-  max-height: 56px;
+  max-height: 50px;
 }
 
 /* 트레이 내부 패널 (가로 스크롤) */
 .bwm-tray-panel {
   display: flex;
   align-items: center;
-  padding: 6px 8px;
+  padding: 4px 8px;
   gap: 2px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  min-height: 44px;
+  min-height: 50px;
+  height: 50px;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 .bwm-tray-panel::-webkit-scrollbar { display: none; }
 
@@ -7049,6 +7075,19 @@ body.bwm-active { overflow: hidden; }
   white-space: nowrap;
 }
 .bwm-tray-btn:active { background: var(--bg-hover, #242436); }
+.bwm-tray-btn.active { color: var(--accent, #4d9fff); }
+
+/* 서식 트레이 fmt 뷰: 전체 가로 균등 배치 */
+.bwm-tray-panel.bwm-panel-fmt {
+  overflow-x: hidden;
+  justify-content: space-evenly;
+  gap: 0;
+}
+.bwm-tray-panel.bwm-panel-fmt .bwm-tray-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 0 2px;
+}
 
 /* 뒤로가기 버튼 */
 .bwm-back {
