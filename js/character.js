@@ -482,7 +482,7 @@ async function switchCharTab(tab, charId) {
           ${groupMap[date].map(p => `
             <div class="patch-entry">
               <span class="patch-entry-type ${p.type}">${p.type === 'buff' ? '버프' : p.type === 'nerf' ? '너프' : '수정'}</span>
-              <div class="patch-entry-text">${p.text}</div>
+              <div class="patch-entry-text">${escHtmlBr(p.text)}</div>
             </div>`).join('')}
         </div>`).join('');
     } else {
