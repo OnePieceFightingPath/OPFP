@@ -2429,7 +2429,7 @@ function _buildEditorHtml(editorId, opts) {
   return [
     '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
     '  <div class="evt-editor-toolbar">',
-    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 15.2A3.2 3.2 0 0 1 8.8 12 3.2 3.2 0 0 1 12 8.8 3.2 3.2 0 0 1 15.2 12 3.2 3.2 0 0 1 12 15.2M12 7a5 5 0 0 0-5 5 5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5m0-4L9.17 6H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-5.17L12 3z"/></svg></button>',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
     '    <span class="evt-editor-fontsize-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-fontsize-btn" data-editor-id="' + editorId + '" title="글자 크기"><span class="evt-editor-fontsize-label" id="fontsize-label-' + editorId + '">15</span><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="margin-left:2px;flex-shrink:0"><path d="M7 10l5 5 5-5H7z"/></svg></button>',
     '      <div class="evt-editor-fontsize-dd" id="fontsize-dd-' + editorId + '" style="display:none">',
