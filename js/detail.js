@@ -857,7 +857,15 @@ function _renderBoardWrite() {
         window.visualViewport.removeEventListener('resize', _bwmAdjust);
         window.visualViewport.removeEventListener('scroll', _bwmAdjust);
       }
+      window.removeEventListener('popstate', _onPopState);
     }
+
+    /* 브라우저 뒤로가기 시 오버레이 정리 */
+    function _onPopState() {
+      _bwmCleanup();
+      _renderBoardList();
+    }
+    window.addEventListener('popstate', _onPopState);
 
     overlay.querySelector('.bwm-close-btn')?.addEventListener('click', () => {
       _bwmCleanup();
@@ -2572,7 +2580,7 @@ function _initEditor(editorId, opts) {
       dock.insertBefore(tray, tb || dock.firstChild);
       document.addEventListener('click', function(e) {
         if (!dock.contains(e.target)) _closeMTray(tray);
-      });
+      }, { signal: _sig });
     }
     return tray;
   }
