@@ -7066,7 +7066,7 @@ body.bwm-active { overflow: hidden; }
   background: none;
   color: var(--text, #cdd6f4);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 20px;
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.1s;
@@ -7097,7 +7097,7 @@ body.bwm-active { overflow: hidden; }
 
 /* 글자 크기 레이블 */
 .bwm-sizelabel {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1;
 }
