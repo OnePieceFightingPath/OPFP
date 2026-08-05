@@ -5031,7 +5031,7 @@ html.is-pwa .site-footer {
   left: 12px;
   bottom: 8px;
   padding: 0;
-  border-bottom: none;
+  border-bottom: none !important;
   gap: 2px;
   z-index: 1;
 }
