@@ -3122,7 +3122,7 @@ html.is-pwa .site-footer {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0px 12px;
+  padding: 8px 12px;
   font-size: 12px;
   color: var(--text-dim);
   white-space: nowrap;
@@ -5381,7 +5381,7 @@ html.is-pwa .site-footer {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 0px 12px;
   border-top: 1px solid var(--border, #313244);
 }
 .evt-editor-charcount {
