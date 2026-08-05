@@ -2946,6 +2946,11 @@ function _initEditor(editorId, opts) {
     var fmtToggle = document.getElementById('bwmFmtToggle');
     var fmtOpen   = false;
     var trayView  = '';
+    /* 서식 상태 — BWM 트레이 ↔ 서식 툴바 동기화용 */
+    var _curFontSize = 15;
+    var _curAlignCmd = 'justifyLeft';
+    var _curColor    = '#ffffff';
+    var _curBgColor  = '';
 
     function _isDark() {
       var th = document.documentElement.getAttribute('data-theme');
@@ -2961,14 +2966,22 @@ function _initEditor(editorId, opts) {
       }).join('');
     }
 
+    var _alignPaths = {
+      justifyLeft:   'M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z',
+      justifyCenter: 'M3 5h18v2H3V5zm3 4h12v2H6V9zm-3 4h18v2H3v-2zm3 4h12v2H6v-2z',
+      justifyRight:  'M3 5h18v2H3V5zm6 4h12v2H9V9zm-6 4h18v2H3v-2zm6 4h12v2H9v-2z',
+      justifyFull:   'M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z',
+    };
     function _viewHtml(v) {
+      var alignPath = _alignPaths[_curAlignCmd] || _alignPaths['justifyLeft'];
+      var bgStyle   = _curBgColor ? ' style="background:' + _curBgColor + ';border-radius:3px;"' : '';
       if (v === 'fmt') return [
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="size"><span class="bwm-sizelabel">15</span></button>',
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="align"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v2H3V5zm0 4h12v2H3V9zm0 4h18v2H3v-2zm0 4h12v2H3v-2z"/></svg></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="size"><span class="bwm-sizelabel">' + _curFontSize + '</span></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="align"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="' + alignPath + '"/></svg></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="bold"><b>B</b></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="underline"><u>U</u></button>',
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="color"><span class="bwm-colorlabel">T</span></button>',
-        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="bgcolor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="color"><span class="bwm-colorlabel" style="color:' + _curColor + ';-webkit-text-stroke:' + (_curColor === '#ffffff' || _curColor === '' ? '0.5px #888' : '0') + '">T</span></button>',
+        '<button type="button" class="bwm-tray-btn bwm-tv" data-view="bgcolor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="20" height="20"><rect x="4" y="4" width="16" height="16" rx="2"' + bgStyle + '/></svg></button>',
         '<button type="button" class="bwm-tray-btn bwm-tc" data-cmd="strikeThrough"><s>S</s></button>',
       ].join('');
 
@@ -3018,6 +3031,7 @@ function _initEditor(editorId, opts) {
         b.addEventListener('click', function(){
           restoreRange();
           document.execCommand(b.dataset.cmd, false, null);
+          _curAlignCmd = b.dataset.cmd;
           area.focus();
           _showView('fmt');
         });
@@ -3032,6 +3046,8 @@ function _initEditor(editorId, opts) {
             el.removeAttribute('size');
             el.style.fontSize = b.dataset.size + 'px';
           });
+          _curFontSize = b.dataset.size;
+          if (fontsizeLabel) fontsizeLabel.textContent = b.dataset.size;
           area.focus();
           _showView('fmt');
         });
@@ -3044,6 +3060,9 @@ function _initEditor(editorId, opts) {
             restoreRange();
             var c = b.dataset.color || (_isDark() ? '#ffffff' : '#000000');
             document.execCommand('foreColor', false, c);
+            _curColor = c;
+            if (colorPreview) colorPreview.style.background = c;
+            if (colorHexInput) colorHexInput.value = c;
             area.focus();
             _showView('fmt');
           });
@@ -3057,6 +3076,7 @@ function _initEditor(editorId, opts) {
             restoreRange();
             var c = b.dataset.color;
             document.execCommand('hiliteColor', false, c || 'transparent');
+            _curBgColor = c || '';
             area.focus();
             _showView('fmt');
           });
