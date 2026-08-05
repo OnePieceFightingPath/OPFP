@@ -2502,8 +2502,9 @@ function _buildEditorHtml(editorId, opts) {
   var emojiItems = CUSTOM_EMOJIS.map(function(src,i){ return '<span class="evt-editor-emoji-item" data-src="'+src+'"><img src="'+src+'" alt="이모지'+(i+1)+'"></span>'; }).join('');
   var fontSizes = [11,13,15,16,19,24,28,30,34,38];
   var fontSizeItems = fontSizes.map(function(s){ return '<button type="button" class="evt-editor-fontsize-item" data-size="'+s+'">'+s+'</button>'; }).join('');
-  return [
-    '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
+
+  /* ── 툴바: bodyMode = 전체 도구 / 댓글 = 이모지 + 카메라만 (우측 정렬) ── */
+  var toolbar = opts.bodyMode ? [
     '  <div class="evt-editor-toolbar">',
     '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
     '    <span class="evt-editor-fontsize-wrap">',
@@ -2550,6 +2551,21 @@ function _buildEditorHtml(editorId, opts) {
     '    <button type="button" class="evt-editor-tool evt-editor-link-btn" data-editor-id="' + editorId + '" title="링크"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg></button>',
     '    <button type="button" class="evt-editor-tool" data-cmd="insertHorizontalRule" title="구분선"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M19 11H5c-.55 0-1 .45-1 1s.45 1 1 1h14c.55 0 1-.45 1-1s-.45-1-1-1z"/></svg></button>',
     '  </div>',
+  ].join('\n') : [
+    '  <div class="evt-editor-toolbar" style="justify-content:flex-end">',
+    '    <span class="evt-editor-emoji-wrap">',
+    '      <button type="button" class="evt-editor-tool evt-editor-emoji-btn" data-editor-id="' + editorId + '" title="이모지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></button>',
+    '      <div class="evt-editor-emoji-picker" id="emoji-picker-' + editorId + '" style="display:none">',
+    '        <div class="evt-editor-emoji-scroll" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
+    '      </div>',
+    '    </span>',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
+    '  </div>',
+  ].join('\n');
+
+  return [
+    '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : '') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
+    toolbar,
     '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 입력하세요') + '"></div>',
     '  <div class="evt-editor-footer">',
     '    <span class="evt-editor-charcount" id="editor-count-' + editorId + '">0 / 1,000</span>',
@@ -2557,7 +2573,7 @@ function _buildEditorHtml(editorId, opts) {
       ? '    <div class="evt-editor-actions"></div>'
       : '    <div class="evt-editor-actions">' + cancelHtml + '<button type="button" class="evt-comment-submit-btn" id="editor-submit-' + editorId + '">' + (opts.submitLabel || '등록') + '</button></div>',
     '  </div>',
-    '</div>'
+    '</div>',
   ].join('\n');
 }
 
