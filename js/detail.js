@@ -806,7 +806,6 @@ function _renderBoardWrite() {
             <option value="자유">자유</option>
             <option value="정보">정보</option>
             <option value="질문">질문</option>
-            <option value="영상">영상</option>
           </select>
           <svg class="bwm-chevron" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"/></svg>
         </div>
@@ -924,7 +923,6 @@ function _renderBoardWrite() {
               <option value="자유">자유</option>
               <option value="정보">정보</option>
               <option value="질문">질문</option>
-              <option value="영상">영상</option>
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
