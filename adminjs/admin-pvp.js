@@ -557,7 +557,7 @@ function addPvpPatchRow(item = {}) {
         <option value="nerf" ${type==='nerf'?'selected':''}>▼ 너프</option>
         <option value="fix"  ${type==='fix' ?'selected':''}>✦ 기능 수정</option>
       </select>
-      <input type="text" class="form-input pvp-patch-text" placeholder="패치 내용" value="${text.replace(/"/g,'&quot;')}">
+      <input type="text" class="form-input pvp-patch-text" placeholder="패치 내용" value="${escHtml(text)}">
     </div>`;
   document.getElementById('pvpPatchesList').appendChild(div);
 }

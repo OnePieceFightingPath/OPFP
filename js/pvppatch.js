@@ -81,10 +81,6 @@ function openPvpPatchModal(charId, isSupport) {
   const sectionOrder = ['buff', 'nerf', 'fix'];
   const sectionLabel = { buff: '버프', nerf: '너프', fix: '기능 수정' };
 
-  function _esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
   let allContent = '';
   sectionOrder.forEach(key => {
     // Fix: 서폿 전용 항목은 supportCharId로 탐색
@@ -95,7 +91,7 @@ function openPvpPatchModal(charId, isSupport) {
     allContent += entry.patches.map(text => `
       <div class="pvp-patch-entry">
         <span class="patch-entry-type ${key}">${sectionLabel[key]}</span>
-        <div class="patch-entry-text">${_esc(text)}</div>
+        <div class="patch-entry-text">${escHtmlBr(text)}</div>
       </div>
     `).join('');
   });
