@@ -3122,7 +3122,7 @@ html.is-pwa .site-footer {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: 0px 12px;
   font-size: 12px;
   color: var(--text-dim);
   white-space: nowrap;
