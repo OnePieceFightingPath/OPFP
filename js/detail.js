@@ -2270,9 +2270,10 @@ function _buildEditorHtml(editorId, opts) {
   return [
     '<div class="evt-editor-wrap' + (opts.bodyMode ? ' evt-body-editor' : ' evt-comment-editor') + '" data-editor-id="' + editorId + '"' + (opts.bodyMode ? ' data-body="true"' : '') + '>',
     authorHtml,
-    toolbar,
+    opts.bodyMode ? toolbar : '',
     '  <div class="evt-editor-area" id="editor-' + editorId + '" contenteditable="true" data-placeholder="' + (opts.bodyMode ? '내용을 입력하세요' : '댓글을 남겨보세요') + '"></div>',
     '  <div class="evt-editor-footer' + (isCommentEditor ? ' evt-comment-editor-footer' : '') + '">',
+    isCommentEditor ? '    ' + toolbar : '',
     '    <span class="evt-editor-charcount" id="editor-count-' + editorId + '">0 / 1,000</span>',
     opts.bodyMode
       ? '    <div class="evt-editor-actions"></div>'

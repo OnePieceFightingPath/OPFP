@@ -5027,9 +5027,8 @@ html.is-pwa .site-footer {
   gap: 10px;
 }
 .evt-comment-editor-toolbar {
-  position: absolute;
-  left: 12px;
-  bottom: 8px;
+  position: relative;
+  flex: 0 0 auto;
   padding: 0;
   border-bottom: none !important;
   gap: 2px;
@@ -5063,7 +5062,6 @@ html.is-pwa .site-footer {
   font-size: 11px;
   margin-left: auto;
   margin-right: 0;
-  padding-left: 68px;
   white-space: nowrap;
 }
 .evt-comment-editor .evt-editor-actions {
@@ -6016,7 +6014,10 @@ html.is-pwa .site-footer {
     padding-right: 10px;
   }
   .evt-comment-editor .evt-editor-charcount {
-    padding-left: 56px;
+    padding-left: 0;
+  }
+  .evt-comment-editor .evt-comment-editor-toolbar {
+    padding: 0;
   }
 
   /* ── 전체 래퍼: 세로 스택 ── */
