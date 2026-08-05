@@ -806,6 +806,7 @@ function _renderBoardWrite() {
             <option value="자유">자유</option>
             <option value="정보">정보</option>
             <option value="질문">질문</option>
+            <option value="영상">영상</option>
           </select>
           <svg class="bwm-chevron" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 10l5 5 5-5H7z"/></svg>
         </div>
@@ -923,6 +924,7 @@ function _renderBoardWrite() {
               <option value="자유">자유</option>
               <option value="정보">정보</option>
               <option value="질문">질문</option>
+              <option value="영상">영상</option>
             </select>
             <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#e85959;font-weight:700;font-size:13px;pointer-events:none">*</span>
           </div>
@@ -2489,6 +2491,17 @@ function _initEditor(editorId, opts) {
   var count = document.getElementById('editor-count-' + editorId);
   if (!area) return;
 
+  /* ── document 레벨 리스너 누적 방지 ──
+     _initEditor 호출마다 AbortController를 생성하고,
+     area 가 DOM 에서 제거될 때 MutationObserver 가 abort() 를 호출해
+     모든 { signal } 리스너를 한 번에 해제한다. */
+  var _ac  = new AbortController();
+  var _sig = _ac.signal;
+  var _mo  = new MutationObserver(function() {
+    if (!document.body.contains(area)) { _ac.abort(); _mo.disconnect(); }
+  });
+  _mo.observe(document.body, { childList: true, subtree: true });
+
   var isBody = wrap.dataset.body === 'true';
   var MAX = isBody ? Infinity : 1000;
   if (isBody && count) count.style.display = 'none';
@@ -2537,7 +2550,7 @@ function _initEditor(editorId, opts) {
   }
   area.addEventListener('keydown', _updateFmtActive);
   area.addEventListener('mousedown', _updateFmtActive);
-  document.addEventListener('selectionchange', _updateFmtActive);
+  document.addEventListener('selectionchange', _updateFmtActive, { signal: _sig });
 
   /* execCommand 버튼 */
   wrap.querySelectorAll('.evt-editor-tool[data-cmd]').forEach(function(btn) {
@@ -2620,7 +2633,7 @@ function _initEditor(editorId, opts) {
     document.addEventListener('click', function(e) {
       if (!alignBtn.contains(e.target) && !alignDd.contains(e.target))
         alignDd.style.display = 'none';
-    });
+    }, { signal: _sig });
   }
 
   /* 글자 크기 드롭다운 */
@@ -2665,7 +2678,7 @@ function _initEditor(editorId, opts) {
     document.addEventListener('click', function(e) {
       if (!fontsizeBtn.contains(e.target) && !fontsizeDd.contains(e.target))
         fontsizeDd.style.display = 'none';
-    });
+    }, { signal: _sig });
   }
 
   /* 글자색 */
@@ -2748,7 +2761,7 @@ function _initEditor(editorId, opts) {
     document.addEventListener('click', function(e) {
       if (!colorBtn.contains(e.target) && !colorPalette.contains(e.target))
         colorPalette.style.display = 'none';
-    });
+    }, { signal: _sig });
   }
 
   /* 링크 */
@@ -2834,7 +2847,7 @@ function _initEditor(editorId, opts) {
     document.addEventListener('click', function(e) {
       if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target))
         emojiPicker.style.display = 'none';
-    });
+    }, { signal: _sig });
     /* 에디터 포커스 시 이모지 패널 닫기 */
     area.addEventListener('focus', function() {
       var panel = document.getElementById('evt-emoji-kb-panel');
@@ -3107,7 +3120,7 @@ function _initEditor(editorId, opts) {
     /* 선택 변경 시 B/U/S 활성 상태 동기화 */
     document.addEventListener('selectionchange', function() {
       if (fmtOpen && trayView === 'fmt') _updateFmtTrayActive();
-    });
+    }, { signal: _sig });
 
     /* 서식 토글 */
     fmtToggle.addEventListener('mousedown', function(e){ e.preventDefault(); });
