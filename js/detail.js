@@ -2421,6 +2421,78 @@ function _clearEditor(editorId) {
   if (cnt) cnt.textContent = '0 / 1,000';
 }
 
+/* ── Cloudinary 업로드 (게시판/댓글 에디터 공용) ── */
+const _CDN_CONFIG = {
+  cloudName   : 'sypoxyqq',
+  uploadPreset: '게시판미디어',
+  folder      : 'fighting-path/board',
+  maxImageBytes: 10 * 1024 * 1024,   // 10 MB
+  maxVideoBytes: 100 * 1024 * 1024,  // 100 MB
+};
+
+async function _uploadToCloudinary(file, area, restoreRange, updateCount) {
+  const isVideo = file.type.startsWith('video/');
+  const limit   = isVideo ? _CDN_CONFIG.maxVideoBytes : _CDN_CONFIG.maxImageBytes;
+  if (file.size > limit) {
+    showToast(`파일이 너무 큽니다. (최대 ${Math.round(limit / 1024 / 1024)}MB)`, 'error');
+    return;
+  }
+
+  /* 로딩 플레이스홀더 삽입 */
+  restoreRange();
+  const placeholder = isVideo
+    ? '<span id="cdn-uploading" style="display:inline-block;padding:6px 12px;border-radius:6px;background:var(--bg-hover);color:var(--text-muted);font-size:13px">⏳ 동영상 업로드 중...</span>'
+    : '<span id="cdn-uploading" style="display:inline-block;padding:6px 12px;border-radius:6px;background:var(--bg-hover);color:var(--text-muted);font-size:13px">⏳ 이미지 업로드 중...</span>';
+  document.execCommand('insertHTML', false, placeholder);
+  area.focus();
+
+  try {
+    const fd = new FormData();
+    fd.append('file',          file);
+    fd.append('upload_preset', _CDN_CONFIG.uploadPreset);
+    fd.append('folder',        _CDN_CONFIG.folder);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${_CDN_CONFIG.cloudName}/auto/upload`,
+      { method: 'POST', body: fd }
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const url  = data.secure_url;
+
+    /* 플레이스홀더를 실제 미디어로 교체 */
+    const ph = area.querySelector('#cdn-uploading');
+    if (ph) {
+      if (isVideo) {
+        ph.outerHTML = `<video src="${url}" controls style="max-width:100%;display:block;margin:4px 0"></video>`;
+      } else {
+        ph.outerHTML = `<img src="${url}" style="max-width:100%">`;
+      }
+    } else {
+      /* 플레이스홀더를 못 찾으면 커서 위치에 삽입 */
+      restoreRange();
+      if (isVideo) {
+        document.execCommand('insertHTML', false,
+          `<video src="${url}" controls style="max-width:100%;display:block;margin:4px 0"></video>`);
+      } else {
+        document.execCommand('insertImage', false, url);
+        area.querySelectorAll('img').forEach(function(img) { img.style.maxWidth = '100%'; });
+      }
+    }
+  } catch (e) {
+    console.error('Cloudinary 업로드 실패:', e);
+    const ph = area.querySelector('#cdn-uploading');
+    if (ph) ph.remove();
+    showToast('업로드에 실패했습니다. 다시 시도해주세요.', 'error');
+  }
+
+  area.focus();
+  if (updateCount) updateCount();
+}
+
 function _buildEditorHtml(editorId, opts) {
   opts = opts || {};
   var cancelHtml = opts.showCancel
@@ -2881,20 +2953,8 @@ function _initEditor(editorId, opts) {
     fileInput.addEventListener('change', function() {
       var file = fileInput.files[0];
       if (!file) return;
-      var reader = new FileReader();
-      reader.onload = function(ev) {
-        restoreRange();
-        if (file.type.startsWith('video/')) {
-          document.execCommand('insertHTML', false,
-            '<video src="' + ev.target.result + '" controls style="max-width:100%;display:block;margin:4px 0"></video>');
-        } else {
-          document.execCommand('insertImage', false, ev.target.result);
-          area.querySelectorAll('img').forEach(function(img) { img.style.maxWidth = '100%'; });
-        }
-        area.focus(); updateCount();
-      };
-      reader.readAsDataURL(file);
       fileInput.value = '';
+      _uploadToCloudinary(file, area, restoreRange, updateCount);
     });
   }
 
