@@ -2125,8 +2125,11 @@ const _CDN_CONFIG = {
 };
 
 async function _uploadToCloudinary(file, area, restoreRange, updateCount) {
-  const isVideo = file.type.startsWith('video/');
-  const limit   = isVideo ? _CDN_CONFIG.maxVideoBytes : _CDN_CONFIG.maxImageBytes;
+  if (!file.type.startsWith('image/')) {
+    showToast('이미지 파일만 업로드할 수 있습니다.', 'error');
+    return;
+  }
+  const limit = _CDN_CONFIG.maxImageBytes;
   if (file.size > limit) {
     showToast(`파일이 너무 큽니다. (최대 ${Math.round(limit / 1024 / 1024)}MB)`, 'error');
     return;
@@ -2210,7 +2213,7 @@ function _buildEditorHtml(editorId, opts) {
   /* ── 툴바: bodyMode = 전체 도구 / 댓글 = 이모지 + 카메라만 ── */
   var toolbar = opts.bodyMode ? [
     '  <div class="evt-editor-toolbar">',
-    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
     '    <span class="evt-editor-fontsize-wrap">',
     '      <button type="button" class="evt-editor-tool evt-editor-fontsize-btn" data-editor-id="' + editorId + '" title="글자 크기"><span class="evt-editor-fontsize-label" id="fontsize-label-' + editorId + '">15</span><svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10" style="margin-left:2px;flex-shrink:0"><path d="M7 10l5 5 5-5H7z"/></svg></button>',
     '      <div class="evt-editor-fontsize-dd" id="fontsize-dd-' + editorId + '" style="display:none">',
@@ -2263,7 +2266,7 @@ function _buildEditorHtml(editorId, opts) {
     '        <div class="evt-editor-emoji-scroll" id="emoji-grid-' + editorId + '">' + emojiItems + '</div>',
     '      </div>',
     '    </span>',
-    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지/동영상"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
+    '    <button type="button" class="evt-editor-tool evt-editor-image-btn" data-editor-id="' + editorId + '" title="이미지"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20 4h-3.17L15 2H9L7.17 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.65 0-3 1.35-3 3s1.35 3 3 3 3-1.35 3-3-1.35-3-3-3z"/></svg></button>',
     '  </div>',
   ].join('\n');
 
@@ -2665,12 +2668,12 @@ function _initEditor(editorId, opts) {
     var fileInput = document.getElementById('img-file-' + editorId);
     if (!fileInput) {
       fileInput = document.createElement('input');
-      fileInput.type = 'file'; fileInput.accept = 'image/*,video/*';
+      fileInput.type = 'file'; fileInput.accept = 'image/*';
       fileInput.id = 'img-file-' + editorId;
       fileInput.style.display = 'none';
       document.body.appendChild(fileInput);
     } else {
-      fileInput.accept = 'image/*,video/*';
+      fileInput.accept = 'image/*';
     }
     imageBtn.addEventListener('mousedown', function(e) { e.preventDefault(); saveRange(); });
     imageBtn.addEventListener('click', function() { fileInput.click(); });
