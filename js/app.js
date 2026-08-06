@@ -1,7 +1,6 @@
 // ===== GNB 팝업 전체 닫기 헬퍼 =====
 function _closeAllGnbPopups() {
   document.getElementById('gnbBkPopup')?.classList.remove('open');
-  document.getElementById('gnbBkOverlay')?.classList.remove('open');
   document.getElementById('gnbDropdown')?.classList.remove('open');
   document.getElementById('gnbUserDropdown')?.classList.remove('open');
   const helpBubble = document.getElementById('gnbBkHelpBubble');
@@ -23,32 +22,16 @@ function initBookmarkPopup() {
 
   let activeTab = 'char';
 
-  const overlay = document.getElementById('gnbBkOverlay');
-
-  function openBkPanel() {
-    popup.classList.add('open');
-    if (overlay) overlay.classList.add('open');
-    renderBkPopup(activeTab);
-  }
-  function closeBkPanel() {
-    popup.classList.remove('open');
-    if (overlay) overlay.classList.remove('open');
-    if (helpBubble) { helpBubble.classList.remove('open'); }
-    if (helpBtn)    { helpBtn.classList.remove('active'); }
-  }
-
-  // 패널 열기/닫기
+  // 팝업 열기/닫기
   btn.addEventListener('click', e => {
     e.stopPropagation();
     const opening = !popup.classList.contains('open');
     _closeAllGnbPopups();
-    if (opening) openBkPanel();
+    if (opening) {
+      popup.classList.add('open');
+      renderBkPopup(activeTab);
+    }
   });
-
-  // 백드롭 클릭 시 닫기
-  if (overlay) {
-    overlay.addEventListener('click', () => closeBkPanel());
-  }
 
   // 도움말 버튼 토글
   if (helpBtn && helpBubble) {
@@ -68,6 +51,17 @@ function initBookmarkPopup() {
       tab.classList.add('active');
       renderBkPopup(activeTab);
     });
+  });
+
+  // 바깥 클릭 시 닫기
+  document.addEventListener('click', e => {
+    if (!popup.contains(e.target) && e.target !== btn) {
+      popup.classList.remove('open');
+      if (helpBubble) {
+        helpBubble.classList.remove('open');
+        helpBtn && helpBtn.classList.remove('active');
+      }
+    }
   });
 }
 

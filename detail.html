@@ -774,36 +774,19 @@ Developed</span>
           body.innerHTML = '<div class="gnb-bk-grid">' + items + '</div>';
         }
 
-        const bkOverlay = document.getElementById('gnbBkOverlay');
-
-        function openBkPanelDetail() {
-          popup.classList.add('open');
-          if (bkOverlay) bkOverlay.classList.add('open');
-        }
-        function closeBkPanelDetail() {
-          popup.classList.remove('open');
-          if (bkOverlay) bkOverlay.classList.remove('open');
-          if (helpBubble) { helpBubble.classList.remove('open'); }
-          if (helpBtn)    { helpBtn.classList.remove('active'); }
-        }
-
         btn.addEventListener('click', async e => {
           e.stopPropagation();
           const opening = !popup.classList.contains('open');
           if (typeof _closeAllGnbPopups === 'function') _closeAllGnbPopups();
           else document.getElementById('gnbDropdown')?.classList.remove('open');
           if (opening) {
-            openBkPanelDetail();
+            popup.classList.add('open');
             if (!CHAR_DATA_LOADED && typeof initData === 'function') {
               try { await Promise.race([initData(), new Promise(r => setTimeout(r, 8000))]); } catch {}
             }
             renderBkPopupDetail(activeTab);
           }
         });
-
-        if (bkOverlay) {
-          bkOverlay.addEventListener('click', () => closeBkPanelDetail());
-        }
 
         if (helpBtn && helpBubble) {
           helpBtn.addEventListener('click', e => {
@@ -821,6 +804,13 @@ Developed</span>
             tab.classList.add('active');
             renderBkPopupDetail(activeTab);
           });
+        });
+
+        document.addEventListener('click', e => {
+          if (!popup.contains(e.target) && e.target !== btn) {
+            popup.classList.remove('open');
+            if (helpBubble) { helpBubble.classList.remove('open'); helpBtn && helpBtn.classList.remove('active'); }
+          }
         });
       })();
       // ── 사이드바 로그인 버튼 ──
@@ -892,7 +882,6 @@ Developed</span>
         _updateCommSidebar();
       })();
     </script>
-  <div class="gnb-bk-overlay" id="gnbBkOverlay"></div>
   <!-- 로그인 필요 안내 팝업 -->
   <div class="modal-overlay" id="likeLoginOverlay">
     <div class="like-login-modal" role="dialog" aria-modal="true">
@@ -1185,7 +1174,6 @@ Developed</span>
       }
     })();
   </script>
-
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1193,6 +1181,5 @@ Developed</span>
       });
     }
   </script>
-
   </body>
 </html>

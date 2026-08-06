@@ -202,21 +202,15 @@
       }
       .sp-confirm-overlay {
         position: fixed; inset: 0; z-index: 500;
-        display: none; align-items: flex-end; justify-content: center;
-        padding: 0; background: rgba(0, 0, 0, 0.62);
+        display: none; align-items: center; justify-content: center;
+        padding: 20px; background: rgba(0, 0, 0, 0.62);
       }
       .sp-confirm-overlay.open { display: flex; }
       .sp-confirm-modal {
-        width: 100%; max-width: 480px; padding: 24px 20px 36px;
+        width: min(100%, 340px); padding: 24px 20px 18px;
         background: var(--bg-card); border: 1px solid var(--border);
-        border-bottom: none; border-radius: 14px 14px 0 0;
-        box-shadow: 0 -8px 40px rgba(0,0,0,.35);
+        border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.35);
         text-align: center;
-        animation: panelSlideUp 0.22s cubic-bezier(.4,0,.2,1);
-      }
-      @keyframes panelSlideUp {
-        from { transform: translateY(100%); }
-        to   { transform: translateY(0); }
       }
       .sp-confirm-title {
         margin: 0 0 10px; color: var(--text); font-size: 17px; font-weight: 700;
