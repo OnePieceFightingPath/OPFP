@@ -4740,26 +4740,30 @@ html.is-pwa .site-footer {
 .evt-comment-textarea::placeholder { color: var(--text-dim, #6c7086); }
 
 .evt-comment-submit-btn {
-  background: #161b22;
+  background: var(--bg-secondary);
   color: var(--text-muted);
-  border: 1px solid var(--border, #313244);
+  border: 1px solid var(--border);
   border-radius: 99px;
   padding: 10px 16px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s, color 0.15s, opacity 0.15s;
+  transition: background 0.15s, color 0.15s, opacity 0.15s, border-color 0.15s;
   font-family: inherit;
   flex-shrink: 0;
   align-self: flex-end;
 }
 .evt-comment-submit-btn:hover:not(:disabled) { opacity: 0.86; }
 .evt-comment-submit-btn:not(:disabled) {
-  background: #d9f7e8;
-  color: #168a58;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 .evt-comment-submit-btn:disabled {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  border-color: var(--border);
   opacity: 1;
   cursor: not-allowed;
 }
