@@ -562,6 +562,126 @@ let _dlBoardSortBy   = 'recent'; // 'recent' | 'oldest' | 'recommended'
 let _dlBoardCategory = 'all';   // 'all' | '자유' | '정보' | '질문'
 let _allBoardPosts   = [];
 
+function _boardIsMobile() {
+  return window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+}
+
+function _boardWriteHost() {
+  return '<div class="opfp-board-write-host" id="opfpBoardWriteHost"></div>';
+}
+
+function _finishBoardWrite(message, boardId) {
+  if (typeof showToast === 'function') showToast(message, 'success');
+  setTimeout(function () {
+    if (boardId) _renderBoardDetail(boardId);
+    else _renderBoardList();
+  }, 350);
+}
+
+function _submitBoardPost(editorApi, editId) {
+  const data = editorApi.getData();
+  const user = (typeof currentUser !== 'undefined') ? currentUser : null;
+  const profile = (typeof currentUserProfile !== 'undefined') ? currentUserProfile : null;
+  if (!user) {
+    document.getElementById('loginModalOverlay')?.classList.add('open');
+    return;
+  }
+  if (!profile) {
+    if (typeof showToast === 'function') showToast('프로필 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.', 'error');
+    return;
+  }
+  if (!data.title) {
+    if (typeof showToast === 'function') showToast('제목을 입력해주세요.', 'error');
+    return;
+  }
+  if (!data.hasContent) {
+    if (typeof showToast === 'function') showToast('본문을 입력해주세요.', 'error');
+    return;
+  }
+
+  const submitBtn = editorApi.element.querySelector('[data-action="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
+  const boardData = {
+    title: data.title,
+    prefix: data.prefix,
+    text: data.text,
+    editedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  let request;
+  if (editId) {
+    request = db.collection('boards').doc(editId).update(boardData);
+  } else {
+    request = db.collection('boards').add({
+      ...boardData,
+      uid: user.uid,
+      author: profile.nickname || '익명',
+      avatar: profile.avatar || '',
+      likedBy: [],
+      dislikedBy: [],
+      likeCount: 0,
+      commentCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+  request.then(ref => {
+    _finishBoardWrite(editId ? '게시글이 수정되었습니다.' : '게시글이 등록되었습니다.', editId || ref.id);
+  }).catch(err => {
+    console.error('게시글 저장 실패:', err);
+    if (submitBtn) submitBtn.disabled = false;
+    if (typeof showToast === 'function') showToast('게시글 저장에 실패했습니다. 다시 시도해주세요.', 'error');
+  });
+}
+
+function _renderBoardWrite() {
+  if (_boardIsMobile()) {
+    location.href = 'PostEdit.html';
+    return;
+  }
+  const main = document.getElementById('detailMain');
+  if (!main || !window.OPFPBoardEditor) return;
+  const user = (typeof currentUser !== 'undefined') ? currentUser : null;
+  if (!user) {
+    document.getElementById('loginModalOverlay')?.classList.add('open');
+    return;
+  }
+  _setNavActive('board');
+  document.title = '게시판 글쓰기 — Fighting Path Patch';
+  history.pushState({}, '', 'detail.html?type=board&mode=write');
+  main.innerHTML = _boardWriteHost();
+  const editor = OPFPBoardEditor.render(document.getElementById('opfpBoardWriteHost'), {
+    mode: 'pc',
+    editorId: 'board-write-editor',
+    onCancel: _renderBoardList,
+    onSubmit: _submitBoardPost,
+  });
+  editor._opfpApi.focus();
+  window.scrollTo({ top: 0 });
+}
+
+function _renderBoardEdit(boardId, post) {
+  if (_boardIsMobile()) {
+    location.href = 'PostEdit.html?edit=' + encodeURIComponent(boardId);
+    return;
+  }
+  const main = document.getElementById('detailMain');
+  if (!main || !window.OPFPBoardEditor) return;
+  const user = (typeof currentUser !== 'undefined') ? currentUser : null;
+  if (!user || user.uid !== post.uid) return;
+  _setNavActive('board');
+  document.title = '게시글 수정 — Fighting Path Patch';
+  history.pushState({}, '', 'detail.html?type=board&mode=edit&id=' + encodeURIComponent(boardId));
+  main.innerHTML = _boardWriteHost();
+  const editor = OPFPBoardEditor.render(document.getElementById('opfpBoardWriteHost'), {
+    mode: 'pc',
+    editorId: 'board-edit-editor',
+    initial: post,
+    onCancel: () => _renderBoardDetail(boardId),
+    onSubmit: api => _submitBoardPost(api, boardId),
+  });
+  editor._opfpApi.focus();
+  window.scrollTo({ top: 0 });
+}
+
 async function _renderBoardList() {
   const main = document.getElementById('detailMain');
   if (!main) return;
@@ -2125,11 +2245,12 @@ const _CDN_CONFIG = {
 };
 
 async function _uploadToCloudinary(file, area, restoreRange, updateCount) {
-  if (!file.type.startsWith('image/')) {
-    showToast('이미지 파일만 업로드할 수 있습니다.', 'error');
+  const isVideo = file.type.startsWith('video/');
+  if (!file.type.startsWith('image/') && !isVideo) {
+    showToast('이미지 또는 동영상 파일만 업로드할 수 있습니다.', 'error');
     return;
   }
-  const limit = _CDN_CONFIG.maxImageBytes;
+  const limit = isVideo ? _CDN_CONFIG.maxVideoBytes : _CDN_CONFIG.maxImageBytes;
   if (file.size > limit) {
     showToast(`파일이 너무 큽니다. (최대 ${Math.round(limit / 1024 / 1024)}MB)`, 'error');
     return;
@@ -3084,12 +3205,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else if (type === 'board') {
     const mode = params.get('mode');
     if (mode === 'write') {
-      // 새로고침/강력 새로고침 시 write URL로 진입하면 authReady 직후에도
-      // Firestore onSnapshot(currentUserProfile)이 아직 미도착이라 profile=null →
-      // 로그인 팝업 오노출 버그 발생. 어차피 새로고침하면 작성 내용도 유실되므로
-      // 게시판 목록으로 리다이렉트한다.
-      history.replaceState({}, '', 'detail.html?type=board');
-      _renderBoardList();
+      if (_boardIsMobile()) {
+        location.replace('PostEdit.html');
+      } else {
+        _renderBoardWrite();
+      }
+    } else if (mode === 'edit' && id) {
+      const editDoc = await db.collection('boards').doc(id).get();
+      if (editDoc.exists) _renderBoardEdit(id, { docId: editDoc.id, ...editDoc.data() });
+      else _renderBoardList();
     } else if (id) {
       _renderBoardDetail(id);
     } else {
