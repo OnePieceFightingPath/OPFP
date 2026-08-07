@@ -155,10 +155,20 @@ async function publishBanners() {
   try {
     const batch = db.batch();
     for (const op of _pendingBanners) {
-      const newVisible = op.data.isActive !== false;
-      if (op.action === 'add') batch.set(db.collection('banners').doc(), { ...op.data, visible: newVisible });
-      else if (op.action === 'edit') batch.update(db.collection('banners').doc(op.docId), { ...op.data, visible: newVisible, hasDraft: firebase.firestore.FieldValue.delete(), draftData: firebase.firestore.FieldValue.delete() });
-      else if (op.action === 'delete') batch.delete(db.collection('banners').doc(op.docId));
+      if (op.action === 'add') {
+        const newVisible = op.data.isActive !== false;
+        batch.set(db.collection('banners').doc(), { ...op.data, visible: newVisible });
+      } else if (op.action === 'edit') {
+        const newVisible = op.data.isActive !== false;
+        batch.update(db.collection('banners').doc(op.docId), {
+          ...op.data,
+          visible: newVisible,
+          hasDraft: firebase.firestore.FieldValue.delete(),
+          draftData: firebase.firestore.FieldValue.delete(),
+        });
+      } else if (op.action === 'delete') {
+        batch.delete(db.collection('banners').doc(op.docId));
+      }
     }
     await batch.commit();
     await savePublishMeta('banners');
