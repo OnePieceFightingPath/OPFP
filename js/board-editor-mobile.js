@@ -291,16 +291,21 @@
     /* ---- 편집 명령 ---- */
     function exec(command, value) {
       restoreRange();
-      var keep = savedRange && savedRange.cloneRange();
+      var sel = window.getSelection();
+      var collapsed = !sel || !sel.rangeCount || sel.getRangeAt(0).collapsed;
+      var keep = !collapsed && savedRange ? savedRange.cloneRange() : null;
       document.execCommand(command, false, value);
+      /* 커서만 있는 상태(collapsed)에서는 selection 을 다시 세팅하면
+       * 브라우저의 "다음 입력에 적용될 서식(pending state)" 이 사라지므로 그대로 둔다. */
       if (keep) {
-        var sel = window.getSelection();
+        sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(keep);
         savedRange = keep.cloneRange();
       } else saveRange();
       syncInlineState();
     }
+
     function insertHtml(html) {
       restoreRange();
       document.execCommand('insertHTML', false, html);
@@ -418,24 +423,32 @@
     shell.querySelector('[data-dock]').addEventListener('mousedown', function (event) {
       if (event.target.closest('[data-action], [data-size-option], [data-color-option], [data-bg-option], [data-emoji]')) event.preventDefault();
     });
-    /* 이모티콘 버튼/이모티콘 셀은 touchstart 에서 기본동작을 막아 포커스 이동을 방지한다.
-     * 단 preventDefault 는 뒤따르는 click 이벤트도 취소하므로, 여기서 직접 실행하고
+    /* 서식/이모티콘 버튼은 touchstart 에서 기본동작을 막아 본문 선택(caret)이 풀리지 않게 한다.
+     * preventDefault 는 뒤따르는 click 도 취소하므로 여기서 직접 실행하고,
      * 혹시 발생하는 click 은 중복 처리되지 않게 무시한다. */
+    var TOUCH_SELECTOR = '[data-action="emoji"], [data-emoji],' +
+      '[data-action="bold"], [data-action="underline"], [data-action="strike"],' +
+      '[data-action="align"], [data-action="fontSize"], [data-action="textColor"],' +
+      '[data-action="backgroundColor"], [data-action="format"], [data-action="format-close"],' +
+      '[data-action="divider"], [data-size-option], [data-color-option], [data-bg-option]';
     var touchHandledAt = 0;
-    shell.querySelector('[data-dock]').addEventListener('touchstart', function (event) {
-      var hit = event.target.closest('[data-action="emoji"], [data-emoji]');
-      if (!hit) return;
+    var touchHandledEl = null;
+    shell.addEventListener('touchstart', function (event) {
+      var hit = event.target.closest(TOUCH_SELECTOR);
+      if (!hit || !shell.contains(hit)) return;
       event.preventDefault();
       touchHandledAt = Date.now();
+      touchHandledEl = hit;
       handleButton(hit);
     }, { passive: false });
 
     shell.addEventListener('click', function (event) {
       var button = event.target.closest('[data-action], [data-size-option], [data-color-option], [data-bg-option], [data-emoji]');
       if (!button || !shell.contains(button)) return;
-      if ((button.dataset.emoji || button.dataset.action === 'emoji') && Date.now() - touchHandledAt < 700) return;
+      if (button === touchHandledEl && Date.now() - touchHandledAt < 700) return;
       handleButton(button);
     });
+
 
     function handleButton(button) {
 
