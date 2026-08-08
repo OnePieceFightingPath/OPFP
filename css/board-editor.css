@@ -54,10 +54,11 @@
 .opfp-tool:active { transform: scale(.94); }
 .opfp-tool svg { width: 20px; height: 20px; fill: currentColor; }
 .opfp-tool b, .opfp-tool u, .opfp-tool s { font-size: 17px; }
-.opfp-size-button { width: 48px; font-weight: 700; }
-.opfp-size-popover { position: absolute; top: 52px; left: 70px; z-index: 12; display: none; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 160px; padding: 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-card); box-shadow: 0 12px 28px rgba(0,0,0,.28); }
-.opfp-size-popover.open { display: grid; }
-.opfp-size-popover button { height: 30px; border: 0; border-radius: 5px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.opfp-size-button { width: 62px; font-weight: 700; }
+.opfp-size-button svg { width: 13px; height: 13px; fill: currentColor; }
+.opfp-size-popover { position: absolute; top: 52px; left: 70px; z-index: 12; display: none; flex-direction: column; gap: 2px; width: 94px; padding: 6px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-card); box-shadow: 0 12px 28px rgba(0,0,0,.28); }
+.opfp-size-popover.open { display: flex; }
+.opfp-size-popover button { height: 30px; border: 0; border-radius: 5px; background: transparent; color: var(--text); font: inherit; cursor: pointer; text-align: left; padding: 0 10px; }
 .opfp-size-popover button:hover { color: var(--opfp-signature); background: var(--bg-hover); }
 .opfp-align-popover { position: absolute; top: 52px; left: 265px; z-index: 12; display: none; grid-template-columns: repeat(4, 1fr); gap: 4px; width: 220px; padding: 8px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg-card); box-shadow: 0 12px 28px rgba(0,0,0,.28); }
 .opfp-align-popover.open { display: grid; }
@@ -87,7 +88,6 @@
 .opfp-palette-apply { height: 30px; border: 0; border-radius: 5px; background: var(--opfp-signature); color: #fff; font: inherit; font-size: 11px; cursor: pointer; }
 .opfp-board-editor--pc [data-palette="color"] { left: 165px; }
 .opfp-board-editor--pc [data-palette="bgcolor"] { left: 210px; }
-.opfp-size-popover { display: none; }
 .opfp-emoji-panel { position: absolute; left: -1px; right: -1px; top: calc(100% + 1px); z-index: 8; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0 0 10px 10px; max-height: 230px; overflow-y: auto; overscroll-behavior: contain; display: none; padding: 12px; box-shadow: 0 12px 28px rgba(0,0,0,.22); }
 .opfp-emoji-panel.open { display: block; animation: opfpFadeUp .2s ease both; }
 .opfp-emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }

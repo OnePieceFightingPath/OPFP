@@ -30,6 +30,7 @@
     alignRight: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5Zm6 4h12v2H9V9Zm-6 4h18v2H3v-2Zm6 4h12v2H9v-2Z"/></svg>',
     alignFull: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v2H3V5Zm0 4h18v2H3V9Zm0 4h18v2H3v-2Zm0 4h18v2H3v-2Z"/></svg>',
     divider: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h16v2H4z"/></svg>',
+     caret: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5z"/></svg>',
     close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.7 5.3 6.3 6.3 6.3-6.3 1.4 1.4-6.3 6.3 6.3 6.3-1.4 1.4-6.3-6.3-6.3 6.3-1.4-1.4 6.3-6.3-6.3-6.3z"/></svg>',
     back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.7 5.3-6.7 6.7 6.7 6.7 1.4-1.4L10.8 12l5.3-5.3z"/></svg>',
     smile: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-3.5 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM7.4 14h9.2a5 5 0 0 1-9.2 0Z"/></svg>'
@@ -88,7 +89,7 @@
   function renderToolbar(mode) {
     var pc = [
       '<button type="button" class="opfp-tool" data-action="media" title="이미지 / 동영상">' + icons.image + '</button>',
-      '<button type="button" class="opfp-tool opfp-size-button" data-action="size" title="글자 크기"><span data-size-label>15</span><small>px</small></button>',
+       '<button type="button" class="opfp-tool opfp-size-button" data-action="size" title="글자 크기" aria-haspopup="listbox" aria-expanded="false"><span data-size-label>15</span><small>px</small>' + icons.caret + '</button>',
       '<button type="button" class="opfp-tool" data-action="bold" title="굵게"><b>B</b></button>',
       '<button type="button" class="opfp-tool" data-action="underline" title="밑줄"><u>U</u></button>',
       '<button type="button" class="opfp-tool" data-action="strike" title="취소선"><s>S</s></button>',
@@ -103,7 +104,7 @@
       '<div class="opfp-mobile-format" data-format-panel>',
       '<div class="opfp-format-page" data-format-page="format">',
       '<button type="button" class="opfp-tool" data-action="format-back" title="돌아가기">' + icons.back + '</button>',
-      '<button type="button" class="opfp-tool opfp-size-button" data-action="size" title="글자 크기"><span data-size-label>15</span></button>',
+       '<button type="button" class="opfp-tool opfp-size-button" data-action="size" title="글자 크기" aria-haspopup="listbox" aria-expanded="false"><span data-size-label>15</span>' + icons.caret + '</button>',
       '<button type="button" class="opfp-tool opfp-align-button" data-action="align" title="정렬">' + icons.alignLeft + '</button>',
       '<button type="button" class="opfp-tool" data-action="bold" title="굵게"><b>B</b></button>',
       '<button type="button" class="opfp-tool" data-action="underline" title="밑줄"><u>U</u></button>',
@@ -249,17 +250,71 @@
       saveRange();
       updateState();
     }
-    function setFontSize(size) {
-      ensureSelection();
-      document.execCommand('fontSize', false, '7');
-      area.querySelectorAll('font[size="7"]').forEach(function (font) {
-        font.removeAttribute('size');
-        font.style.fontSize = size + 'px';
-      });
-      state.size = Number(size);
-      saveRange();
-      updateState();
-    }
+     function selectedTextNodes(selectionRange) {
+       var nodes = [];
+       var walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT);
+       var node;
+       while ((node = walker.nextNode())) {
+         if (!node.nodeValue) continue;
+         var nodeRange = document.createRange();
+         nodeRange.selectNodeContents(node);
+         var endsBeforeSelection = nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) <= 0;
+         var startsAfterSelection = nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) >= 0;
+         if (!endsBeforeSelection && !startsAfterSelection) nodes.push(node);
+       }
+       return nodes;
+     }
+
+     function restoreTextSelection(nodes) {
+       if (!nodes.length) return;
+       var selection = window.getSelection();
+       var restored = document.createRange();
+       restored.setStart(nodes[0], 0);
+       restored.setEnd(nodes[nodes.length - 1], nodes[nodes.length - 1].nodeValue.length);
+       selection.removeAllRanges();
+       selection.addRange(restored);
+       range = restored.cloneRange();
+     }
+
+     function setFontSize(size) {
+       size = Number(size);
+       if (!size) return;
+       ensureSelection();
+       var selectionRange = range && range.cloneRange();
+       if (!selectionRange || !area.contains(selectionRange.commonAncestorContainer)) return;
+
+       if (selectionRange.collapsed) {
+         restoreRange();
+         document.execCommand('fontSize', false, '7');
+         area.querySelectorAll('font[size="7"]').forEach(function (font) {
+           font.removeAttribute('size');
+           font.style.fontSize = size + 'px';
+         });
+         state.size = size;
+         saveRange();
+         updateState();
+         return;
+       }
+
+       var nodes = selectedTextNodes(selectionRange);
+       var styledNodes = [];
+       nodes.forEach(function (node) {
+         var start = node === selectionRange.startContainer ? selectionRange.startOffset : 0;
+         var end = node === selectionRange.endContainer ? selectionRange.endOffset : node.nodeValue.length;
+         if (end <= start) return;
+         var selected = node;
+         if (end < selected.nodeValue.length) selected.splitText(end);
+         if (start > 0) selected = selected.splitText(start);
+         var wrapper = document.createElement('span');
+         wrapper.style.fontSize = size + 'px';
+         selected.parentNode.insertBefore(wrapper, selected);
+         wrapper.appendChild(selected);
+         styledNodes.push(selected);
+       });
+       state.size = size;
+       restoreTextSelection(styledNodes);
+       updateState();
+     }
     function setColor(kind, value) {
       ensureSelection();
       if (kind === 'color') {
@@ -277,9 +332,20 @@
     }
     function closePanels() {
       shell.querySelectorAll('[data-palette]').forEach(function (panel) { panel.classList.remove('open'); });
+      closeDropdowns();
        setEmojiOpen(false);
       shell.querySelector('[data-link-modal]').classList.remove('open');
       shell.querySelector('[data-link-modal]').setAttribute('aria-hidden', 'true');
+    }
+    function closeDropdowns() {
+      var sizePopover = shell.querySelector('[data-size-popover]');
+      var alignPopover = shell.querySelector('[data-align-popover]');
+      var sizeButton = shell.querySelector('.opfp-size-button');
+      var alignButton = shell.querySelector('[data-action="align"]');
+      if (sizePopover) sizePopover.classList.remove('open');
+      if (alignPopover) alignPopover.classList.remove('open');
+      if (sizeButton) sizeButton.setAttribute('aria-expanded', 'false');
+      if (alignButton) alignButton.setAttribute('aria-expanded', 'false');
     }
      function setEmojiOpen(open) {
        shell.querySelector('[data-emoji-panel]').classList.toggle('open', !!open);
@@ -392,7 +458,7 @@
       if (button.dataset.sizeOption) {
         setFontSize(button.dataset.sizeOption);
         if (mode === 'mobile') showFormatPage('format');
-        else shell.querySelector('[data-size-popover]').classList.remove('open');
+        else closeDropdowns();
         return;
       }
       if (button.dataset.colorOption !== undefined) {
@@ -403,7 +469,7 @@
       if (button.dataset.alignOption !== undefined) {
         state.align = Number(button.dataset.alignOption);
         exec(alignCommands[state.align]);
-        shell.querySelector('[data-align-popover]').classList.remove('open');
+        closeDropdowns();
         return;
       }
       if (button.dataset.emoji) {
@@ -429,7 +495,17 @@
         if (mode === 'mobile') restoreRange();
         return;
       }
-      if (action === 'size') { saveRange(); return mode === 'mobile' ? showFormatPage('sizes') : shell.querySelector('[data-size-popover]')?.classList.toggle('open'); }
+       if (action === 'size') {
+         saveRange();
+         if (mode === 'mobile') return showFormatPage('sizes');
+         var sizePopover = shell.querySelector('[data-size-popover]');
+         var sizeButton = shell.querySelector('.opfp-size-button');
+         var opening = !sizePopover.classList.contains('open');
+         closePanels();
+         sizePopover.classList.toggle('open', opening);
+         sizeButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
+         return;
+       }
       if (action === 'bold') return exec('bold');
       if (action === 'underline') return exec('underline');
       if (action === 'strike') return exec('strikeThrough');
@@ -471,7 +547,12 @@
       if (action === 'align') {
         if (mode === 'pc') {
           saveRange();
-          shell.querySelector('[data-align-popover]').classList.toggle('open');
+          var alignPopover = shell.querySelector('[data-align-popover]');
+          var alignButton = shell.querySelector('[data-action="align"]');
+          var opening = !alignPopover.classList.contains('open');
+          closePanels();
+          alignPopover.classList.toggle('open', opening);
+          alignButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
           return;
         }
         state.align = (state.align + 1) % alignCommands.length;
