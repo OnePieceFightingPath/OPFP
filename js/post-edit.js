@@ -40,8 +40,7 @@
     if (!host) return;
     var start = function () {
       var initial = current || {};
-      var editor = OPFPBoardEditor.render(host, {
-        mode: 'mobile',
+      var editor = OPFPMobileBoardEditor.render(host, {
         editorId: 'post-edit-editor',
         initial: initial,
         onCancel: closePage,
@@ -51,7 +50,7 @@
         db.collection('boards').doc(editId).get().then(function (snap) {
           if (!snap.exists) return showToast('게시글을 찾을 수 없습니다.', 'error');
           current = snap.data();
-          editor = OPFPBoardEditor.render(host, { mode: 'mobile', editorId: 'post-edit-editor', initial: current, onCancel: closePage, onSubmit: savePost })._opfpApi;
+          editor = OPFPMobileBoardEditor.render(host, { editorId: 'post-edit-editor', initial: current, onCancel: closePage, onSubmit: savePost })._opfpApi;
         });
       }
     };

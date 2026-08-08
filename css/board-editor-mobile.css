@@ -1,0 +1,342 @@
+/* OPFP 모바일 게시판 글쓰기 전용 스타일
+ * PC 에디터(css/board-editor.css)와 클래스가 겹치지 않도록 opfp-mb-* 네임스페이스만 사용합니다.
+ */
+.opfp-mb-editor {
+  --mb-bar-h: 54px;
+  --mb-emoji-h: min(44dvh, 320px);
+  --mb-sig: var(--accent, #4d9fff);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg, #0d1117);
+  color: var(--text, #e6edf3);
+}
+
+/* ------------------------------------------------------- 상단 고정 바 */
+.opfp-mb-topbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: calc(54px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 14px 0;
+  background: color-mix(in srgb, var(--bg-card, #161b22) 94%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border, #262c36);
+}
+.opfp-mb-close,
+.opfp-mb-submit {
+  min-height: 36px;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.opfp-mb-close { color: var(--text, #e6edf3); display: inline-flex; align-items: center; }
+.opfp-mb-close svg { width: 22px; height: 22px; fill: currentColor; }
+.opfp-mb-submit { color: var(--mb-sig); font-size: 15px; font-weight: 700; }
+.opfp-mb-submit:disabled { opacity: .5; cursor: wait; }
+
+/* ----------------------------------------------------- 머리말 / 제목 */
+.opfp-mb-fields {
+  padding: calc(66px + env(safe-area-inset-top)) 18px 0;
+}
+.opfp-mb-prefix {
+  width: 100%;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #8b949e);
+  font: inherit;
+  font-size: 13px;
+  padding: 0;
+  outline: 0;
+}
+.opfp-mb-prefix:valid { color: var(--text, #e6edf3); }
+.opfp-mb-title {
+  width: 100%;
+  box-sizing: border-box;
+  height: 52px;
+  border: 0;
+  border-bottom: 1px solid var(--border, #262c36);
+  background: transparent;
+  color: var(--text, #e6edf3);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  padding: 0;
+  outline: 0;
+}
+.opfp-mb-title::placeholder { color: var(--text-dim, #6e7681); font-weight: 600; }
+
+/* --------------------------------------------------------- 본문 영역 */
+.opfp-mb-content {
+  flex: 1;
+  min-height: calc(100dvh - 260px);
+  padding: 16px 18px calc(var(--mb-bar-h) + 80px);
+  font-size: 15px;
+  line-height: 1.75;
+  outline: 0;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.opfp-mb-content:empty::before {
+  content: attr(data-placeholder);
+  white-space: pre-line;
+  color: var(--text-dim, #6e7681);
+  pointer-events: none;
+}
+.opfp-mb-content img { max-width: 100%; border-radius: 6px; vertical-align: middle; }
+.opfp-mb-content img.opfp-editor-emoji { max-width: 76px; }
+.opfp-mb-content video { max-width: 100%; display: block; margin: 6px 0; border-radius: 6px; }
+.opfp-mb-content a { color: var(--mb-sig); text-decoration: underline; }
+.opfp-mb-content hr {
+  border: 0;
+  border-top: 1px solid var(--border, #262c36);
+  margin: 16px 0;
+  width: 100%;
+}
+
+/* ------------------------------------------- 하단 Dock (툴바 + 입력 영역) */
+.opfp-mb-dock {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 30;
+  background: var(--bg-card, #161b22);
+  border-top: 1px solid var(--border, #262c36);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 서식 툴바: 메인 툴바 위에서 Slide Up / Slide Down */
+.opfp-mb-formatbar {
+  position: relative;
+  height: var(--mb-bar-h);
+  overflow: hidden;
+  border-bottom: 1px solid var(--border, #262c36);
+  transform: translateY(100%);
+  transition: transform .24s cubic-bezier(.22, .8, .2, 1),
+              height .24s cubic-bezier(.22, .8, .2, 1),
+              opacity .18s linear;
+  opacity: 0;
+}
+.opfp-mb-editor:not(.is-format-open) .opfp-mb-formatbar {
+  height: 0;
+  border-bottom-color: transparent;
+}
+.opfp-mb-editor.is-format-open .opfp-mb-formatbar {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.opfp-mb-row {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  height: var(--mb-bar-h);
+}
+.opfp-mb-row.is-active { display: flex; }
+/* 서식 툴바는 한 줄에 정확히 8칸 */
+.opfp-mb-row--format { display: none; }
+.opfp-mb-row--format.is-active {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  align-items: center;
+}
+/* 뒤로 버튼 1칸 + 스크롤 영역 7칸 */
+.opfp-mb-rowback { flex: 0 0 12.5%; }
+.opfp-mb-scroller {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.opfp-mb-scroller::-webkit-scrollbar { display: none; }
+
+/* 공통 셀: 모든 버튼 높이는 메인 툴바와 동일 */
+.opfp-mb-cell {
+  height: var(--mb-bar-h);
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted, #8b949e);
+  font: inherit;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.opfp-mb-cell svg { width: 21px; height: 21px; fill: currentColor; }
+.opfp-mb-cell b, .opfp-mb-cell u, .opfp-mb-cell s { font-size: 17px; }
+.opfp-mb-cell:active { color: var(--mb-sig); }
+/* 활성 상태 = Signature Color */
+.opfp-mb-cell.is-on { color: var(--mb-sig); }
+
+/* 글자 크기 셀: 서식 버튼보다 조금 크게, 다음 항목이 일부 잘려 보이도록 */
+.opfp-mb-scroller--size > .opfp-mb-sizecell {
+  flex: 0 0 calc(100% / 6.4);
+  height: 42px;
+  margin: 0 3px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--bg-hover, #1f2630);
+  color: var(--text, #e6edf3);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.opfp-mb-scroller--size > .opfp-mb-sizecell:active { color: var(--mb-sig); }
+
+/* 색상 셀: 8칸이 정확히 맞도록 (뒤로 1칸 + 7칸) */
+.opfp-mb-scroller--color > .opfp-mb-swatch {
+  flex: 0 0 calc(100% / 7);
+}
+.opfp-mb-swatch i {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--swatch);
+  border: 1px solid var(--border, #262c36);
+}
+/* 색상 없음 = 흰 배경 + 대각선 */
+.opfp-mb-swatch-none {
+  background: #fff !important;
+  position: relative;
+  overflow: hidden;
+}
+.opfp-mb-swatch-none::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 1.5px;
+  height: 34px;
+  background: #ff4d5a;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* 글자색 / 배경색 버튼 미리보기 */
+.opfp-mb-colorcell { flex-direction: column; gap: 2px; font-size: 15px; line-height: 1; }
+.opfp-mb-colorcell mark { background: transparent; color: inherit; }
+.opfp-mb-colorcell i {
+  display: block;
+  width: 17px;
+  height: 4px;
+  border-radius: 3px;
+  background: transparent;
+}
+.opfp-mb-colorcell i.is-none {
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.opfp-mb-colorcell i.is-none::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 1.5px;
+  height: 16px;
+  background: #ff4d5a;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* 메인 툴바: 항상 표시, 위치 고정 */
+.opfp-mb-mainbar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  height: var(--mb-bar-h);
+}
+
+/* 입력 영역: 이모티콘 (메인 툴바 아래, 시스템 키보드 자리) */
+.opfp-mb-emoji {
+  height: 0;
+  overflow: hidden;
+  transition: height .22s cubic-bezier(.22, .8, .2, 1);
+  border-top: 1px solid transparent;
+}
+.opfp-mb-editor.is-emoji-open .opfp-mb-emoji {
+  height: var(--mb-emoji-h);
+  overflow-y: auto;
+  border-top-color: var(--border, #262c36);
+  -webkit-overflow-scrolling: touch;
+}
+.opfp-mb-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 14px 18px;
+}
+.opfp-mb-emoji-grid button {
+  min-height: 64px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--bg-hover, #1f2630);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.opfp-mb-emoji-grid img { max-width: 44px; max-height: 44px; }
+
+/* ------------------------------------------------------------ 링크 모달 */
+.opfp-mb-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .5);
+}
+.opfp-mb-modal.is-open { display: flex; }
+.opfp-mb-modal-card {
+  width: min(360px, 100%);
+  box-sizing: border-box;
+  padding: 18px;
+  border: 1px solid var(--border, #262c36);
+  border-radius: 14px;
+  background: var(--bg-card, #161b22);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
+}
+.opfp-mb-modal-title { font-weight: 700; margin-bottom: 12px; }
+.opfp-mb-modal-card input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 44px;
+  border: 1px solid var(--border, #262c36);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--bg, #0d1117);
+  color: var(--text, #e6edf3);
+  font: inherit;
+}
+.opfp-mb-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.opfp-mb-modal-actions button {
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--bg-hover, #1f2630);
+  color: var(--text, #e6edf3);
+  font: inherit;
+  cursor: pointer;
+}
+.opfp-mb-modal-actions button:last-child { background: var(--mb-sig); color: #fff; font-weight: 700; }
+
+.opfp-mb-editor .opfp-uploading { color: var(--text-dim, #6e7681); font-size: 13px; }
