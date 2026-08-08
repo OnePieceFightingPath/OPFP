@@ -136,9 +136,7 @@
     var id = options.editorId || 'board-editor';
     var initial = options.initial || {};
     var placeholder = '해당 게시판은 PvP 관련 정보를 공유하는 게시판입니다.\\n• 패치 정보\\n• 캐릭터 운용법\\n• 콤보\\n• 메타\\n• PvP 팁 등을 자유롭게 작성해주세요.\\n욕설 및 비방 게시글은 제재될 수 있습니다.';
-    var prefixOptions = mode === 'mobile'
-      ? '<option value="" disabled>머리말 선택</option><option value="자유">자유</option><option value="정보">정보</option><option value="질문">질문</option>'
-      : '<option value="">자유</option><option value="정보">정보</option><option value="질문">질문</option>';
+    var prefixOptions = '<option value="" disabled>머리말 선택</option><option value="자유">자유</option><option value="정보">정보</option><option value="질문">질문</option>';
     var prefixRequired = mode === 'mobile' ? ' required' : '';
     var shell = document.createElement('section');
     shell.className = 'opfp-board-editor opfp-board-editor--' + mode;
@@ -146,8 +144,8 @@
     shell.innerHTML = '<div class="opfp-editor-topbar"><button type="button" class="opfp-editor-cancel" data-action="cancel" aria-label="나가기">' + (mode === 'mobile' ? icons.close : icons.back) + '<span>' + (mode === 'mobile' ? '' : '게시판 글쓰기') + '</span></button><strong>' + (mode === 'mobile' ? '게시판 글쓰기' : '') + '</strong><button type="button" class="opfp-editor-submit" data-action="submit">등록</button></div>' +
       (mode === 'pc' ? '<div class="opfp-editor-heading">게시판 글쓰기</div>' : '') +
       '<div class="opfp-editor-fields"><select data-field="prefix" aria-label="머리말"' + prefixRequired + '>' + prefixOptions + '</select><input data-field="title" type="text" maxlength="100" placeholder="제목을 입력해주세요." aria-label="제목"></div>' +
-      '<div class="opfp-editor-body"><div class="opfp-editor-toolbar-wrap">' + renderToolbar(mode) + '</div><div class="opfp-editor-content" contenteditable="true" data-editor-content data-placeholder="' + esc(placeholder) + '" role="textbox" aria-multiline="true"></div></div>' +
-      '<input type="file" data-media-input accept="image/*,video/*" hidden><div class="opfp-emoji-panel" data-emoji-panel><div class="opfp-emoji-grid">' + EMOJIS.map(function (src, index) { return '<button type="button" data-emoji="' + src + '"><img src="' + src + '" alt="이모티콘 ' + (index + 1) + '"></button>'; }).join('') + '</div></div>' +
+      '<div class="opfp-editor-body"><div class="opfp-editor-toolbar-wrap">' + renderToolbar(mode) + '<div class="opfp-emoji-panel" data-emoji-panel><div class="opfp-emoji-grid">' + EMOJIS.map(function (src, index) { return '<button type="button" data-emoji="' + src + '"><img src="' + src + '" alt="이모티콘 ' + (index + 1) + '"></button>'; }).join('') + '</div></div></div><div class="opfp-editor-content" contenteditable="true" data-editor-content data-placeholder="' + esc(placeholder) + '" role="textbox" aria-multiline="true"></div></div>' +
+      '<input type="file" data-media-input accept="image/*,video/*" hidden>' +
       '<div class="opfp-link-modal" data-link-modal aria-hidden="true"><div class="opfp-link-card" role="dialog" aria-label="링크 추가"><div class="opfp-link-title">링크 추가</div><input type="url" data-link-input placeholder="https://example.com"><div class="opfp-link-actions"><button type="button" data-link-cancel>취소</button><button type="button" data-link-apply>생성</button></div></div></div>';
     target.innerHTML = '';
     target.appendChild(shell);
@@ -185,23 +183,42 @@
        }
        restoringRange = false;
     }
-     function readMobileState() {
-       if (mode !== 'mobile' || !inEditor()) return;
+     function toHex(value) {
+       if (!value) return '';
+       value = String(value).trim();
+       if (!value || value === 'transparent' || value === 'inherit' || value === 'initial') return '';
+       if (value.charAt(0) === '#') return value.toLowerCase();
+       var match = value.match(/rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)(?:[\s,/]+([\d.]+))?\s*\)/i);
+       if (!match) return '';
+       if (match[4] !== undefined && Number(match[4]) === 0) return '';
+       return '#' + [match[1], match[2], match[3]].map(function (n) { return ('0' + Number(n).toString(16)).slice(-2); }).join('');
+     }
+     function inlineStyleValue(element, prop, fontAttr) {
+       var node = element;
+       while (node && node !== area && node.nodeType === 1) {
+         if (node.style && node.style[prop]) return node.style[prop];
+         if (fontAttr && node.tagName === 'FONT' && node.getAttribute(fontAttr)) return node.getAttribute(fontAttr);
+         node = node.parentElement;
+       }
+       return '';
+     }
+     function readEditorState() {
+       if (!inEditor()) return;
        var selection = window.getSelection();
        var node = selection.anchorNode;
        var element = node && (node.nodeType === 1 ? node : node.parentElement);
        if (!element || !area.contains(element)) return;
        var block = element.closest('p,div,li,blockquote,h1,h2,h3,h4,h5,h6') || area;
-       var style = window.getComputedStyle(element);
-       var size = parseInt(style.fontSize, 10);
+       var size = parseInt(inlineStyleValue(element, 'fontSize', null) || window.getComputedStyle(element).fontSize, 10);
        if (size) state.size = size;
-       state.color = style.color && !/^rgba?\(\s*0+\s*,\s*0+\s*,\s*0+\s*(?:,\s*0+)?\s*\)$/i.test(style.color) ? style.color : '';
-       state.bgcolor = style.backgroundColor && !/^rgba?\([^)]*,\s*0\s*\)$/i.test(style.backgroundColor) ? style.backgroundColor : '';
+       state.color = toHex(inlineStyleValue(element, 'color', 'color'));
+       state.bgcolor = toHex(inlineStyleValue(element, 'backgroundColor', null));
        var align = window.getComputedStyle(block).textAlign;
-       state.align = { left: 0, start: 0, center: 1, right: 2, end: 2, justify: 3 }[align] || 0;
+       var alignIndex = { left: 0, start: 0, center: 1, right: 2, end: 2, justify: 3 }[align];
+       state.align = alignIndex === undefined ? 0 : alignIndex;
      }
     function updateState() {
-       readMobileState();
+       readEditorState();
       shell.querySelectorAll('[data-action="bold"],[data-action="underline"],[data-action="strike"]').forEach(function (button) {
         var cmd = button.dataset.action === 'bold' ? 'bold' : button.dataset.action === 'underline' ? 'underline' : 'strikeThrough';
         button.classList.toggle('active', inEditor() && document.queryCommandState(cmd));
@@ -210,23 +227,30 @@
       shell.querySelectorAll('[data-color-preview]').forEach(function (el) { el.style.background = state.color || 'transparent'; el.classList.toggle('is-none', !state.color); });
       shell.querySelectorAll('[data-bg-preview]').forEach(function (el) { el.style.background = state.bgcolor || 'transparent'; el.classList.toggle('is-none', !state.bgcolor); });
       shell.querySelectorAll('[data-action="align"]').forEach(function (button) { button.innerHTML = alignIcons[state.align]; });
+      shell.querySelectorAll('[data-size-option]').forEach(function (button) {
+        button.classList.toggle('active', Number(button.dataset.sizeOption) === state.size);
+      });
+      shell.querySelectorAll('[data-align-option]').forEach(function (button) {
+        button.classList.toggle('active', Number(button.dataset.alignOption) === state.align);
+      });
+      shell.querySelectorAll('[data-palette]').forEach(function (panel) {
+        var current = panel.dataset.palette === 'bgcolor' ? state.bgcolor : state.color;
+        panel.querySelectorAll('[data-color]').forEach(function (swatch) {
+          swatch.classList.toggle('selected', (swatch.dataset.color || '') === (current || ''));
+        });
+      });
+    }
+    function ensureSelection() {
+      if (document.activeElement !== area || !inEditor()) restoreRange();
     }
     function exec(command, value) {
-      restoreRange();
-       var selectedRange = range && range.cloneRange();
+      ensureSelection();
       document.execCommand(command, false, value);
-       if (selectedRange) {
-         var selection = window.getSelection();
-         selection.removeAllRanges();
-         selection.addRange(selectedRange);
-         range = selectedRange.cloneRange();
-       } else {
-         saveRange();
-       }
+      saveRange();
       updateState();
     }
     function setFontSize(size) {
-      restoreRange();
+      ensureSelection();
       document.execCommand('fontSize', false, '7');
       area.querySelectorAll('font[size="7"]').forEach(function (font) {
         font.removeAttribute('size');
@@ -237,7 +261,7 @@
       updateState();
     }
     function setColor(kind, value) {
-      restoreRange();
+      ensureSelection();
       if (kind === 'color') {
         document.execCommand('foreColor', false, value || 'inherit');
         state.color = value;
@@ -273,7 +297,7 @@
       shell.querySelector('[data-format-panel]').classList.add('open');
     }
     function insertHtml(html) {
-      restoreRange();
+      ensureSelection();
       document.execCommand('insertHTML', false, html);
       saveRange();
       area.dispatchEvent(new Event('input', { bubbles: true }));
@@ -343,6 +367,19 @@
          closePanels();
        }
      });
+     area.addEventListener('input', function () {
+       if (!area.textContent.trim() && !area.querySelector('img,video,hr')) area.innerHTML = '';
+     });
+     if (mode === 'pc') {
+       var onDocumentDown = function (event) {
+         if (!document.contains(shell)) {
+           document.removeEventListener('mousedown', onDocumentDown);
+           return;
+         }
+         if (!shell.contains(event.target)) closePanels();
+       };
+       document.addEventListener('mousedown', onDocumentDown);
+     }
     document.addEventListener('selectionchange', updateState);
     shell.addEventListener('mousedown', function (event) {
       var tool = event.target.closest('[data-action], [data-size-option], [data-color-option], [data-align-option], [data-emoji]');
