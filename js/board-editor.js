@@ -158,6 +158,7 @@
     var mode = shell.classList.contains('opfp-board-editor--mobile') ? 'mobile' : 'pc';
     var area = shell.querySelector('[data-editor-content]');
     var range = null;
+     var restoringRange = false;
     var state = { size: 15, color: '', bgcolor: '', align: 0 };
     var alignCommands = ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'];
     var alignIcons = [icons.alignLeft, icons.alignCenter, icons.alignRight, icons.alignFull];
@@ -171,11 +172,13 @@
       if (selection && selection.rangeCount && area.contains(selection.anchorNode)) range = selection.getRangeAt(0).cloneRange();
     }
     function restoreRange() {
-      area.focus();
       if (!range) return;
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+       restoringRange = true;
+       area.focus({ preventScroll: true });
+       var selection = window.getSelection();
+       selection.removeAllRanges();
+       selection.addRange(range.cloneRange());
+       restoringRange = false;
     }
     function updateState() {
       shell.querySelectorAll('[data-action="bold"],[data-action="underline"],[data-action="strike"]').forEach(function (button) {
@@ -189,8 +192,16 @@
     }
     function exec(command, value) {
       restoreRange();
+       var selectedRange = range && range.cloneRange();
       document.execCommand(command, false, value);
-      saveRange();
+       if (selectedRange) {
+         var selection = window.getSelection();
+         selection.removeAllRanges();
+         selection.addRange(selectedRange);
+         range = selectedRange.cloneRange();
+       } else {
+         saveRange();
+       }
       updateState();
     }
     function setFontSize(size) {
@@ -295,7 +306,10 @@
 
     area.addEventListener('mouseup', saveRange);
     area.addEventListener('keyup', saveRange);
-    area.addEventListener('focus', function () { saveRange(); closePanels(); });
+     area.addEventListener('focus', function () {
+       if (!restoringRange) saveRange();
+       closePanels();
+     });
     document.addEventListener('selectionchange', updateState);
     shell.addEventListener('mousedown', function (event) {
       var tool = event.target.closest('[data-action], [data-size-option], [data-color-option], [data-align-option], [data-emoji]');
