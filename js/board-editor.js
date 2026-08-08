@@ -113,7 +113,7 @@
       '</div><div class="opfp-format-page" data-format-page="sizes"><button type="button" class="opfp-tool opfp-page-back" data-action="format-back">' + icons.back + '</button><div class="opfp-horizontal-options">' +
       SIZES.map(function (size) { return '<button type="button" data-size-option="' + size + '">' + size + '</button>'; }).join('') +
       '</div></div><div class="opfp-format-page" data-format-page="colors"><button type="button" class="opfp-tool opfp-page-back" data-action="format-back">' + icons.back + '</button><div class="opfp-horizontal-options opfp-color-options">' +
-      COLORS.map(function (color) { return '<button type="button" data-color-option="' + color.value + '" title="' + color.name + '">' + (color.value ? '<i style="background:' + color.value + '"></i>' : '<i class="opfp-color-none">/</i>') + '</button>'; }).join('') +
+       COLORS.map(function (color) { return '<button type="button" data-color-option="' + color.value + '" title="' + color.name + '">' + (color.value ? '<i style="--swatch:' + color.value + '"></i>' : '<i class="opfp-color-none">/</i>') + '</button>'; }).join('') +
       '</div></div></div><div class="opfp-mobile-mainbar">' +
       '<button type="button" class="opfp-tool" data-action="media" title="이미지 / 동영상">' + icons.image + '</button>' +
       '<button type="button" class="opfp-tool" data-action="format" title="서식"><b>T</b></button>' +
@@ -136,12 +136,16 @@
     var id = options.editorId || 'board-editor';
     var initial = options.initial || {};
     var placeholder = '해당 게시판은 PvP 관련 정보를 공유하는 게시판입니다.\\n• 패치 정보\\n• 캐릭터 운용법\\n• 콤보\\n• 메타\\n• PvP 팁 등을 자유롭게 작성해주세요.\\n욕설 및 비방 게시글은 제재될 수 있습니다.';
+    var prefixOptions = mode === 'mobile'
+      ? '<option value="" disabled>머리말 선택</option><option value="자유">자유</option><option value="정보">정보</option><option value="질문">질문</option>'
+      : '<option value="">자유</option><option value="정보">정보</option><option value="질문">질문</option>';
+    var prefixRequired = mode === 'mobile' ? ' required' : '';
     var shell = document.createElement('section');
     shell.className = 'opfp-board-editor opfp-board-editor--' + mode;
     shell.id = id;
     shell.innerHTML = '<div class="opfp-editor-topbar"><button type="button" class="opfp-editor-cancel" data-action="cancel" aria-label="나가기">' + (mode === 'mobile' ? icons.close : icons.back) + '<span>' + (mode === 'mobile' ? '' : '게시판 글쓰기') + '</span></button><strong>' + (mode === 'mobile' ? '게시판 글쓰기' : '') + '</strong><button type="button" class="opfp-editor-submit" data-action="submit">등록</button></div>' +
       (mode === 'pc' ? '<div class="opfp-editor-heading">게시판 글쓰기</div>' : '') +
-      '<div class="opfp-editor-fields"><select data-field="prefix" aria-label="머리말"><option value="">자유</option><option value="정보">정보</option><option value="질문">질문</option></select><input data-field="title" type="text" maxlength="100" placeholder="제목을 입력해주세요." aria-label="제목"></div>' +
+      '<div class="opfp-editor-fields"><select data-field="prefix" aria-label="머리말"' + prefixRequired + '>' + prefixOptions + '</select><input data-field="title" type="text" maxlength="100" placeholder="제목을 입력해주세요." aria-label="제목"></div>' +
       '<div class="opfp-editor-body"><div class="opfp-editor-toolbar-wrap">' + renderToolbar(mode) + '</div><div class="opfp-editor-content" contenteditable="true" data-editor-content data-placeholder="' + esc(placeholder) + '" role="textbox" aria-multiline="true"></div></div>' +
       '<input type="file" data-media-input accept="image/*,video/*" hidden><div class="opfp-emoji-panel" data-emoji-panel><div class="opfp-emoji-grid">' + EMOJIS.map(function (src, index) { return '<button type="button" data-emoji="' + src + '"><img src="' + src + '" alt="이모티콘 ' + (index + 1) + '"></button>'; }).join('') + '</div></div>' +
       '<div class="opfp-link-modal" data-link-modal aria-hidden="true"><div class="opfp-link-card" role="dialog" aria-label="링크 추가"><div class="opfp-link-title">링크 추가</div><input type="url" data-link-input placeholder="https://example.com"><div class="opfp-link-actions"><button type="button" data-link-cancel>취소</button><button type="button" data-link-apply>생성</button></div></div></div>';
@@ -172,15 +176,32 @@
       if (selection && selection.rangeCount && area.contains(selection.anchorNode)) range = selection.getRangeAt(0).cloneRange();
     }
     function restoreRange() {
-      if (!range) return;
        restoringRange = true;
        area.focus({ preventScroll: true });
        var selection = window.getSelection();
-       selection.removeAllRanges();
-       selection.addRange(range.cloneRange());
+       if (range) {
+         selection.removeAllRanges();
+         selection.addRange(range.cloneRange());
+       }
        restoringRange = false;
     }
+     function readMobileState() {
+       if (mode !== 'mobile' || !inEditor()) return;
+       var selection = window.getSelection();
+       var node = selection.anchorNode;
+       var element = node && (node.nodeType === 1 ? node : node.parentElement);
+       if (!element || !area.contains(element)) return;
+       var block = element.closest('p,div,li,blockquote,h1,h2,h3,h4,h5,h6') || area;
+       var style = window.getComputedStyle(element);
+       var size = parseInt(style.fontSize, 10);
+       if (size) state.size = size;
+       state.color = style.color && !/^rgba?\(\s*0+\s*,\s*0+\s*,\s*0+\s*(?:,\s*0+)?\s*\)$/i.test(style.color) ? style.color : '';
+       state.bgcolor = style.backgroundColor && !/^rgba?\([^)]*,\s*0\s*\)$/i.test(style.backgroundColor) ? style.backgroundColor : '';
+       var align = window.getComputedStyle(block).textAlign;
+       state.align = { left: 0, start: 0, center: 1, right: 2, end: 2, justify: 3 }[align] || 0;
+     }
     function updateState() {
+       readMobileState();
       shell.querySelectorAll('[data-action="bold"],[data-action="underline"],[data-action="strike"]').forEach(function (button) {
         var cmd = button.dataset.action === 'bold' ? 'bold' : button.dataset.action === 'underline' ? 'underline' : 'strikeThrough';
         button.classList.toggle('active', inEditor() && document.queryCommandState(cmd));
@@ -232,10 +253,20 @@
     }
     function closePanels() {
       shell.querySelectorAll('[data-palette]').forEach(function (panel) { panel.classList.remove('open'); });
-      shell.querySelector('[data-emoji-panel]').classList.remove('open');
+       setEmojiOpen(false);
       shell.querySelector('[data-link-modal]').classList.remove('open');
       shell.querySelector('[data-link-modal]').setAttribute('aria-hidden', 'true');
     }
+     function setEmojiOpen(open) {
+       shell.querySelector('[data-emoji-panel]').classList.toggle('open', !!open);
+       shell.classList.toggle('emoji-open', !!open);
+     }
+     function restoreMobileInput() {
+       if (mode !== 'mobile') return;
+       shell.querySelector('[data-format-panel]').classList.remove('open');
+       shell.querySelector('[data-emoji-panel]').classList.remove('open');
+       restoreRange();
+     }
     function showFormatPage(page) {
       if (mode !== 'mobile') return;
       shell.querySelectorAll('[data-format-page]').forEach(function (el) { el.classList.toggle('is-visible', el.dataset.formatPage === page); });
@@ -307,8 +338,10 @@
     area.addEventListener('mouseup', saveRange);
     area.addEventListener('keyup', saveRange);
      area.addEventListener('focus', function () {
-       if (!restoringRange) saveRange();
-       closePanels();
+       if (!restoringRange) {
+         saveRange();
+         closePanels();
+       }
      });
     document.addEventListener('selectionchange', updateState);
     shell.addEventListener('mousedown', function (event) {
@@ -344,36 +377,48 @@
       if (action === 'submit') return submit();
       if (action === 'cancel') return typeof options.onCancel === 'function' ? options.onCancel() : null;
       if (action === 'media') {
-        saveRange();
-        shell.querySelector('[data-emoji-panel]').classList.remove('open');
-        if (mode === 'mobile') area.blur();
+        if (mode === 'mobile') restoreMobileInput(); else saveRange();
         return shell.querySelector('[data-media-input]').click();
       }
       if (action === 'format') {
-        saveRange();
-        shell.querySelector('[data-emoji-panel]').classList.remove('open');
-        if (mode === 'mobile') area.focus();
+        if (mode === 'mobile') {
+          setEmojiOpen(false);
+          restoreRange();
+        } else saveRange();
         return showFormatPage('format');
       }
       if (action === 'format-back') {
         shell.querySelector('[data-format-panel]').classList.remove('open');
+        if (mode === 'mobile') restoreRange();
         return;
       }
       if (action === 'size') { saveRange(); return mode === 'mobile' ? showFormatPage('sizes') : shell.querySelector('[data-size-popover]')?.classList.toggle('open'); }
       if (action === 'bold') return exec('bold');
       if (action === 'underline') return exec('underline');
       if (action === 'strike') return exec('strikeThrough');
-      if (action === 'divider') return insertHtml('<hr>');
+      if (action === 'divider') {
+        if (mode === 'mobile') restoreMobileInput(); else saveRange();
+        return insertHtml('<hr>');
+      }
       if (action === 'link') {
-        shell.querySelector('[data-emoji-panel]').classList.remove('open');
-        if (mode === 'mobile') area.blur();
+        if (mode === 'mobile') restoreMobileInput(); else saveRange();
         return openLink();
       }
       if (action === 'emoji') {
-        saveRange();
-        if (mode === 'mobile') area.blur();
-        shell.querySelector('[data-emoji-panel]').classList.toggle('open');
-        if (mode === 'mobile') shell.querySelector('[data-format-panel]').classList.remove('open');
+        var emojiPanel = shell.querySelector('[data-emoji-panel]');
+        if (mode !== 'mobile') {
+          saveRange();
+          setEmojiOpen(!emojiPanel.classList.contains('open'));
+          return;
+        }
+        if (emojiPanel.classList.contains('open')) {
+          restoreMobileInput();
+        } else {
+          saveRange();
+          shell.querySelector('[data-format-panel]').classList.remove('open');
+          area.blur();
+          setEmojiOpen(true);
+        }
         return;
       }
       if (action === 'color' || action === 'bgcolor') {
