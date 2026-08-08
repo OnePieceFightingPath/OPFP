@@ -222,6 +222,8 @@
         row.classList.toggle('is-active', formatOpen && row.dataset.row === state.toolbarMode);
       });
       syncInlineState();
+      syncKeyboard();
+
     }
 
     function syncInlineState() {
@@ -272,6 +274,9 @@
         saveRange();
         state.toolbarMode = 'main';   // 서식 툴바와 동시 표시 금지
         area.blur();          // 시스템 키보드 종료
+        /* 키보드가 닫히므로 Dock 오프셋을 즉시 0 으로 (이모티콘 패널이 화면 밖으로 밀리는 것 방지) */
+        shell.style.setProperty('--mb-kb', '0px');
+        shell.classList.remove('is-keyboard-open');
       }
       apply();
       if (mode === 'keyboard') restoreRange();   // 시스템 키보드 복원
@@ -367,14 +372,42 @@
       linkModal.setAttribute('aria-hidden', 'true');
     }
 
+    /* ---- 화면 키보드 추적: 키보드 위에 메인 툴바가 항상 붙어 있도록 ---- */
+    var vv = window.visualViewport;
+    function syncKeyboard() {
+      var kb = 0;
+      if (vv && state.inputMode === 'keyboard') {
+        kb = Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
+        if (kb < 80) kb = 0;   // 주소창 축소 등 오차 무시
+      }
+      shell.style.setProperty('--mb-kb', kb + 'px');
+      shell.classList.toggle('is-keyboard-open', kb > 0);
+    }
+    if (vv) {
+      vv.addEventListener('resize', syncKeyboard);
+      vv.addEventListener('scroll', syncKeyboard);
+    }
+    window.addEventListener('orientationchange', function () { setTimeout(syncKeyboard, 300); });
+
     /* ---- 이벤트 ---- */
     area.addEventListener('input', function () { state.sizeLocked = false; });
+
     area.addEventListener('mouseup', saveRange);
     area.addEventListener('keyup', saveRange);
     area.addEventListener('touchend', function () { setTimeout(saveRange, 0); });
     area.addEventListener('focus', function () {
-      if (state.inputMode === 'emoji') { state.inputMode = 'keyboard'; apply(); }
+      if (state.inputMode === 'emoji') { state.inputMode = 'keyboard'; }
+      apply();
+      /* 키보드가 실제로 올라오는 타이밍이 기기마다 달라 여러 번 재측정 */
+      [60, 180, 350, 600].forEach(function (delay) { setTimeout(syncKeyboard, delay); });
     });
+    area.addEventListener('blur', function () {
+      setTimeout(syncKeyboard, 60);
+    });
+    shell.querySelector('[data-field="title"]').addEventListener('focus', function () {
+      [60, 180, 350, 600].forEach(function (delay) { setTimeout(syncKeyboard, delay); });
+    });
+
     document.addEventListener('selectionchange', function () {
       if (!inEditor()) return;
       readSelectionState();
@@ -385,14 +418,26 @@
     shell.querySelector('[data-dock]').addEventListener('mousedown', function (event) {
       if (event.target.closest('[data-action], [data-size-option], [data-color-option], [data-bg-option], [data-emoji]')) event.preventDefault();
     });
+    /* 이모티콘 버튼/이모티콘 셀은 touchstart 에서 기본동작을 막아 포커스 이동을 방지한다.
+     * 단 preventDefault 는 뒤따르는 click 이벤트도 취소하므로, 여기서 직접 실행하고
+     * 혹시 발생하는 click 은 중복 처리되지 않게 무시한다. */
+    var touchHandledAt = 0;
     shell.querySelector('[data-dock]').addEventListener('touchstart', function (event) {
       var hit = event.target.closest('[data-action="emoji"], [data-emoji]');
-      if (hit) event.preventDefault();
+      if (!hit) return;
+      event.preventDefault();
+      touchHandledAt = Date.now();
+      handleButton(hit);
     }, { passive: false });
 
     shell.addEventListener('click', function (event) {
       var button = event.target.closest('[data-action], [data-size-option], [data-color-option], [data-bg-option], [data-emoji]');
       if (!button || !shell.contains(button)) return;
+      if ((button.dataset.emoji || button.dataset.action === 'emoji') && Date.now() - touchHandledAt < 700) return;
+      handleButton(button);
+    });
+
+    function handleButton(button) {
 
       if (button.dataset.sizeOption) {
         setFontSize(button.dataset.sizeOption);
@@ -456,7 +501,7 @@
         default:
           return;
       }
-    });
+    }
 
     shell.querySelector('[data-media-input]').addEventListener('change', function (event) {
       upload(event.target.files[0]);

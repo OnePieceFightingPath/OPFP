@@ -77,7 +77,7 @@
 .opfp-mb-content {
   flex: 1;
   min-height: calc(100dvh - 260px);
-  padding: 16px 18px calc(var(--mb-bar-h) + 80px);
+  padding: 16px 18px calc(var(--mb-bar-h) + 80px + var(--mb-kb, 0px));
   font-size: 15px;
   line-height: 1.75;
   outline: 0;
@@ -102,6 +102,8 @@
 }
 
 /* ------------------------------------------- 하단 Dock (툴바 + 입력 영역) */
+/* --mb-kb : 화면 키보드 높이(JS 가 visualViewport 로 실측해서 넣어줍니다)
+ * 키보드가 올라오면 Dock 을 그만큼 위로 올려 키보드 바로 위에 붙게 합니다. */
 .opfp-mb-dock {
   position: fixed;
   inset: auto 0 0;
@@ -109,7 +111,13 @@
   background: var(--bg-card, #161b22);
   border-top: 1px solid var(--border, #262c36);
   padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(calc(-1 * var(--mb-kb, 0px)));
+  transition: transform .18s ease-out;
+  will-change: transform;
 }
+/* 키보드가 올라온 동안에는 안전영역 여백이 중복되지 않도록 제거 */
+.opfp-mb-editor.is-keyboard-open .opfp-mb-dock { padding-bottom: 0; }
+
 
 /* 서식 툴바: 메인 툴바 위에서 Slide Up / Slide Down */
 .opfp-mb-formatbar {
