@@ -266,6 +266,41 @@
          node.removeAttribute('bgcolor');
        }
      }
+     function resetSelectedTextColor(kind, selectionRange) {
+       var walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT);
+       var selectedNodes = [];
+       var node;
+       while ((node = walker.nextNode())) {
+         var nodeRange = document.createRange();
+         nodeRange.selectNodeContents(node);
+         var endsBefore = nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) <= 0;
+         var startsAfter = nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) >= 0;
+         if (!endsBefore && !startsAfter) selectedNodes.push(node);
+       }
+       var resetNodes = [];
+       selectedNodes.forEach(function (textNode) {
+         var start = textNode === selectionRange.startContainer ? selectionRange.startOffset : 0;
+         var end = textNode === selectionRange.endContainer ? selectionRange.endOffset : textNode.nodeValue.length;
+         if (end <= start) return;
+         var selected = textNode;
+         if (end < selected.nodeValue.length) selected.splitText(end);
+         if (start > 0) selected = selected.splitText(start);
+         var reset = document.createElement('span');
+         if (kind === 'color') reset.style.color = 'var(--text, inherit)';
+         else reset.style.backgroundColor = 'transparent';
+         selected.parentNode.insertBefore(reset, selected);
+         reset.appendChild(selected);
+         resetNodes.push(selected);
+       });
+       if (!resetNodes.length) return;
+       var restored = document.createRange();
+       restored.setStart(resetNodes[0], 0);
+       restored.setEnd(resetNodes[resetNodes.length - 1], resetNodes[resetNodes.length - 1].nodeValue.length);
+       var selection = window.getSelection();
+       selection.removeAllRanges();
+       selection.addRange(restored);
+       range = restored.cloneRange();
+     }
      function clearInlineColor(kind) {
        var selection = window.getSelection();
        var selectionRange = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
@@ -276,26 +311,13 @@
          return;
        }
 
-       /* If the selected text is wrapped by a color element, clear that
-        * wrapper too. Otherwise extracting the text below would put it back
-        * inside the same red <span>/<font>. */
+       /* Put a neutral inline override directly on each selected text run.
+        * This also handles partial selections inside a red wrapper: simply
+        * removing a descendant style would still inherit the wrapper color. */
+       resetSelectedTextColor(kind, selectionRange);
        area.querySelectorAll('*').forEach(function (node) {
          if (selectionCoversNode(selectionRange, node)) removeInlineColor(node, kind);
        });
-
-       var fragment = selectionRange.extractContents();
-       var holder = document.createElement('div');
-       holder.appendChild(fragment);
-       holder.querySelectorAll('*').forEach(function (node) {
-         removeInlineColor(node, kind);
-       });
-       var cleaned = document.createDocumentFragment();
-       while (holder.firstChild) cleaned.appendChild(holder.firstChild);
-       selectionRange.insertNode(cleaned);
-       selectionRange.collapse(false);
-       selection.removeAllRanges();
-       selection.addRange(selectionRange);
-       range = selectionRange.cloneRange();
      }
      function selectedTextNodes(selectionRange) {
        var nodes = [];
