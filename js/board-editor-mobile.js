@@ -313,13 +313,60 @@
       area.dispatchEvent(new Event('input', { bubbles: true }));
     }
     function setFontSize(size) {
+      size = Number(size);
+      if (!size) return;
       restoreRange();
-      document.execCommand('fontSize', false, '7');
-      area.querySelectorAll('font[size="7"]').forEach(function (font) {
-        font.removeAttribute('size');
-        font.style.fontSize = size + 'px';
-      });
-      state.size = Number(size);
+      var selection = window.getSelection();
+      var selectionRange = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
+      if (!selectionRange || !area.contains(selectionRange.commonAncestorContainer)) return;
+
+      if (selectionRange.collapsed) {
+        var marker = document.createElement('span');
+        marker.style.fontSize = size + 'px';
+        var markerText = document.createTextNode('\u200b');
+        marker.appendChild(markerText);
+        selectionRange.insertNode(marker);
+        selectionRange.setStart(markerText, 1);
+        selectionRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(selectionRange);
+      } else {
+        var walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT);
+        var nodes = [];
+        var node;
+        while ((node = walker.nextNode())) {
+          var nodeRange = document.createRange();
+          nodeRange.selectNodeContents(node);
+          var endsBefore = nodeRange.compareBoundaryPoints(Range.END_TO_START, selectionRange) <= 0;
+          var startsAfter = nodeRange.compareBoundaryPoints(Range.START_TO_END, selectionRange) >= 0;
+          if (!endsBefore && !startsAfter) nodes.push(node);
+        }
+
+        var styledNodes = [];
+        nodes.forEach(function (textNode) {
+          var start = textNode === selectionRange.startContainer ? selectionRange.startOffset : 0;
+          var end = textNode === selectionRange.endContainer ? selectionRange.endOffset : textNode.nodeValue.length;
+          if (end <= start) return;
+          var selectedNode = textNode;
+          if (end < selectedNode.nodeValue.length) selectedNode.splitText(end);
+          if (start > 0) selectedNode = selectedNode.splitText(start);
+          var wrapper = document.createElement('span');
+          wrapper.style.fontSize = size + 'px';
+          selectedNode.parentNode.insertBefore(wrapper, selectedNode);
+          wrapper.appendChild(selectedNode);
+          styledNodes.push(selectedNode);
+        });
+
+        if (styledNodes.length) {
+          var restored = document.createRange();
+          restored.setStart(styledNodes[0], 0);
+          restored.setEnd(styledNodes[styledNodes.length - 1], styledNodes[styledNodes.length - 1].nodeValue.length);
+          selection.removeAllRanges();
+          selection.addRange(restored);
+        }
+      }
+
+      state.size = size;
       state.sizeLocked = true;      // 선택한 크기를 버튼에 유지
       saveRange();
     }

@@ -284,14 +284,18 @@
        if (!selectionRange || !area.contains(selectionRange.commonAncestorContainer)) return;
 
        if (selectionRange.collapsed) {
-         restoreRange();
-         document.execCommand('fontSize', false, '7');
-         area.querySelectorAll('font[size="7"]').forEach(function (font) {
-           font.removeAttribute('size');
-           font.style.fontSize = size + 'px';
-         });
+          var marker = document.createElement('span');
+          marker.style.fontSize = size + 'px';
+          var markerText = document.createTextNode('\u200b');
+          marker.appendChild(markerText);
+          selectionRange.insertNode(marker);
+          selectionRange.setStart(markerText, 1);
+          selectionRange.collapse(true);
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(selectionRange);
+          range = selectionRange.cloneRange();
          state.size = size;
-         saveRange();
          updateState();
          return;
        }
