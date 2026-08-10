@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opfp-v8';
+const CACHE_NAME = 'opfp-v9';
 const PREFS_CACHE = 'opfp-prefs';
 const STATIC_ASSETS = [
   './',
@@ -19,7 +19,7 @@ const STATIC_ASSETS = [
   './js/userauth.js',
   './js/utils.js',
   './js/board-editor.js?v=3',
-  './js/board-editor-mobile.js?v=3',
+  './js/board-editor-mobile.js?v=4',
   './img/logo.png',
   './img/logo-dark.png',
   './img/logo-light.png',

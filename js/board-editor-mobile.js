@@ -290,19 +290,12 @@
 
     /* ---- 편집 명령 ---- */
     function exec(command, value) {
+      /* 터치 시작 시점에도 본문 선택이 살아 있으면 최신 선택을 우선 보존 */
+      if (inEditor()) saveRange();
       restoreRange();
-      var sel = window.getSelection();
-      var collapsed = !sel || !sel.rangeCount || sel.getRangeAt(0).collapsed;
-      var keep = !collapsed && savedRange ? savedRange.cloneRange() : null;
       document.execCommand(command, false, value);
-      /* 커서만 있는 상태(collapsed)에서는 selection 을 다시 세팅하면
-       * 브라우저의 "다음 입력에 적용될 서식(pending state)" 이 사라지므로 그대로 둔다. */
-      if (keep) {
-        sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(keep);
-        savedRange = keep.cloneRange();
-      } else saveRange();
+      /* PC 에디터와 동일한 순서: 적용 후 현재 선택을 저장 */
+      saveRange();
       syncInlineState();
     }
 
