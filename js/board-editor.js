@@ -250,6 +250,22 @@
       saveRange();
       updateState();
     }
+     function selectionCoversNode(selectionRange, node) {
+       var nodeRange = document.createRange();
+       nodeRange.selectNodeContents(node);
+       return selectionRange.compareBoundaryPoints(Range.START_TO_START, nodeRange) <= 0 &&
+         selectionRange.compareBoundaryPoints(Range.END_TO_END, nodeRange) >= 0;
+     }
+     function removeInlineColor(node, kind) {
+       if (kind === 'color') {
+         node.style.removeProperty('color');
+         if (node.tagName === 'FONT') node.removeAttribute('color');
+       } else {
+         node.style.removeProperty('background-color');
+         node.style.removeProperty('background');
+         node.removeAttribute('bgcolor');
+       }
+     }
      function clearInlineColor(kind) {
        var selection = window.getSelection();
        var selectionRange = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
@@ -260,17 +276,18 @@
          return;
        }
 
+       /* If the selected text is wrapped by a color element, clear that
+        * wrapper too. Otherwise extracting the text below would put it back
+        * inside the same red <span>/<font>. */
+       area.querySelectorAll('*').forEach(function (node) {
+         if (selectionCoversNode(selectionRange, node)) removeInlineColor(node, kind);
+       });
+
        var fragment = selectionRange.extractContents();
        var holder = document.createElement('div');
        holder.appendChild(fragment);
        holder.querySelectorAll('*').forEach(function (node) {
-         if (kind === 'color') {
-           node.style.removeProperty('color');
-           if (node.tagName === 'FONT') node.removeAttribute('color');
-         } else {
-           node.style.removeProperty('background-color');
-           node.style.removeProperty('background');
-         }
+         removeInlineColor(node, kind);
        });
        var cleaned = document.createDocumentFragment();
        while (holder.firstChild) cleaned.appendChild(holder.firstChild);
