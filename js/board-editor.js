@@ -250,6 +250,36 @@
       saveRange();
       updateState();
     }
+     function clearInlineColor(kind) {
+       var selection = window.getSelection();
+       var selectionRange = selection && selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
+       if (!selectionRange || !area.contains(selectionRange.commonAncestorContainer)) return;
+
+       if (selectionRange.collapsed) {
+         document.execCommand(kind === 'color' ? 'foreColor' : 'hiliteColor', false, kind === 'color' ? 'inherit' : 'transparent');
+         return;
+       }
+
+       var fragment = selectionRange.extractContents();
+       var holder = document.createElement('div');
+       holder.appendChild(fragment);
+       holder.querySelectorAll('*').forEach(function (node) {
+         if (kind === 'color') {
+           node.style.removeProperty('color');
+           if (node.tagName === 'FONT') node.removeAttribute('color');
+         } else {
+           node.style.removeProperty('background-color');
+           node.style.removeProperty('background');
+         }
+       });
+       var cleaned = document.createDocumentFragment();
+       while (holder.firstChild) cleaned.appendChild(holder.firstChild);
+       selectionRange.insertNode(cleaned);
+       selectionRange.collapse(false);
+       selection.removeAllRanges();
+       selection.addRange(selectionRange);
+       range = selectionRange.cloneRange();
+     }
      function selectedTextNodes(selectionRange) {
        var nodes = [];
        var walker = document.createTreeWalker(area, NodeFilter.SHOW_TEXT);
@@ -322,10 +352,12 @@
     function setColor(kind, value) {
       ensureSelection();
       if (kind === 'color') {
-        document.execCommand('foreColor', false, value || 'inherit');
+         if (value) document.execCommand('foreColor', false, value);
+         else clearInlineColor('color');
         state.color = value;
       } else {
-        document.execCommand('hiliteColor', false, value || 'transparent');
+         if (value) document.execCommand('hiliteColor', false, value);
+         else clearInlineColor('bgcolor');
         state.bgcolor = value;
       }
       saveRange();
