@@ -1000,3 +1000,52 @@
 .axd-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm,8px);background:var(--accent,#e0453c);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;transition:filter .15s}
 .axd-btn-primary:hover{filter:brightness(1.08)}
 @media (max-width:900px){.axd-btn-primary{display:none}}
+
+
+/* ---------- DETAIL BOTTOM TAB BAR (legacy .detail-bottom-tab hooks) ----------
+   Mirrors .ax-tabbar / .ax-tab so the bottom nav is styled, not raw HTML.
+   JS toggles .active on .detail-bottom-tab-item. */
+.detail-bottom-tab {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 950;
+  height: calc(var(--ax-tabbar-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--bg-secondary) 94%, transparent);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+}
+.detail-bottom-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  background: none;
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: var(--transition);
+}
+.detail-bottom-tab-item svg {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.8;
+}
+.detail-bottom-tab-item.active {
+  color: var(--accent);
+}
+@media (max-width: 1180px) {
+  .detail-bottom-tab {
+    display: grid;
+  }
+}
