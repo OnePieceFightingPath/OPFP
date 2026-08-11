@@ -232,32 +232,6 @@ footer {
   flex: 1;
 }
 
-/* ===== GNB ROOM 아이콘 버튼 ===== */
-.gnb-room-btn {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  cursor: pointer;
-  margin-left: 6px;
-  flex-shrink: 0;
-}
-.gnb-room-icon {
-  font-style: normal;
-  font-weight: 900;
-  letter-spacing: 1px;
-  font-size: 15px;
-  line-height: 1;
-  color: var(--text);
-  user-select: none;
-  transition: opacity 0.15s;
-}
-.gnb-room-icon::before {
-  content: "RooM";
-}
-.gnb-room-btn:hover .gnb-room-icon {
-  opacity: 0.7;
-}
-
 .gnb-bookmark-btn {
   width: 36px;
   height: 36px;
@@ -3007,7 +2981,6 @@ html.is-pwa .site-footer {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
   justify-content: flex-end;
   width: 100%;
 }

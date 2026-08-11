@@ -9,7 +9,7 @@
       name="description"
       content="원파패의 패치노트, PvP 밸런스를 한눈에 확인하세요."
     />
-    <meta name="theme-color" content="#0d1117" />
+    <meta name="theme-color" content="#4d9fff" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -55,18 +55,7 @@
         </span>
       </a>
 
-      <div class="ax-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" id="axGlobalSearch" placeholder="캐릭터 · 패치 검색" aria-label="통합 검색" />
-        <kbd>Enter</kbd>
-      </div>
-
       <nav class="gnb ax-actions">
-        <a class="gnb-room-btn ax-icon-btn ax-desktop-only" href="detail.html" aria-label="ROOM 커뮤니티 홈">
-          <i class="gnb-room-icon"></i>
-        </a>
-
-
       <!-- 즐겨찾기 버튼 (별표 아이콘 + 툴팁 + 팝업) -->
       <div class="gnb-tooltip-wrap" style="position:relative">
         <button class="gnb-bookmark-btn" id="gnbBookmarkBtn" aria-label="즐겨찾기">
@@ -248,15 +237,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           ROOM 게시판
         </a>
-        <a class="ax-rail-item" href="setting.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.1a2 2 0 1 1-4 0v-.2A1.7 1.7 0 0 0 7 19.4a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 2.6 14H2.5a2 2 0 1 1 0-4h.2A1.7 1.7 0 0 0 4.6 7a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6V4.5a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 2.9 1.2 2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.1a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.3 1z"/></svg>
-          설정
-        </a>
-
-        <a class="ax-rail-cta" href="detail.html">
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          글쓰기
-        </a>
         <div class="ax-rail-note">
           <strong>航海王热血航线</strong> 관련 정보를 팬 커뮤니티에서 정리하여 제공합니다.
         </div>
@@ -271,10 +251,6 @@
             <span class="ax-eyebrow">Home</span>
             <h1 class="ax-page-title">오늘의 파패 패치</h1>
             <p class="ax-page-desc">최신 패치, PvP 패를 확인 해보세요.</p>
-          </div>
-          <div class="ax-head-tools ax-desktop-only">
-            <span class="ax-chip">Fighting Path</span>
-            <a class="ax-btn ax-btn-primary" href="detail.html">커뮤니티 가기</a>
           </div>
         </div>
         <div class="ax-hero">
@@ -315,36 +291,6 @@
           <div class="banner-dots" id="bannerDots"></div>
         </div>
 
-          <div class="ax-hero-side">
-            <div class="ax-stat-grid">
-              <div class="ax-stat">
-                <div class="ax-stat-k">Characters</div>
-                <div class="ax-stat-v" id="axStatChar">—</div>
-              </div>
-              <div class="ax-stat">
-                <div class="ax-stat-k">Live Events</div>
-                <div class="ax-stat-v" id="axStatEvent">—</div>
-              </div>
-            </div>
-            <div class="ax-quick">
-              <a class="subnav-item" data-page="character">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
-                <div>캐릭터 도감<span>등급 · 속성 · 타입 필터</span></div>
-              </a>
-              <a class="subnav-item" data-page="pvppatch">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 3.5 6 6M18 2l4 4-9.5 9.5-4-4z"/><path d="m8 12-6 6 4 4 6-6"/></svg>
-                <div>PvP 밸런스<span>버프 · 너프 · 수정</span></div>
-              </a>
-              <a class="subnav-item" data-page="patchnote">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8"/></svg>
-                <div>패치노트<span>월별 업데이트 기록</span></div>
-              </a>
-              <a href="detail.html">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <div>ROOM<span>공략 · 자유 게시판</span></div>
-              </a>
-            </div>
-          </div>
         </div><!-- /.ax-hero -->
 
         <div class="home-grid">
@@ -554,7 +500,6 @@
             <p class="ax-page-desc">매주 업데이트되는 버프 · 너프 · 기능 변경 내역을 한눈에 확인하세요.</p>
           </div>
           <div class="ax-head-tools">
-            <span class="pvp-current-badge ax-chip" id="pvpCurrentBadge" style="display:none">현재</span>
             <div class="pvp-help-wrap">
               <button class="pvp-help-btn" id="pvpHelpBtn" aria-label="도움말">?</button>
               <div class="pvp-help-tooltip" id="pvpHelpTooltip">이전 패치 내용을<br>확인할 수 있습니다.</div>
@@ -568,21 +513,6 @@
             </div>
           </div>
         </div>
-        <div class="ax-pvp-legend">
-          <div class="ax-legend-card">
-            <span class="ax-legend-dot buff">▲</span>
-            <div><div class="ax-legend-k">버프</div><div class="ax-legend-v">성능이 상향된 캐릭터</div></div>
-          </div>
-          <div class="ax-legend-card">
-            <span class="ax-legend-dot nerf">▼</span>
-            <div><div class="ax-legend-k">너프</div><div class="ax-legend-v">성능이 하향된 캐릭터</div></div>
-          </div>
-          <div class="ax-legend-card">
-            <span class="ax-legend-dot fix">✦</span>
-            <div><div class="ax-legend-k">기능 수정</div><div class="ax-legend-v">버그 · 동작 변경</div></div>
-          </div>
-        </div>
-
         <div class="pvp-sections">
           <div class="pvp-section">
             <div class="pvp-section-header">
@@ -1298,36 +1228,6 @@ Developed</span>
     <script src="js/pvppatch.js"></script>
     <script src="js/event.js"></script>
     <script src="js/app.js"></script>
-    <!-- AXIS UI: 글로벌 검색 + 홈 지표 -->
-    <script>
-    (function () {
-      var gs = document.getElementById('axGlobalSearch');
-      if (gs) {
-        gs.addEventListener('keydown', function (e) {
-          if (e.key !== 'Enter') return;
-          var q = gs.value.trim();
-          if (typeof navigateTo === 'function') navigateTo('character');
-          var ci = document.getElementById('charSearchInput');
-          if (ci) {
-            ci.value = q;
-            ci.dispatchEvent(new Event('input', { bubbles: true }));
-            var btn = document.getElementById('charSearchBtn');
-            if (btn) btn.click();
-          }
-        });
-      }
-      function num(el, v) { if (el && v != null) el.innerHTML = v + '<small>개</small>'; }
-      var tries = 0;
-      var t = setInterval(function () {
-        tries++;
-        var chars = (window.allCharacters || window.characters || []);
-        var evts = (window.allEvents || window.events || []);
-        if (chars.length) num(document.getElementById('axStatChar'), chars.length);
-        if (evts.length) num(document.getElementById('axStatEvent'), evts.length);
-        if ((chars.length && evts.length) || tries > 30) clearInterval(t);
-      }, 700);
-    })();
-    </script>
     <!-- 모바일 전용 메인탭 스와이프 제스처 + 슬라이드 애니메이션 -->
     <script>
     (function() {

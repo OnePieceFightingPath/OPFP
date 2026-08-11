@@ -72,7 +72,7 @@ body {
   z-index: 900;
   height: var(--ax-top-h);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 16px;
   padding: 0 18px;
@@ -116,61 +116,11 @@ body {
   text-transform: uppercase;
 }
 
-/* global search */
-.ax-search {
-  position: relative;
-  max-width: 460px;
-  width: 100%;
-  justify-self: start;
-}
-.ax-search svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--text-dim);
-  pointer-events: none;
-}
-.ax-search input {
-  width: 100%;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-secondary);
-  color: var(--text);
-  padding: 0 14px 0 36px;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: var(--transition);
-}
-.ax-search input::placeholder {
-  color: var(--text-dim);
-}
-.ax-search input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--ax-accent-soft);
-}
-.ax-search kbd {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-dim);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 2px 6px;
-  background: var(--bg);
-}
-
 .ax-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-self: end;
 }
 
 /* neutralize legacy fixed GNB chrome, keep popovers usable */
@@ -278,25 +228,6 @@ body {
   color: var(--text-dim);
 }
 
-.ax-rail-cta {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 18px;
-  padding: 11px;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  text-decoration: none;
-  transition: var(--transition);
-}
-.ax-rail-cta:hover {
-  background: var(--accent-hover);
-}
-
 .ax-rail-note {
   margin-top: 22px;
   padding: 12px 13px;
@@ -367,9 +298,6 @@ body {
 
 /* ---------- 5. HOME ---------- */
 .ax-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-  gap: 18px;
   margin-bottom: 22px;
 }
 .banner-carousel {
@@ -383,82 +311,6 @@ body {
 .banner-carousel .banner-slide img,
 .banner-carousel .banner-slide {
   height: 100% !important;
-}
-
-.ax-hero-side {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.ax-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-.ax-stat {
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-card);
-}
-.ax-stat-k {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.ax-stat-v {
-  margin-top: 4px;
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: var(--text);
-}
-.ax-stat-v small {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-left: 3px;
-}
-.ax-quick {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-.ax-quick a {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-card);
-  color: var(--text);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: var(--transition);
-}
-.ax-quick a:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-}
-.ax-quick svg {
-  width: 20px;
-  height: 20px;
-  color: var(--accent);
-  stroke-width: 1.8;
-}
-.ax-quick span {
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 600;
-  display: block;
-  margin-top: 2px;
 }
 
 /* home content columns */
@@ -666,52 +518,6 @@ body {
 }
 
 /* ---------- 8. PVP HUB ---------- */
-.ax-pvp-legend {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.ax-legend-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--bg-card);
-}
-.ax-legend-dot {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 900;
-}
-.ax-legend-dot.buff {
-  color: var(--buff);
-  background: color-mix(in srgb, var(--buff) 15%, transparent);
-}
-.ax-legend-dot.nerf {
-  color: var(--nerf);
-  background: color-mix(in srgb, var(--nerf) 15%, transparent);
-}
-.ax-legend-dot.fix {
-  color: var(--fix);
-  background: color-mix(in srgb, var(--fix) 15%, transparent);
-}
-.ax-legend-k {
-  font-size: 12.5px;
-  font-weight: 800;
-}
-.ax-legend-v {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
 .pvp-sections {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -889,16 +695,14 @@ body {
   color: var(--text) !important;
 }
 .gnb-bookmark-btn,
-.gnb-menu-btn,
-.gnb-room-btn {
+.gnb-menu-btn {
   width: 36px !important;
   height: 36px !important;
   border-radius: var(--radius) !important;
   color: var(--text-muted) !important;
 }
 .gnb-bookmark-btn:hover,
-.gnb-menu-btn:hover,
-.gnb-room-btn:hover {
+.gnb-menu-btn:hover {
   background: var(--bg-hover) !important;
   color: var(--text) !important;
 }
@@ -983,9 +787,6 @@ body {
   .pvp-sections {
     grid-template-columns: minmax(0, 1fr);
   }
-  .ax-pvp-legend {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 900px) {
@@ -1015,12 +816,6 @@ body {
     gap: 10px;
     padding: 0 12px;
   }
-  .ax-search {
-    max-width: none;
-  }
-  .ax-search kbd {
-    display: none;
-  }
   .ax-brand-text {
     display: none;
   }
@@ -1035,9 +830,6 @@ body {
   }
   .home-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .ax-quick {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .char-toolbar {
     position: static;
@@ -1061,17 +853,13 @@ body {
   /* touch targets */
   .ax-icon-btn,
   .gnb-bookmark-btn,
-  .gnb-menu-btn,
-  .gnb-room-btn {
+  .gnb-menu-btn {
     width: 40px !important;
     height: 40px !important;
   }
 }
 
 @media (max-width: 520px) {
-  .ax-stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .event-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
