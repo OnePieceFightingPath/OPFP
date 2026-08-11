@@ -1174,25 +1174,10 @@ function _renderHome() {
   history.pushState({}, '', 'detail.html');
   _setNavActive('home');
 
-  const hubCard = (fn, icon, title, desc) => `
-    <button class="axd-hub-card" onclick="${fn}">
-      <span class="axd-hub-icon">${icon}</span>
-      <span class="axd-hub-title">${title}</span>
-      <span class="axd-hub-desc">${desc}</span>
-    </button>`;
-
-  const iconBoard = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/></svg>`;
   const iconPatch = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
-  const iconEvent = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
 
   main.innerHTML = `
     ${_axdHead('Community', '커뮤니티 홈', '게시판 · 패치노트 · 이벤트를 한곳에서 확인하세요.')}
-    <div class="axd-hub">
-      ${hubCard('_renderBoardList()', iconBoard, '게시판', '자유 · 정보 · 질문 게시글을 읽고 함께 이야기하세요.')}
-      ${hubCard('_renderPatchList()', iconPatch, '패치노트', '최신 업데이트 내역을 최신순으로 확인하세요.')}
-      ${hubCard('_renderEventList()', iconEvent, '이벤트', '진행 중인 이벤트와 기간을 확인하세요.')}
-    </div>
-
     <section class="axd-section">
       <div class="axd-section-head">
         <span class="axd-section-title">최신 게시글</span>

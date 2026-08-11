@@ -516,55 +516,6 @@
   margin: 0 auto 12px;
 }
 
-/* ---------- 5. HOME (hub) ---------- */
-.axd-hub {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.axd-hub-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 18px;
-  text-align: left;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  font-family: inherit;
-  transition: var(--transition);
-}
-.axd-hub-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
-}
-.axd-hub-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius);
-  background: var(--ax-accent-soft);
-  color: var(--accent);
-}
-.axd-hub-icon svg {
-  width: 19px;
-  height: 19px;
-  stroke-width: 1.8;
-}
-.axd-hub-title {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: var(--text);
-}
-.axd-hub-desc {
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--text-muted);
-}
 .axd-section {
   margin-top: 22px;
 }
@@ -979,8 +930,7 @@
 }
 
 @media (max-width: 1180px) {
-  .axd-grid,
-  .axd-hub {
+  .axd-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1015,8 +965,7 @@
   .event-sort-select {
     flex: 1 1 auto;
   }
-  .axd-grid,
-  .axd-hub {
+  .axd-grid {
     grid-template-columns: minmax(0, 1fr);
   }
   .axd-article {
