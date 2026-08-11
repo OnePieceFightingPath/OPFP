@@ -811,6 +811,12 @@ body {
   .ax-main {
     padding: 16px 14px calc(var(--ax-tabbar-h) + 34px);
   }
+  /* The AX shell header remains in normal flow; remove the legacy mobile
+     page offset so index.html starts like detail.html below the header. */
+  body:not(.detail-page) .page {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
   .ax-top {
     grid-template-columns: auto 1fr auto;
     gap: 10px;
