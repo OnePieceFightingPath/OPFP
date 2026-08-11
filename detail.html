@@ -25,152 +25,28 @@
     <link rel="icon" type="image/png" href="img/logo-dark.png" id="appFaviconIcon" />
     <link rel="preload" href="img/logo-dark.png" as="image" />
     <link rel="stylesheet" href="css/style.css?v=6" />
+    <link rel="stylesheet" href="css/opfp-ui.css?v=1" />
+    <link rel="stylesheet" href="css/detail-ui.css?v=1" />
     <link rel="stylesheet" href="css/board-editor.css?v=2" />
-    <style>
-    /* ===== 모바일 detail 페이지 전용 스타일 ===== */
-    @media (max-width: 768px) {
-      /* 1. 히어로 배경 이미지 & 타이틀 제거 */
-      .hero-bg,
-      .hero-title-wrap {
-        display: none !important;
-      }
 
-      /* 2. comm-main 전체 너비 */
-      .comm-main {
-        width: 100% !important;
-        min-width: 0;
-      }
+    <!-- 레이아웃/반응형은 css/opfp-ui.css + css/detail-ui.css 로 통합되었습니다. -->
 
-      /* 상단 여백: GNB(56px) + 여백(16px), 음수 마진 초기화 */
-      .detail-page .comm-wrap {
-        margin-top: 0 !important;
-        padding-top: 72px !important;
-        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
-      }
-
-      /* 3. 본문 텍스트 컴포넌트 스타일 제거 → 평문 */
-      /* h1: 하단 border 제거 */
-      .patch-detail-body h1,
-      .evt-detail-body h1 {
-        font-size: 18px;
-        padding-bottom: 0;
-        border-bottom: none;
-      }
-      /* h2: 좌측 border 제거 */
-      .patch-detail-body h2,
-      .evt-detail-body h2 {
-        font-size: 16px;
-        padding-left: 0;
-        border-left: none;
-      }
-      /* h3: 강조색 제거 */
-      .patch-detail-body h3,
-      .evt-detail-body h3 {
-        font-size: 15px;
-        color: var(--text);
-      }
-      /* blockquote: 배경·border 제거 */
-      .patch-detail-body blockquote,
-      .evt-detail-body blockquote {
-        border-left: none;
-        background: none;
-        padding: 0;
-        margin: 12px 0;
-        font-style: normal;
-        color: var(--text);
-      }
-      /* pre/code: 배경·border 제거 */
-      .patch-detail-body pre,
-      .evt-detail-body pre {
-        background: none;
-        border: none;
-        padding: 0;
-      }
-      .patch-detail-body :not(pre) > code,
-      .evt-detail-body :not(pre) > code {
-        background: none;
-        border: none;
-        padding: 0;
-        font-family: inherit;
-        font-size: inherit;
-      }
-      /* ul 커스텀 불릿 제거 → 기본 텍스트 */
-      .patch-detail-body ul li,
-      .evt-detail-body ul li {
-        padding-left: 14px;
-      }
-      .patch-detail-body ul li::before,
-      .evt-detail-body ul li::before {
-        content: '-';
-        color: var(--text-muted);
-        font-size: inherit;
-        top: 0;
-      }
-    }
-    </style>
-    <style>
-    /* ===== 하단 탭바 ===== */
-    .detail-bottom-tab {
-      display: none;
-    }
-    @media (max-width: 768px) {
-      .detail-bottom-tab {
-        display: flex;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 200;
-        background: var(--bg-card);
-        border-top: 1px solid var(--border);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.18);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-      }
-      .detail-bottom-tab-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        padding: 10px 4px;
-        color: var(--text-muted);
-        font-size: 11px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: color var(--transition);
-      }
-      .detail-bottom-tab-item svg {
-        width: 22px;
-        height: 22px;
-        opacity: 0.6;
-        transition: opacity var(--transition);
-      }
-      .detail-bottom-tab-item.active {
-        color: var(--accent);
-      }
-      .detail-bottom-tab-item.active svg {
-        opacity: 1;
-      }
-    }
-    </style>
   </head>
   <body class="detail-page">
-    <!-- ===== HERO BACKGROUND ===== -->
-    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="ax-shell">
 
-    <!-- ===== GNB ===== -->
-    <nav class="gnb">
-      <div class="gnb-logo" style="cursor:pointer" onclick="location.href='index.html'">
-        <div class="footer-logo-icon">
-          <img src="img/logo-dark.png" alt="Logo" class="logo-img" />
-        </div>
-        <span class="gnb-title">Fighting Path Patch</span>
-      </div>
-      <a class="gnb-room-btn active" href="detail.html" aria-label="ROOM 커뮤니티 홈">
-        <i class="gnb-room-icon"></i>
+    <!-- ===== TOP BAR (AXIS UI) ===== -->
+    <header class="ax-top">
+      <a class="ax-brand" href="index.html">
+        <img src="img/logo-dark.png" alt="Logo" class="logo-img" />
+        <span class="ax-brand-text">
+          <span class="ax-brand-sub">Community</span>
+          <span class="ax-brand-name">Fighting Path Patch</span>
+        </span>
       </a>
-      <div class="gnb-spacer"></div>
+
+      <nav class="gnb ax-actions">
+
 
       <!-- 즐겨찾기 버튼 (별표 아이콘 + 툴팁 + 팝업) -->
       <div class="gnb-tooltip-wrap" style="position:relative">
@@ -305,13 +181,16 @@
           <button class="gnb-logout-item" id="gnbLogoutBtn">로그아웃</button>
         </div>
       </div>
-    </nav>
+      </nav>
+    </header>
 
-    <!-- ===== 2열 레이아웃 ===== -->
-    <div class="comm-wrap">
+    <!-- ===== BODY : RAIL + MAIN ===== -->
+    <div class="ax-body">
 
-      <!-- ── 왼쪽 사이드바 ── -->
-      <aside class="comm-sidebar">
+      <!-- ── 사이드 레일 (데스크톱) ── -->
+      <aside class="ax-rail" aria-label="커뮤니티 메뉴">
+        <span class="ax-rail-label">내 프로필</span>
+
 
         <!-- 프로필 카드 -->
         <div class="comm-profile-card" id="commProfileCard">
@@ -385,67 +264,95 @@
           </div>
         </div>
 
-        <!-- 네비게이션 카드 -->
-        <nav class="comm-nav-card" aria-label="페이지 이동">
-          <a class="comm-nav-item" href="detail.html" id="navHome">
+        <!-- 커뮤니티 네비게이션 -->
+        <span class="ax-rail-label">커뮤니티</span>
+        <nav aria-label="커뮤니티 이동">
+          <a class="ax-rail-item comm-nav-item" href="detail.html" id="navHome">
             <span class="comm-nav-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
             </span>
             홈
-            <span class="comm-nav-active-bar"></span>
           </a>
-          <a class="comm-nav-item" href="detail.html?type=board" id="navBoard">
+          <a class="ax-rail-item comm-nav-item" href="detail.html?type=board" id="navBoard">
             <span class="comm-nav-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/>
               </svg>
             </span>
             게시판
-            <span class="comm-nav-active-bar"></span>
           </a>
-          <a class="comm-nav-item" href="detail.html?type=patchnote" id="navPatchnote">
+          <a class="ax-rail-item comm-nav-item" href="detail.html?type=patchnote" id="navPatchnote">
             <span class="comm-nav-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
             </span>
             패치노트
-            <span class="comm-nav-active-bar"></span>
           </a>
-          <a class="comm-nav-item" href="detail.html?type=event" id="navEvent">
+          <a class="ax-rail-item comm-nav-item" href="detail.html?type=event" id="navEvent">
             <span class="comm-nav-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </span>
             이벤트
-            <span class="comm-nav-active-bar"></span>
           </a>
         </nav>
 
-        <!-- 검색 -->
-        <div class="comm-search-wrap">
-          <input type="search" class="comm-search-input" placeholder="검색어를 입력하세요.">
-          <button class="comm-search-btn" aria-label="검색">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          </button>
+        <span class="ax-rail-label">바로가기</span>
+        <a class="ax-rail-item" href="index.html">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6h16M4 12h16M4 18h10"/>
+          </svg>
+          패치 · 도감 홈
+        </a>
+
+        <div class="ax-rail-note">
+          게시판 · 패치노트 · 이벤트가 한곳에 모인 커뮤니티 공간입니다.
         </div>
 
       </aside>
 
-      <!-- ── 오른쪽 본문 ── -->
-      <main class="comm-main">
+      <!-- ── 본문 ── -->
+      <main class="ax-main">
         <div id="detailMain">
-          <div style="padding:80px 0;text-align:center">
-            <div class="spinner" style="width:36px;height:36px;border-width:4px;margin:0 auto 16px"></div>
-            <p style="color:var(--text-muted)">불러오는 중...</p>
+          <div class="axd-loading">
+            <div class="spinner"></div>
+            불러오는 중...
           </div>
         </div>
       </main>
 
-    </div><!-- /.comm-wrap -->
+    </div><!-- /.ax-body -->
+
+    <!-- ===== 모바일 하단 탭바 ===== -->
+    <nav class="ax-tabbar" aria-label="커뮤니티 메뉴">
+      <a class="ax-tab detail-bottom-tab-item" href="detail.html" id="btmHome">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        홈
+      </a>
+      <a class="ax-tab detail-bottom-tab-item" href="detail.html?type=board" id="btmBoard">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/></svg>
+        게시판
+      </a>
+      <a class="ax-tab detail-bottom-tab-item" href="detail.html?type=patchnote" id="btmPatchnote">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        패치노트
+      </a>
+      <a class="ax-tab detail-bottom-tab-item" href="detail.html?type=event" id="btmEvent">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        이벤트
+      </a>
+    </nav>
+
+    <!-- 모바일 글쓰기 FAB -->
+    <button class="axd-fab" id="axdWriteFab" aria-label="게시판 글쓰기"
+      onclick="typeof _renderBoardWrite==='function'?_renderBoardWrite():(location.href='PostEdit.html')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+    </button>
+
 
     <footer class="site-footer">
       <div class="footer-inner">
@@ -507,6 +414,9 @@ Developed</span>
         </div>
       </div>
     </footer>
+
+    </div><!-- /.ax-shell -->
+
 
     <!-- ===== 댓글 삭제 확인 모달 ===== -->
     <div class="modal-overlay" id="commentDeleteOverlay">
