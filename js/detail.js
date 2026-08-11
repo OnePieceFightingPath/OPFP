@@ -209,7 +209,7 @@ function _renderPatchDetail(id) {
   const main     = document.getElementById('detailMain');
 
   if (!patch || !main) {
-    if (main) main.innerHTML = '<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">패치노트를 찾을 수 없습니다.</div>';
+    if (main) main.innerHTML = '<div class="axd-empty">패치노트를 찾을 수 없습니다.</div>';
     return;
   }
 
@@ -689,16 +689,33 @@ async function _renderBoardList() {
   history.pushState({}, '', 'detail.html?type=board');
   _setNavActive('board');
 
-  main.innerHTML = `
-    <div style="padding-bottom:80px">
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-        <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
+  const bHead = (count) => _axdHead('Board', '게시판',
+    count ? `자유 · 정보 · 질문 — 총 ${count}개의 글` : '자유 · 정보 · 질문 게시판',
+    `<button class="axd-btn-primary" onclick="typeof _renderBoardWrite==='function'&&_renderBoardWrite()">글쓰기</button>`);
+
+  const bToolbar = () => `
+    <div class="dl-evt-toolbar">
+      <div class="dl-evt-status-filter">
+        <button class="dl-evt-status-btn${_dlBoardCategory==='all'?' active':''}" data-bcat="all">전체</button>
+        <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
+        <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
+        <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
       </div>
-      <div style="padding:60px 16px;text-align:center">
-        <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
-        <p style="color:var(--text-muted)">게시판을 불러오는 중...</p>
-      </div>
+      <span class="dl-evt-toolbar-sep"></span>
+      <select class="event-sort-select" id="dlBoardSortSelect">
+        <option value="recent"${_dlBoardSortBy==='recent'?' selected':''}>최신순</option>
+        <option value="oldest"${_dlBoardSortBy==='oldest'?' selected':''}>오래된순</option>
+        <option value="recommended"${_dlBoardSortBy==='recommended'?' selected':''}>추천순</option>
+      </select>
+      <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+      </button>
+      <button class="dl-evt-view-btn${_dlBoardViewMode==='list'?' active':''}" data-bview="list" title="목록형으로 보기">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
+      </button>
     </div>`;
+
+  main.innerHTML = `${bHead()}${_axdLoading('게시판을 불러오는 중...')}`;
 
   try {
     const snap = await db.collection('boards').orderBy('createdAt', 'desc').limit(50).get();
@@ -706,63 +723,16 @@ async function _renderBoardList() {
 
     if (!_allBoardPosts.length) {
       main.innerHTML = `
-        <div style="padding-bottom:80px">
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-            <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
-          </div>
-          <div class="dl-evt-toolbar">
-            <div class="dl-evt-status-filter">
-              <button class="dl-evt-status-btn${_dlBoardCategory==='all'?' active':''}" data-bcat="all">전체</button>
-              <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
-              <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
-              <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
-            </div>
-            <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
-            </button>
-            <button class="dl-evt-view-btn${_dlBoardViewMode==='list'?' active':''}" data-bview="list" title="목록형으로 보기">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
-            </button>
-            <span class="dl-evt-toolbar-sep"></span>
-            <select class="event-sort-select" id="dlBoardSortSelect">
-              <option value="recent"${_dlBoardSortBy==='recent'?' selected':''}>최신순</option>
-              <option value="oldest"${_dlBoardSortBy==='oldest'?' selected':''}>오래된순</option>
-              <option value="recommended"${_dlBoardSortBy==='recommended'?' selected':''}>추천순</option>
-            </select>
-          </div>
-          <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글이 없습니다.</div>
-        </div>`;
-      _initNotifBell('bellEvent', 'notifEvent');
+        ${bHead()}
+        ${bToolbar()}
+        <div class="axd-empty">게시글이 없습니다.</div>`;
       return;
     }
 
     main.innerHTML = `
-      <div style="padding-bottom:80px">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
-        </div>
-        <div class="dl-evt-toolbar">
-          <div class="dl-evt-status-filter">
-            <button class="dl-evt-status-btn${_dlBoardCategory==='all'?' active':''}" data-bcat="all">전체</button>
-            <button class="dl-evt-status-btn${_dlBoardCategory==='자유'?' active':''}" data-bcat="자유">자유</button>
-            <button class="dl-evt-status-btn${_dlBoardCategory==='정보'?' active':''}" data-bcat="정보">정보</button>
-            <button class="dl-evt-status-btn${_dlBoardCategory==='질문'?' active':''}" data-bcat="질문">질문</button>
-          </div>
-          <button class="dl-evt-view-btn${_dlBoardViewMode==='card'?' active':''}" data-bview="card" title="카드형으로 보기">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
-          </button>
-          <button class="dl-evt-view-btn${_dlBoardViewMode==='list'?' active':''}" data-bview="list" title="목록형으로 보기">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
-          </button>
-          <span class="dl-evt-toolbar-sep"></span>
-          <select class="event-sort-select" id="dlBoardSortSelect">
-            <option value="recent"${_dlBoardSortBy==='recent'?' selected':''}>최신순</option>
-            <option value="oldest"${_dlBoardSortBy==='oldest'?' selected':''}>오래된순</option>
-            <option value="recommended"${_dlBoardSortBy==='recommended'?' selected':''}>추천순</option>
-          </select>
-        </div>
-        <div id="detailBoardList"></div>
-      </div>`;
+      ${bHead(_allBoardPosts.length)}
+      ${bToolbar()}
+      <div id="detailBoardList"></div>`;
 
     _applyDlBoardFilter(main);
 
@@ -786,14 +756,9 @@ async function _renderBoardList() {
     });
 
   } catch {
-    main.innerHTML = `
-      <div style="padding-bottom:80px">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">게시판</span>
-        </div>
-        <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시판을 불러올 수 없습니다.</div>
-      </div>`;
+    main.innerHTML = `${bHead()}<div class="axd-empty">게시판을 불러올 수 없습니다.</div>`;
   }
+
 
   window.scrollTo({ top: 0 });
 }
@@ -890,16 +855,12 @@ async function _renderBoardDetail(boardId) {
   _setNavActive('board');
   history.pushState({}, '', 'detail.html?type=board&id=' + boardId);
 
-  main.innerHTML = `
-    <div style="padding:60px 16px;text-align:center">
-      <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
-      <p style="color:var(--text-muted)">불러오는 중...</p>
-    </div>`;
+  main.innerHTML = _axdLoading('불러오는 중...');
 
   try {
     const doc = await db.collection('boards').doc(boardId).get();
     if (!doc.exists) {
-      main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글을 찾을 수 없습니다.</div>`;
+      main.innerHTML = `<div class="axd-empty">게시글을 찾을 수 없습니다.</div>`;
       return;
     }
     const p       = { docId: doc.id, ...doc.data() };
@@ -913,85 +874,71 @@ async function _renderBoardDetail(boardId) {
     document.title = (p.title || '게시글') + ' — Fighting Path Patch';
 
     const avatarHtml = p.avatar
-      ? `<img src="${escHtml(p.avatar)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">`
-      : `<div style="width:32px;height:32px;border-radius:50%;background:var(--bg-hover);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted)">👤</div>`;
+      ? `<img class="axd-avatar" src="${escHtml(p.avatar)}" alt="">`
+      : `<div class="axd-avatar axd-avatar-ph">👤</div>`;
 
     main.innerHTML = `
-      <div style="padding-bottom:80px">
+      ${_axdBackBtn('boardDetailBackBtn', '게시판 목록으로')}
 
-        <button class="evt-detail-back-btn" id="boardDetailBackBtn">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
-          게시판 목록으로
-        </button>
-
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:8px">
-
-          <div class="evt-detail-header">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;flex-wrap:wrap">
-                ${p.prefix ? `<span style="flex-shrink:0;font-size:15px;font-weight:700;color:var(--text-muted)">[${escHtml(p.prefix)}]</span>` : ""}
-                <h1 class="evt-detail-title" style="margin:0;flex:1;min-width:0">${escHtml(p.title || '제목 없음')}</h1>
-              </div>
-              <div class="board-detail-more-wrap" style="position:relative;flex-shrink:0">
-                <button id="boardDetailMoreBtn" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px 6px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center" title="더보기">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
-                </button>
-                <div class="evt-comment-dropdown board-detail-dropdown" id="boardDetailDropdown" style="display:none;min-width:90px">
-                  ${isOwner ? `<button class="evt-comment-dropdown-item" id="boardDetailEdit">수정</button>` : ''}
-                  ${isOwner ? `<button class="evt-comment-dropdown-item evt-comment-delete-btn" id="boardDetailDelete">삭제</button>` : ''}
-                  <button class="evt-comment-dropdown-item" id="boardDetailShare">공유</button>
-                </div>
-              </div>
+      <article class="axd-article">
+        <div class="evt-detail-header">
+          <div class="axd-article-top">
+            <div class="axd-article-titlebox">
+              ${p.prefix ? `<span class="axd-cat">${escHtml(p.prefix)}</span>` : ""}
+              <h1 class="evt-detail-title axd-article-title">${escHtml(p.title || '제목 없음')}</h1>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-              ${avatarHtml}
-              <div>
-                <span style="font-size:12px;font-weight:600;color:var(--accent)">${escHtml(p.author || '익명')}</span>
-                ${dateStr ? `<span style="font-size:11px;color:var(--text-dim);margin-left:6px">${dateStr}</span>` : ''}
-                <span class="patch-detail-read-count" id="boardDetailReadCount" style="display:none;margin-left:8px">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="13" height="13"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            ${_axdMoreBtn('boardDetailMoreBtn', 'boardDetailDropdown', `
+              ${isOwner ? `<button class="evt-comment-dropdown-item" id="boardDetailEdit">수정</button>` : ''}
+              ${isOwner ? `<button class="evt-comment-dropdown-item evt-comment-delete-btn" id="boardDetailDelete">삭제</button>` : ''}
+              <button class="evt-comment-dropdown-item" id="boardDetailShare">공유</button>`)}
+          </div>
+          <div class="axd-byline">
+            ${avatarHtml}
+            <div class="axd-byline-text">
+              <span class="axd-byline-name">${escHtml(p.author || '익명')}</span>
+              <span class="axd-byline-sub">
+                ${dateStr ? `<span>${dateStr}</span>` : ''}
+                <span class="patch-detail-read-count" id="boardDetailReadCount" style="display:none">
+                  ${_axdEye(13)}
                   <span id="boardDetailReadCountNum">0</span>
                 </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="evt-detail-divider"></div>
-
-          <div class="evt-detail-body">${p.text || ''}</div>
-
-          <div class="detail-like-row">
-            <button class="detail-like-btn${liked ? ' liked' : ''}" id="boardLikeBtn">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="${liked ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-              <span id="boardLikeCount">${p.likeCount || 0}</span>
-            </button>
-          </div>
-
-        </div>
-
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px 24px;margin-top:12px">
-          <div class="evt-comment-section" style="margin-top:0">
-            <div class="evt-comment-section-title">
-              댓글 <span class="evt-comment-count-badge" id="boardCommentCount">0</span>
-            </div>
-            ${ user ? _buildEditorHtml('board-cmt', {}) : `<div class="evt-comment-login-notice">글을 작성하시려면 <button class="evt-comment-login-link" id="boardCommentLoginBtn">로그인</button> 해주세요.</div>` }
-            <div class="evt-comment-list" id="boardCommentList">
-              <div class="evt-comment-empty">댓글을 불러오는 중...</div>
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="patch-nav-section">
-          <div class="patch-nav-header">
-            <span class="patch-nav-header-title">게시판</span>
-            <button class="patch-nav-to-list-btn" id="boardToListBtn">+ 목록</button>
-          </div>
-          <div class="patch-recent-list" id="boardRecentList"></div>
-        </div>
+        <div class="evt-detail-divider"></div>
 
-      </div>`;
+        <div class="evt-detail-body">${p.text || ''}</div>
+
+        <div class="detail-like-row">
+          <button class="detail-like-btn${liked ? ' liked' : ''}" id="boardLikeBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="${liked ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <span id="boardLikeCount">${p.likeCount || 0}</span>
+          </button>
+        </div>
+      </article>
+
+      <section class="axd-article axd-comments">
+        <div class="evt-comment-section">
+          <div class="evt-comment-section-title">
+            댓글 <span class="evt-comment-count-badge" id="boardCommentCount">0</span>
+          </div>
+          ${ user ? _buildEditorHtml('board-cmt', {}) : `<div class="evt-comment-login-notice">글을 작성하시려면 <button class="evt-comment-login-link" id="boardCommentLoginBtn">로그인</button> 해주세요.</div>` }
+          <div class="evt-comment-list" id="boardCommentList">
+            <div class="evt-comment-empty">댓글을 불러오는 중...</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="patch-nav-section">
+        <div class="patch-nav-header">
+          <span class="patch-nav-header-title">게시판</span>
+          <button class="patch-nav-to-list-btn" id="boardToListBtn">+ 목록</button>
+        </div>
+        <div class="patch-recent-list" id="boardRecentList"></div>
+      </section>`;
+
 
     /* 버튼 이벤트 */
     const _goBackFromBoard = () => {
@@ -1089,7 +1036,7 @@ async function _renderBoardDetail(boardId) {
 
   } catch (e) {
     console.error('게시글 로드 실패:', e);
-    main.innerHTML = `<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">게시글을 불러오지 못했습니다.</div>`;
+    main.innerHTML = `<div class="axd-empty">게시글을 불러오지 못했습니다.</div>`;
   }
 
   window.scrollTo({ top: 0 });
@@ -1172,6 +1119,54 @@ async function _renderBoardRecentList(currentId) {
   } catch (e) { console.error('게시판 목록 로드 실패:', e); }
 }
 /* ── 홈 렌더링 ── */
+/* ── AXIS DETAIL 공용 UI 헬퍼 ── */
+function _axdHead(eyebrow, title, desc, tools) {
+  return `
+    <div class="axd-head">
+      <div class="axd-head-text">
+        <span class="axd-eyebrow">${escHtml(eyebrow)}</span>
+        <h1 class="axd-title">${escHtml(title)}</h1>
+        ${desc ? `<p class="axd-desc">${escHtml(desc)}</p>` : ''}
+      </div>
+      ${tools ? `<div class="axd-head-tools">${tools}</div>` : ''}
+    </div>`;
+}
+
+function _axdBell(bellId, lsKey) {
+  return `<button id="${bellId}" class="dl-notif-bell${localStorage.getItem(lsKey)==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>`;
+}
+
+function _axdEye(size) {
+  const s = size || 12;
+  return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="${s}" height="${s}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+}
+
+function _axdArrow() {
+  return `<span class="axd-row-arrow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>`;
+}
+
+function _axdLoading(text) {
+  return `<div class="axd-loading"><div class="spinner"></div>${escHtml(text || '불러오는 중...')}</div>`;
+}
+
+function _axdBackBtn(id, label) {
+  return `<div class="axd-article-bar">
+    <button class="evt-detail-back-btn" id="${id}">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="15" height="15"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      ${escHtml(label)}
+    </button>
+  </div>`;
+}
+
+function _axdMoreBtn(btnId, dropId, items) {
+  return `<div class="board-detail-more-wrap">
+    <button class="axd-more-btn" id="${btnId}" title="더보기">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
+    </button>
+    <div class="evt-comment-dropdown board-detail-dropdown" id="${dropId}" style="display:none">${items}</div>
+  </div>`;
+}
+
 function _renderHome() {
   const main = document.getElementById('detailMain');
   if (!main) return;
@@ -1179,39 +1174,105 @@ function _renderHome() {
   history.pushState({}, '', 'detail.html');
   _setNavActive('home');
 
-  main.innerHTML = `
-    <div style="padding-bottom:80px">
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 20px;margin-bottom:12px;text-align:center">
-        <p style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">파이팅 패스 패치 ROOM에 오신 것을 환영합니다</p>
-        <p style="font-size:12px;color:var(--text-muted)">게시판, 패치노트, 이벤트를 한곳에서 확인하세요</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button onclick="_renderBoardList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20" style="color:var(--accent);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/></svg>
-          <div>
-            <div style="font-size:14px;font-weight:600;color:var(--text)">게시판</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">커뮤니티 게시글을 확인하세요</div>
-          </div>
-        </button>
-        <button onclick="_renderPatchList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20" style="color:var(--accent);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          <div>
-            <div style="font-size:14px;font-weight:600;color:var(--text)">패치노트</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">최신 패치 내역을 확인하세요</div>
-          </div>
-        </button>
-        <button onclick="_renderEventList();" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="20" height="20" style="color:var(--accent);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-          <div>
-            <div style="font-size:14px;font-weight:600;color:var(--text)">이벤트</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">진행 중인 이벤트를 확인하세요</div>
-          </div>
-        </button>
-      </div>
-    </div>`;
+  const hubCard = (fn, icon, title, desc) => `
+    <button class="axd-hub-card" onclick="${fn}">
+      <span class="axd-hub-icon">${icon}</span>
+      <span class="axd-hub-title">${title}</span>
+      <span class="axd-hub-desc">${desc}</span>
+    </button>`;
 
+  const iconBoard = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8a2 2 0 012-2h2m10-4H7a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2z"/></svg>`;
+  const iconPatch = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`;
+  const iconEvent = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+
+  main.innerHTML = `
+    ${_axdHead('Community', '커뮤니티 홈', '게시판 · 패치노트 · 이벤트를 한곳에서 확인하세요.')}
+    <div class="axd-hub">
+      ${hubCard('_renderBoardList()', iconBoard, '게시판', '자유 · 정보 · 질문 게시글을 읽고 함께 이야기하세요.')}
+      ${hubCard('_renderPatchList()', iconPatch, '패치노트', '최신 업데이트 내역을 최신순으로 확인하세요.')}
+      ${hubCard('_renderEventList()', iconEvent, '이벤트', '진행 중인 이벤트와 기간을 확인하세요.')}
+    </div>
+
+    <section class="axd-section">
+      <div class="axd-section-head">
+        <span class="axd-section-title">최신 게시글</span>
+        <button class="axd-link-btn" onclick="_renderBoardList()">전체보기</button>
+      </div>
+      <div id="axdHomeBoard">${_axdLoading('게시글을 불러오는 중...')}</div>
+    </section>
+
+    <section class="axd-section">
+      <div class="axd-section-head">
+        <span class="axd-section-title">최근 패치노트</span>
+        <button class="axd-link-btn" onclick="_renderPatchList()">전체보기</button>
+      </div>
+      <div id="axdHomePatch">${_axdLoading('패치노트를 불러오는 중...')}</div>
+    </section>`;
+
+  _fillHomeBoard();
+  _fillHomePatch();
   window.scrollTo({ top: 0 });
 }
+
+async function _fillHomeBoard() {
+  const box = document.getElementById('axdHomeBoard');
+  if (!box) return;
+  try {
+    const snap = await db.collection('boards').orderBy('createdAt', 'desc').limit(5).get();
+    const posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    if (!posts.length) { box.innerHTML = `<div class="axd-empty">아직 게시글이 없습니다.</div>`; return; }
+    box.innerHTML = `<div class="axd-list">${posts.map((p, i) => {
+      const raw = p.createdAt?.toDate ? p.createdAt.toDate() : (p.createdAt ? new Date(p.createdAt) : null);
+      const date = raw ? raw.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : '';
+      return `<div class="axd-row" data-boardid="${escHtml(p.docId)}">
+        <div class="axd-row-main">
+          <div class="axd-row-top">
+            ${i === 0 ? `<span class="axd-badge-new">NEW</span>` : ''}
+            ${p.prefix ? `<span class="axd-cat">${escHtml(p.prefix)}</span>` : ''}
+            <span class="axd-row-title">${escHtml(p.title || '제목 없음')}</span>
+          </div>
+          <div class="axd-meta">
+            <span class="axd-author">${escHtml(p.author || '익명')}</span>
+            ${date ? `<span>${date}</span>` : ''}
+          </div>
+        </div>
+        ${_axdArrow()}
+      </div>`;
+    }).join('')}</div>`;
+    box.querySelectorAll('[data-boardid]').forEach(el => {
+      el.addEventListener('click', () => _renderBoardDetail(el.dataset.boardid));
+    });
+  } catch {
+    box.innerHTML = `<div class="axd-empty">게시글을 불러올 수 없습니다.</div>`;
+  }
+}
+
+async function _fillHomePatch() {
+  const box = document.getElementById('axdHomePatch');
+  if (!box) return;
+  let notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
+  if (!notes.length && typeof initData === 'function') {
+    try { await Promise.race([initData(), new Promise(r => setTimeout(r, 8000))]); } catch {}
+    notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
+  }
+  if (!box.isConnected) return;
+  if (!notes.length) { box.innerHTML = `<div class="axd-empty">패치노트가 없습니다.</div>`; return; }
+  box.innerHTML = `<div class="axd-list">${notes.slice(0, 5).map((p, i) => `
+    <div class="axd-row" data-patchid="${escHtml(String(p.id))}">
+      <div class="axd-row-main">
+        <div class="axd-row-top">
+          ${i === 0 ? `<span class="axd-badge-new">NEW</span>` : ''}
+          <span class="axd-row-title">${escHtml(p.title)}</span>
+        </div>
+        <div class="axd-meta"><span class="axd-author">관리자</span><span>${_dFmtPatchDate(p.date)}</span></div>
+      </div>
+      ${_axdArrow()}
+    </div>`).join('')}</div>`;
+  box.querySelectorAll('[data-patchid]').forEach(el => {
+    el.addEventListener('click', () => _renderPatchDetail(el.dataset.patchid));
+  });
+}
+
 
 /* ── 패치노트 목록 렌더링 ── */
 async function _renderPatchList() {
@@ -1223,10 +1284,7 @@ async function _renderPatchList() {
 
   const allNotes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
   if (!allNotes.length) {
-    main.innerHTML = `<div style="padding:60px 16px;text-align:center">
-      <div class="spinner" style="width:32px;height:32px;border-width:3px;margin:0 auto 12px"></div>
-      <p style="color:var(--text-muted)">패치노트를 불러오는 중...</p>
-    </div>`;
+    main.innerHTML = _axdLoading('패치노트를 불러오는 중...');
     if (typeof initData === 'function') {
       try { await Promise.race([initData(), new Promise(r => setTimeout(r, 8000))]); } catch {}
     }
@@ -1235,52 +1293,34 @@ async function _renderPatchList() {
   const notes = (typeof PATCH_NOTES !== 'undefined') ? PATCH_NOTES : [];
   if (!notes.length) {
     main.innerHTML = `
-      <div style="padding-bottom:80px">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">패치노트</span>
-          <button id="bellPatch" class="dl-notif-bell${localStorage.getItem('notifPatch')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-        </div>
-        <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">패치노트가 없습니다.</div>
-      </div>`;
+      ${_axdHead('Updates', '패치노트', '업데이트 기록을 최신순으로 확인합니다.', _axdBell('bellPatch', 'notifPatch'))}
+      <div class="axd-empty">패치노트가 없습니다.</div>`;
     _initNotifBell('bellPatch', 'notifPatch');
     return;
   }
 
-  const firstId = notes[0]?.id;
   main.innerHTML = `
-    <div style="padding-bottom:80px">
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-        <span style="font-size:15px;font-weight:700;color:var(--text)">패치노트</span>
-        <button id="bellPatch" class="dl-notif-bell${localStorage.getItem('notifPatch')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-      </div>
-      <div id="detailPatchList" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
-        ${notes.map((p, i) => `
-          <div data-patchid="${escHtml(String(p.id))}" style="
-            padding:14px 16px;
-            border-bottom:1px solid var(--border);
-            cursor:pointer;
-            transition:background 0.15s;
-          " onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-            <div style="display:flex;align-items:center;gap:6px;min-width:0">
-              ${i === 0 ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:var(--accent);color:#fff">NEW</span>` : ''}
-              <span style="
-                font-size:14px;font-weight:500;color:var(--text);
-                overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0;
-              ">${escHtml(p.title)}</span>
+    ${_axdHead('Updates', '패치노트', `총 ${notes.length}개의 업데이트 기록`, _axdBell('bellPatch', 'notifPatch'))}
+    <div class="axd-list" id="detailPatchList">
+      ${notes.map((p, i) => `
+        <div class="axd-row" data-patchid="${escHtml(String(p.id))}">
+          <div class="axd-row-main">
+            <div class="axd-row-top">
+              ${i === 0 ? `<span class="axd-badge-new">NEW</span>` : ''}
+              <span class="axd-row-title">${escHtml(p.title)}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
-              <span style="font-size:11px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
-              <span style="font-size:11px;color:var(--text-dim)">${_dFmtPatchDate(p.date)}</span>
-              <span id="pv-${p.id}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <span>-</span>
-              </span>
+            <div class="axd-meta">
+              <span class="axd-author">관리자</span>
+              <span>${_dFmtPatchDate(p.date)}</span>
+              <span class="axd-meta-item" id="pv-${p.id}">${_axdEye()}<span>-</span></span>
             </div>
           </div>
-        `).join('')}
-      </div>
+          <span class="axd-row-arrow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
+        </div>
+      `).join('')}
     </div>
   `;
+
 
   main.querySelectorAll('#detailPatchList [data-patchid]').forEach(el => {
     el.addEventListener('click', () => {
@@ -1356,44 +1396,36 @@ async function _renderEventList() {
 
     if (!_allDetailEvents.length) {
       main.innerHTML = `
-        <div style="padding-bottom:80px">
-          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-            <span style="font-size:15px;font-weight:700;color:var(--text)">이벤트</span>
-            <button id="bellEvent" class="dl-notif-bell${localStorage.getItem('notifEvent')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
-          </div>
-          <div style="padding:60px 16px;text-align:center;color:var(--text-muted)">이벤트가 없습니다.</div>
-        </div>`;
+        ${_axdHead('Events', '이벤트', '진행 중인 이벤트와 종료된 이벤트를 확인하세요.', _axdBell('bellEvent', 'notifEvent'))}
+        <div class="axd-empty">이벤트가 없습니다.</div>`;
+      _initNotifBell('bellEvent', 'notifEvent');
       return;
     }
 
     main.innerHTML = `
-      <div style="padding-bottom:80px">
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">이벤트</span>
-          <button id="bellEvent" class="dl-notif-bell${localStorage.getItem('notifEvent')==='true'?' active':''}" aria-label="알림 설정" title="알림 설정"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+      ${_axdHead('Events', '이벤트', '진행 중인 이벤트와 종료된 이벤트를 확인하세요.', _axdBell('bellEvent', 'notifEvent'))}
+      <div class="dl-evt-toolbar">
+        <div class="dl-evt-status-filter">
+          <button class="dl-evt-status-btn${_dlStatusFilter==='all'?' active':''}" data-status="all">전체</button>
+          <button class="dl-evt-status-btn${_dlStatusFilter==='active'?' active':''}" data-status="active">진행중</button>
+          <button class="dl-evt-status-btn${_dlStatusFilter==='ended'?' active':''}" data-status="ended">종료</button>
         </div>
-        <div class="dl-evt-toolbar">
-          <div class="dl-evt-status-filter">
-            <button class="dl-evt-status-btn${_dlStatusFilter==='all'?' active':''}" data-status="all">전체</button>
-            <button class="dl-evt-status-btn${_dlStatusFilter==='active'?' active':''}" data-status="active">진행중</button>
-            <button class="dl-evt-status-btn${_dlStatusFilter==='ended'?' active':''}" data-status="ended">종료</button>
-          </div>
-          <button class="dl-evt-view-btn${_dlViewMode==='card'?' active':''}" data-view="card" title="카드형으로 보기">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
-          </button>
-          <button class="dl-evt-view-btn${_dlViewMode==='list'?' active':''}" data-view="list" title="목록형으로 보기">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
-          </button>
-          <span class="dl-evt-toolbar-sep"></span>
-          <select class="event-sort-select" id="dlEvtSortSelect">
-            <option value="recent"${_dlSortBy==='recent'?' selected':''}>최신순</option>
-            <option value="updated"${_dlSortBy==='updated'?' selected':''}>업데이트순</option>
-            <option value="recommended"${_dlSortBy==='recommended'?' selected':''}>추천순</option>
-          </select>
-        </div>
-        <div id="detailEventGrid"></div>
+        <span class="dl-evt-toolbar-sep"></span>
+        <select class="event-sort-select" id="dlEvtSortSelect">
+          <option value="recent"${_dlSortBy==='recent'?' selected':''}>최신순</option>
+          <option value="updated"${_dlSortBy==='updated'?' selected':''}>업데이트순</option>
+          <option value="recommended"${_dlSortBy==='recommended'?' selected':''}>추천순</option>
+        </select>
+        <button class="dl-evt-view-btn${_dlViewMode==='card'?' active':''}" data-view="card" title="카드형으로 보기">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h7v7H3zm0 11h7v7H3zm11-11h7v7h-7zm0 11h7v7h-7z"/></svg>
+        </button>
+        <button class="dl-evt-view-btn${_dlViewMode==='list'?' active':''}" data-view="list" title="목록형으로 보기">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7zm-4 6h2v2H3zm4 0h14v2H7z"/></svg>
+        </button>
       </div>
+      <div id="detailEventGrid"></div>
     `;
+
 
     _applyDlFilter();
 
@@ -1419,7 +1451,7 @@ async function _renderEventList() {
     await _loadDlEventCounts();
   } catch (err) {
     console.error('이벤트 목록 로드 실패:', err);
-    if (main) main.innerHTML = '<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">이벤트를 불러오지 못했습니다.</div>';
+    if (main) main.innerHTML = '<div class="axd-empty">이벤트를 불러오지 못했습니다.</div>';
   }
   _initNotifBell('bellEvent', 'notifEvent');
   window.scrollTo({ top: 0 });
@@ -1465,72 +1497,62 @@ function _applyDlFilter() {
     sorted = sorted.filter(e => !_dlIsActive(e));
   }
 
-  const metaHtml = (e) => `
-    <div style="display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap">
-      <span style="font-size:10px;font-weight:700;color:var(--accent);padding:1px 5px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
-      <span id="ev-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        <span>-</span>
-      </span>
-      <span id="ec-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        <span>${e.commentCount ?? 0}</span>
-      </span>
+  const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
+  const cmtIcon = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>`;
+
+  const metaHtml = (e, dateStr) => `
+    <div class="axd-meta">
+      <span class="axd-author">관리자</span>
+      ${dateStr ? `<span>${escHtml(dateStr)}</span>` : ''}
+      <span class="axd-meta-item" id="ev-${escHtml(e._docId)}">${eyeIcon}<span>-</span></span>
+      <span class="axd-meta-item" id="ec-${escHtml(e._docId)}">${cmtIcon}<span>${e.commentCount ?? 0}</span></span>
     </div>`;
 
   if (_dlViewMode === 'card') {
-    grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px';
+    grid.className = 'axd-grid';
+    grid.style.cssText = '';
     grid.innerHTML = sorted.map(e => {
       const active   = _dlIsActive(e);
       const dateStr  = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
       const thumb    = e.thumbnailUrl
         ? `<img src="${escHtml(e.thumbnailUrl)}" alt="${escHtml(e.title||'')}" loading="lazy">`
         : `<div class="event-card-thumb-placeholder">이미지 없음</div>`;
-      const dateBadge = dateStr ? `<span class="event-card-period">${escHtml(dateStr)}</span>` : '';
       return `
         <div class="event-card event-card-clickable${active?'':' event-card-ended'}" data-evtid="${escHtml(e._docId)}">
           <div class="event-card-thumb">
             ${thumb}
             ${e.tag ? `<span class="event-card-tag">${escHtml(e.tag)}</span>` : ''}
-            ${dateBadge}
+            ${dateStr ? `<span class="event-card-period">${escHtml(dateStr)}</span>` : ''}
             ${!active ? `<div class="event-card-ended-overlay"><span>종료</span></div>` : ''}
           </div>
           <div class="event-card-body">
             <div class="event-card-title">${escHtml(e.title||'제목 없음')}</div>
-            ${metaHtml(e)}
+            ${metaHtml(e, '')}
           </div>
         </div>`;
     }).join('');
   } else {
-    grid.style.cssText = 'display:flex;flex-direction:column;gap:0';
-    grid.innerHTML = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">` +
+    grid.className = '';
+    grid.style.cssText = '';
+    grid.innerHTML = `<div class="axd-list">` +
       sorted.map(e => {
         const active  = _dlIsActive(e);
         const dateStr = e.startDate ? _dlFmtDate(e.startDate) : (e.date || '');
-        const statusBadge = active
-          ? `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(34,197,94,0.15);color:#22c55e">진행중</span>`
-          : `<span style="flex-shrink:0;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(150,150,150,0.15);color:var(--text-dim)">종료</span>`;
         return `
-          <div class="event-card-clickable" data-evtid="${escHtml(e._docId)}" style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
-            <div style="display:flex;align-items:center;gap:6px;min-width:0">
-              ${statusBadge}
-              <span style="font-size:14px;font-weight:500;color:var(--text);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0">${escHtml(e.title||'제목 없음')}</span>
+          <div class="axd-row event-card-clickable" data-evtid="${escHtml(e._docId)}">
+            <div class="axd-row-main">
+              <div class="axd-row-top">
+                <span class="${active ? 'axd-badge-live' : 'axd-badge-ended'}">${active ? '진행중' : '종료'}</span>
+                <span class="axd-row-title">${escHtml(e.title||'제목 없음')}</span>
+              </div>
+              ${metaHtml(e, dateStr)}
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
-              <span style="font-size:11px;font-weight:600;color:var(--accent);padding:1px 6px;border-radius:3px;background:rgba(77,159,255,0.12)">관리자</span>
-              ${dateStr ? `<span style="font-size:11px;color:var(--text-dim)">${escHtml(dateStr)}</span>` : ''}
-              <span id="ev-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                <span>-</span>
-              </span>
-              <span id="ec-${escHtml(e._docId)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-dim)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="11" height="11"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <span>${e.commentCount ?? 0}</span>
-              </span>
-            </div>
+            <span class="axd-row-arrow"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></span>
           </div>`;
       }).join('') + `</div>`;
   }
+
+
 
   grid.querySelectorAll('.event-card-clickable[data-evtid]').forEach(el => {
     el.addEventListener('click', () => {
@@ -1606,7 +1628,7 @@ async function _renderEventDetail(id) {
   } catch (e) {
     console.error('이벤트 로드 실패:', e);
     const main2 = document.getElementById('detailMain');
-    if (main2) main2.innerHTML = '<div style="padding:60px 16px;text-align:center;color:var(--text-muted)">이벤트를 찾을 수 없습니다.</div>';
+    if (main2) main2.innerHTML = '<div class="axd-empty">이벤트를 찾을 수 없습니다.</div>';
   }
 }
 
