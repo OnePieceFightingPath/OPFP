@@ -15,7 +15,7 @@
   display: none !important;
 }
 .detail-page {
-  background: var(--bg);
+  background-color: var(--bg);
 }
 .detail-page .ax-main {
   padding: 24px 26px 90px;
