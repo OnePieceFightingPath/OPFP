@@ -831,6 +831,10 @@ body {
     gap: 12px;
     margin-bottom: 16px;
   }
+  .ax-page-head .ax-head-tools {
+    width: 100%;
+    justify-content: flex-end;
+  }
   .ax-page-title {
     font-size: 21px;
   }
