@@ -1121,8 +1121,9 @@ async function _renderBoardRecentList(currentId) {
 /* ── 홈 렌더링 ── */
 /* ── AXIS DETAIL 공용 UI 헬퍼 ── */
 function _axdHead(eyebrow, title, desc, tools) {
+  const hasTitleNotification = Boolean(tools && tools.includes('dl-notif-bell'));
   return `
-    <div class="axd-head">
+    <div class="axd-head${hasTitleNotification ? ' axd-head-with-notif' : ''}">
       <div class="axd-head-text">
         <span class="axd-eyebrow">${escHtml(eyebrow)}</span>
         <h1 class="axd-title">${escHtml(title)}</h1>

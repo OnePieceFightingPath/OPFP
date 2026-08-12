@@ -948,6 +948,33 @@
     gap: 10px;
     margin-bottom: 12px;
   }
+  .axd-head.axd-head-with-notif {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 4px;
+  }
+  .axd-head-with-notif .axd-head-text {
+    display: contents;
+  }
+  .axd-head-with-notif .axd-eyebrow {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .axd-head-with-notif .axd-title {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .axd-head-with-notif .axd-desc {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .axd-head-with-notif .axd-head-tools {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+  }
   .axd-title {
     font-size: 20px;
   }
