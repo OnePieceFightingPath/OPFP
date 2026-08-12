@@ -3233,7 +3233,6 @@ html.is-pwa .site-footer {
     right: 0;
     left: auto;
     max-width: calc(100vw - 40px);
-    white-space: normal;
     word-break: keep-all;
   }
 }
