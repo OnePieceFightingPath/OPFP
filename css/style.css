@@ -448,6 +448,12 @@ footer {
   margin: 0 0 16px;
   line-height: 1.5;
 }
+.gnb-icon-notice {
+  color: var(--text-muted, var(--text-dim));
+  font-size: 13px;
+  margin: -4px 0 14px;
+  line-height: 1.6;
+}
 .gnb-sub-modal-hint {
   font-size: 11.5px;
   color: var(--text-dim);

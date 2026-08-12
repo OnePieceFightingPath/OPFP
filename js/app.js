@@ -393,22 +393,19 @@ function _closeSubModal(id) {
   document.getElementById(id)?.classList.remove('open');
 }
 
-// ── 앱 아이콘 컬러 핸들러 ──
+// ── 앱 아이콘 선택 핸들러 ──
 function _initAppIconModal() {
-  const saved = localStorage.getItem('accentColor') || '#4d9fff';
-  document.querySelectorAll('.gnb-icon-color-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.color === saved);
+  const saved = localStorage.getItem('appIcon') || 'dark';
+  document.querySelectorAll('.gnb-icon-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.icon === saved);
+    if (btn.dataset.appIconBound === 'true') return;
+    btn.dataset.appIconBound = 'true';
     btn.addEventListener('click', () => {
-      const color = btn.dataset.color;
-      document.documentElement.style.setProperty('--accent', color);
-      localStorage.setItem('accentColor', color);
-      const metaTheme = document.querySelector('meta[name="theme-color"]');
-      if (metaTheme) metaTheme.setAttribute('content', color);
-      document.querySelectorAll('.gnb-icon-color-btn').forEach(b => b.classList.toggle('active', b === btn));
+      const iconKey = btn.dataset.icon || 'dark';
+      document.querySelectorAll('.gnb-icon-option').forEach(b => b.classList.toggle('active', b === btn));
+      applyAppIcon(iconKey);
     });
   });
-  // 저장된 accent 색상 복원
-  document.documentElement.style.setProperty('--accent', saved);
 }
 
 // ── 언어 선택 핸들러 ──
