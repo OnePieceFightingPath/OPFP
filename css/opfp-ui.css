@@ -386,7 +386,6 @@ body {
   display: inline-flex !important;
   gap: 4px;
   padding: 4px !important;
-  margin: 0 0 18px !important;
   border: 1px solid var(--border) !important;
   border-radius: 999px !important;
   background: var(--bg-secondary) !important;
