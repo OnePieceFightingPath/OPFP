@@ -570,6 +570,22 @@ function _boardWriteHost() {
   return '<div class="opfp-board-write-host" id="opfpBoardWriteHost"></div>';
 }
 
+function _boardWriteFrame(isEdit) {
+  const title = isEdit ? '게시글 수정' : '게시판 글쓰기';
+  const description = isEdit
+    ? '게시글 내용을 확인하고 수정해주세요.'
+    : '자유 · 정보 · 질문을 나누는 게시판';
+  const submitButton = '<button class="axd-btn-primary" id="boardHeaderSubmit" type="button">등록</button>';
+  return _axdHead('Board', title, description, submitButton) + _boardWriteHost();
+}
+
+function _bindBoardHeaderSubmit(editor) {
+  const headerSubmit = document.getElementById('boardHeaderSubmit');
+  const editorSubmit = editor?.querySelector('[data-action="submit"]');
+  if (!headerSubmit || !editorSubmit) return;
+  headerSubmit.addEventListener('click', () => editorSubmit.click());
+}
+
 function _finishBoardWrite(message, boardId) {
   if (typeof showToast === 'function') showToast(message, 'success');
   setTimeout(function () {
@@ -647,13 +663,14 @@ function _renderBoardWrite() {
   _setNavActive('board');
   document.title = '게시판 글쓰기 — Fighting Path Patch';
   history.pushState({}, '', 'detail.html?type=board&mode=write');
-  main.innerHTML = _boardWriteHost();
+  main.innerHTML = _boardWriteFrame(false);
   const editor = OPFPBoardEditor.render(document.getElementById('opfpBoardWriteHost'), {
     mode: 'pc',
     editorId: 'board-write-editor',
     onCancel: _renderBoardList,
     onSubmit: _submitBoardPost,
   });
+  _bindBoardHeaderSubmit(editor);
   editor._opfpApi.focus();
   window.scrollTo({ top: 0 });
 }
@@ -670,7 +687,7 @@ function _renderBoardEdit(boardId, post) {
   _setNavActive('board');
   document.title = '게시글 수정 — Fighting Path Patch';
   history.pushState({}, '', 'detail.html?type=board&mode=edit&id=' + encodeURIComponent(boardId));
-  main.innerHTML = _boardWriteHost();
+  main.innerHTML = _boardWriteFrame(true);
   const editor = OPFPBoardEditor.render(document.getElementById('opfpBoardWriteHost'), {
     mode: 'pc',
     editorId: 'board-edit-editor',
@@ -678,6 +695,7 @@ function _renderBoardEdit(boardId, post) {
     onCancel: () => _renderBoardDetail(boardId),
     onSubmit: api => _submitBoardPost(api, boardId),
   });
+  _bindBoardHeaderSubmit(editor);
   editor._opfpApi.focus();
   window.scrollTo({ top: 0 });
 }
