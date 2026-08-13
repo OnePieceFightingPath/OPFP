@@ -576,7 +576,7 @@ function _boardWriteFrame(isEdit) {
     ? '게시글 내용을 확인하고 수정해주세요.'
     : '자유 · 정보 · 질문을 나누는 게시판';
   const submitButton = '<button class="axd-btn-primary" id="boardHeaderSubmit" type="button">등록</button>';
-  return _axdHead('Board', title, description, submitButton) + _boardWriteHost();
+  return _axdHead(isEdit ? 'Edit a Post' : 'Write a Post', isEdit ? '< 게시글 수정' : '< 게시판 글쓰기', description, submitButton) + _boardWriteHost();
 }
 
 function _bindBoardHeaderSubmit(editor) {
@@ -584,6 +584,23 @@ function _bindBoardHeaderSubmit(editor) {
   const editorSubmit = editor?.querySelector('[data-action="submit"]');
   if (!headerSubmit || !editorSubmit) return;
   headerSubmit.addEventListener('click', () => editorSubmit.click());
+}
+
+function _bindBoardWriteBack() {
+  const title = document.querySelector('#detailMain .axd-title');
+  if (!title) return;
+  const goToBoard = () => _renderBoardList();
+  title.classList.add('axd-title-link');
+  title.setAttribute('role', 'link');
+  title.setAttribute('tabindex', '0');
+  title.setAttribute('aria-label', '게시판으로 돌아가기');
+  title.addEventListener('click', goToBoard);
+  title.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      goToBoard();
+    }
+  });
 }
 
 function _finishBoardWrite(message, boardId) {
@@ -670,6 +687,7 @@ function _renderBoardWrite() {
     onCancel: _renderBoardList,
     onSubmit: _submitBoardPost,
   });
+  _bindBoardWriteBack();
   _bindBoardHeaderSubmit(editor);
   editor._opfpApi.focus();
   window.scrollTo({ top: 0 });
