@@ -27,7 +27,7 @@
     font-weight: 600;
     letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--text-dim);
+    color: var(--accent);
   }
   .detail-page .axd-head .axd-title {
     margin: 6px 0 0;
