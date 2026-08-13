@@ -136,7 +136,7 @@
     var mode = options.mode === 'mobile' ? 'mobile' : 'pc';
     var id = options.editorId || 'board-editor';
     var initial = options.initial || {};
-    var placeholder = '해당 게시판은 PvP 관련 정보를 공유하는 게시판입니다.\\n• 패치 정보\\n• 캐릭터 운용법\\n• 콤보\\n• 메타\\n• PvP 팁 등을 자유롭게 작성해주세요.\\n욕설 및 비방 게시글은 제재될 수 있습니다.';
+    var placeholder = '해당 게시판은 PvP 관련 정보를 공유하는 게시판입니다.\n• 패치 정보\n• 캐릭터 운용법\n• 콤보\n• 메타\n• PvP 팁 등을 자유롭게 작성해주세요.\n욕설 및 비방 게시글은 제재될 수 있습니다.';
     var prefixOptions = '<option value="" disabled>머리말 선택</option><option value="자유">자유</option><option value="정보">정보</option><option value="질문">질문</option>';
     var prefixRequired = mode === 'mobile' ? ' required' : '';
     var shell = document.createElement('section');
