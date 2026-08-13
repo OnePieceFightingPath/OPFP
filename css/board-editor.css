@@ -45,7 +45,7 @@
 }
 .opfp-editor-fields select { width: 92px; padding: 0 10px; }
 .opfp-editor-fields input { min-width: 0; flex: 1; padding: 0 14px; }
-.opfp-editor-fields input:focus, .opfp-editor-fields select:focus { border-color: var(--opfp-signature); box-shadow: 0 0 0 3px color-mix(in srgb, var(--opfp-signature) 14%, transparent); }
+.opfp-editor-fields input:focus, .opfp-editor-fields select:focus { border-color: var(--border); box-shadow: none; }
 .opfp-editor-body { margin: 0 28px 28px; border: 1px solid var(--border); border-radius: 10px; overflow: visible; position: relative; }
 .opfp-editor-toolbar-wrap { position: relative; z-index: 4; }
 .opfp-toolbar { position: sticky; top: 64px; min-height: var(--opfp-editor-height); display: flex; align-items: center; gap: 2px; padding: 5px 8px; border-bottom: 1px solid var(--border); background: var(--bg-card); overflow-x: auto; }
@@ -233,8 +233,8 @@
 
   .detail-page .opfp-board-editor--pc .opfp-editor-fields select:focus,
   .detail-page .opfp-board-editor--pc .opfp-editor-fields input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: var(--border);
+    box-shadow: none;
   }
 
   .detail-page .opfp-board-editor--pc .opfp-editor-body {
@@ -247,8 +247,8 @@
   }
 
   .detail-page .opfp-board-editor--pc .opfp-editor-body:focus-within {
-    border-color: color-mix(in srgb, var(--accent) 68%, var(--border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+    border-color: var(--border);
+    box-shadow: none;
   }
 
   .detail-page .opfp-board-editor--pc .opfp-editor-toolbar-wrap {
