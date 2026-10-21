@@ -63,8 +63,9 @@ separate from the user-facing reply notification described above.
 by the separate FPPatchStudio admin app, adds the paths needed by notifications,
 FCM tokens, inquiries, character tips, and admin dashboard reads, and uses
 `patchViewers`, `eventViewers`, and `boardViews` for public view counters. It
-removes unused `withdrawalBlocks` and legacy `userTips` rules. The live rules
-are not changed by this ZIP.
+also restores public reads and owner-scoped actions for the legacy `userTips`
+collection so existing user tips can be shown alongside `tips_{charId}` data.
+The live rules are not changed by this ZIP.
 
 From the repository root:
 

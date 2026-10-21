@@ -780,7 +780,7 @@
     var mine = !!(uid && t.uid && t.uid === uid);
     var upOn = !!(uid && (t.upBy || []).indexOf(uid) > -1);
     var downOn = !!(uid && (t.downBy || []).indexOf(uid) > -1);
-    var h = '<li class="tip-row' + (mine ? ' tip-row--own' : '') + '" data-tip="' + UI.esc(t.id) + '">';
+    var h = '<li class="tip-row' + (mine ? ' tip-row--own' : '') + '" data-tip="' + UI.esc(t.id) + '" data-tip-source="' + UI.esc(t.sourceCollection || '') + '">';
     h += tipAvaHTML(t);
     h += '<div class="tip-main">' +
       '<div class="tip-top"><b>' + UI.esc(t.author || '선원') + (mine ? ' (나)' : '') + '</b>' +
@@ -837,7 +837,7 @@
     }
     if (tipCache[c.id]) { paint(tipCache[c.id]); return; }
     UI.skelRows(body, 4);
-    FB.getTips(c.id).then(paint).catch(function () { paint([]); });
+    FB.getTips(c.id, c.name).then(paint).catch(function () { paint([]); });
   }
   function bindTipEvents(c) {
     var body = $('cpBody');
@@ -849,7 +849,8 @@
       b.addEventListener('click', function () {
         if (!uid) return;
         var row = b.closest('.tip-row');
-        FB.voteTip(c.id, row.getAttribute('data-tip'), b.getAttribute('data-vote'), uid).then(function (list) {
+        FB.voteTip(c.id, row.getAttribute('data-tip'), b.getAttribute('data-vote'), uid,
+          row.getAttribute('data-tip-source'), c.name).then(function (list) {
           tipCache[c.id] = list;
           if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
             body.innerHTML = tipsHTML(c, list);
@@ -869,7 +870,7 @@
         var ud = UI.userDoc() || {};
         FB.addTip(c.id, v, u, ud).then(function (res) {
           UI.toast(res.remote ? '꿀팁이 등록되었습니다.' : '임시 저장되었습니다. (서버 연결 실패)', res.remote ? 'ok' : 'err');
-          FB.getTips(c.id).then(function (list) {
+          FB.getTips(c.id, c.name).then(function (list) {
             tipCache[c.id] = list;
             if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
               body.innerHTML = tipsHTML(c, list);
@@ -903,7 +904,8 @@
         main.querySelector('[data-act="save"]').addEventListener('click', function () {
           var v = area.value.trim();
           if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); area.focus(); return; }
-          FB.updateTip(c.id, row.getAttribute('data-tip'), v).then(function (list) {
+          FB.updateTip(c.id, row.getAttribute('data-tip'), v,
+            row.getAttribute('data-tip-source'), c.name).then(function (list) {
             tipCache[c.id] = list;
             UI.toast('팁이 수정되었습니다.', 'ok');
             body.innerHTML = tipsHTML(c, list);
@@ -928,7 +930,7 @@
         m.body.querySelector('#tipDelNo').addEventListener('click', m.close);
         m.body.querySelector('#tipDelYes').addEventListener('click', function () {
           m.close();
-          FB.deleteTip(c.id, tipId).then(function (list) {
+          FB.deleteTip(c.id, tipId, row.getAttribute('data-tip-source'), c.name).then(function (list) {
             tipCache[c.id] = list;
             UI.toast('팁이 삭제되었습니다.', 'ok');
             if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
