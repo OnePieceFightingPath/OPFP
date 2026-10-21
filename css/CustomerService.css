@@ -1,0 +1,73 @@
+/* ============================================================
+   FPP v2 — CustomerService.css
+   ============================================================ */
+.cs-wrap{padding-top:22px;padding-bottom:10px}
+
+.cs-search{position:relative;max-width:680px;margin:0 auto}
+.cs-search > svg,.cs-search > [class^="ic-v2"],.cs-search > [class*=" ic-v2"]{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-3);font-size:20px;line-height:1;pointer-events:none;z-index:1}
+.cs-search input{
+  padding:14px 18px 14px 48px;min-height:56px;border-radius:99px;font-size:15px;
+  background:var(--surface);box-shadow:var(--shadow);
+}
+.cs-search input:focus{border-color:var(--gold)}
+
+.cs-actions{display:flex;gap:10px;justify-content:center;margin:18px 0 22px;flex-wrap:wrap}
+
+/* Border 없는 목록형 Box (§38) */
+.cs-list{max-width:860px;margin:0 auto}
+.cs-rows{list-style:none;margin:0;padding:0}
+.cs-row{
+  display:flex;align-items:center;gap:15px;padding:17px 10px;cursor:pointer;min-height:64px;
+  border-bottom:1px solid var(--line);transition:.2s;position:relative;
+}
+.cs-row:last-child{border-bottom:0}
+.cs-row::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--gold);transform:scaleX(0);transition:transform .3s var(--ease)}
+.cs-row:hover::after{transform:scaleX(1)}
+.cs-row:hover{padding-left:16px}
+.cs-q-ic{
+  flex:none;width:38px;height:38px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-d);font-size:17px;color:var(--gold-ink);background:linear-gradient(150deg,var(--gold-2),var(--gold));
+  transform:skewX(-6deg);transition:transform .25s var(--ease);
+}
+.cs-row:hover .cs-q-ic{transform:skewX(-6deg) scale(1.08)}
+.cs-row-tx{flex:1;min-width:0}
+.cs-row-tx b{display:block;font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-row-tx small{display:flex;gap:7px;align-items:center;font-size:11.5px;color:var(--text-3);margin-top:3px}
+.cs-row-tx .badge{font-style:normal}
+.cs-arrow{color:var(--text-3);font-size:22px;transition:.2s}
+.cs-row:hover .cs-arrow{color:var(--gold);transform:translateX(3px)}
+
+#csDetail{max-width:860px;margin:0 auto}
+#csMeta{font-size:12.5px;color:var(--text-3)}
+
+.my-inquiry-inline-link{display:inline;padding:0;border:0;background:none;color:var(--gold);font:inherit;font-weight:800;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.my-inquiry-list{display:grid;gap:8px}
+.my-q-item{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface-2);color:var(--text);text-align:left;cursor:pointer;transition:border-color .18s,background .18s}
+.my-q-item:hover{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 5%,var(--surface-2))}
+.my-q-item-main{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.my-q-item-main>b{overflow:hidden;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.my-q-item time,.my-q-detail-date{flex:none;font-size:11px;color:var(--text-3)}
+.my-q-item-arrow{flex:none;color:var(--text-3);font-size:21px;line-height:1}
+.my-inquiry-status{display:inline-flex;align-items:center;justify-content:center;flex:none;padding:3px 8px;border:1px solid transparent;border-radius:999px;font-size:10.5px;font-weight:800;white-space:nowrap}
+.my-inquiry-status--received{color:#8a5a00;background:#fff1c2;border-color:#f4d889}
+.my-inquiry-status--waiting{color:#52617a;background:#e9eef5;border-color:#d3dce8}
+.my-inquiry-status--progress{color:#1766a2;background:#dff2ff;border-color:#b9e2ff}
+.my-inquiry-status--completed{color:#1b7a4b;background:#dcf7e8;border-color:#b8e8cd}
+.my-q-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:16px 0 5px}
+.my-q-detail-head h4{min-width:0;margin:0;font-size:16px;overflow-wrap:anywhere}
+.my-q-detail-date{display:block;margin-bottom:16px}
+.my-q-detail-content{padding:13px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface-2)}
+.my-q-detail-content h5{margin:0;font-size:12px;color:var(--text-3)}
+.my-q-detail-content p{margin:8px 0 0;font-size:13px;color:var(--text-2);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.my-q-reply{margin-top:12px;padding:12px 13px;border-left:3px solid var(--gold);border-radius:0 var(--r-sm) var(--r-sm) 0;background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
+.my-q-reply>b{font-size:12px;color:var(--gold-2)}
+.my-q-reply p{margin-top:6px;font-size:13px;color:var(--text-2);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.my-q-reply--pending{border-left-color:var(--line);background:var(--surface-2)}
+.my-q-reply--pending>b{color:var(--text-3)}
+.my-inquiry-back{margin-bottom:2px}
+
+@media(max-width:520px){
+  .my-q-item{align-items:flex-start;flex-wrap:wrap}
+  .my-q-item-main{flex-basis:calc(100% - 30px)}
+  .my-q-item time{margin-left:2px}
+}
