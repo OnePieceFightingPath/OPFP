@@ -220,22 +220,18 @@ service cloud.firestore {
         (resource.data.uid == request.auth.uid || canWriteSection('boards'));
     }
 
-    // 캐릭터 팁 — tips_{charId}와 기존 사용자 팁(userTips)을 읽고 관리
+    // 캐릭터 팁 — userTips 컬렉션만 사용
     match /{tipsCollection}/{tipId} {
-      allow read: if tipsCollection == 'userTips' ||
-        tipsCollection.matches('^tips_[A-Za-z0-9_-]+$');
-      allow create: if (tipsCollection == 'userTips' ||
-        tipsCollection.matches('^tips_[A-Za-z0-9_-]+$')) &&
+      allow read: if tipsCollection == 'userTips';
+      allow create: if tipsCollection == 'userTips' &&
         request.auth != null && request.resource.data.uid == request.auth.uid;
-      allow update: if (tipsCollection == 'userTips' ||
-        tipsCollection.matches('^tips_[A-Za-z0-9_-]+$')) &&
+      allow update: if tipsCollection == 'userTips' &&
         request.auth != null && (
           (resource.data.get('uid', resource.data.get('userId', resource.data.get('authorId', ''))) == request.auth.uid &&
            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])) ||
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upBy', 'downBy'])
         );
-      allow delete: if (tipsCollection == 'userTips' ||
-        tipsCollection.matches('^tips_[A-Za-z0-9_-]+$')) &&
+      allow delete: if tipsCollection == 'userTips' &&
         request.auth != null &&
         resource.data.get('uid', resource.data.get('userId', resource.data.get('authorId', ''))) == request.auth.uid;
     }

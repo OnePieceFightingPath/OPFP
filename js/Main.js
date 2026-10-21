@@ -826,18 +826,43 @@
     var empty = '<p class="cp-empty">아직 등록된 꿀팁이 없습니다.<br>첫 꿀팁의 주인공이 되어보세요!</p>';
     return (sorted.length ? '<ul class="tip-list">' + rows + '</ul>' : empty) + tipWriteHTML(u);
   }
+  function paintTips(c, list) {
+    if (!Array.isArray(list)) return;
+    tipCache[c.id] = list;
+    var body = $('cpBody');
+    if (!body || !CP || String(CP.c.id) !== String(c.id) || CP.tab !== 'tips') return;
+    body.innerHTML = tipsHTML(c, list);
+    bindTipEvents(c);
+  }
+  function voteCachedTip(c, tipId, dir, uid) {
+    return (tipCache[c.id] || []).map(function (t) {
+      if (String(t.id) !== String(tipId)) return t;
+      var up = (t.upBy || []).slice(), down = (t.downBy || []).slice();
+      var hadUp = up.indexOf(uid) > -1, hadDown = down.indexOf(uid) > -1;
+      if (dir === 'up') {
+        if (hadUp) up = up.filter(function (x) { return x !== uid; });
+        else { up.push(uid); down = down.filter(function (x) { return x !== uid; }); }
+      } else {
+        if (hadDown) down = down.filter(function (x) { return x !== uid; });
+        else { down.push(uid); up = up.filter(function (x) { return x !== uid; }); }
+      }
+      return Object.assign({}, t, { upBy: up, downBy: down });
+    });
+  }
   function renderTips(c) {
     var body = $('cpBody');
     if (!body) return;
-    function paint(list) {
-      if (!CP || String(CP.c.id) !== String(c.id) || CP.tab !== 'tips') return; /* 그 사이 탭이 바뀌었으면 무시 */
-      tipCache[c.id] = list;
-      body.innerHTML = tipsHTML(c, list);
-      bindTipEvents(c);
-    }
-    if (tipCache[c.id]) { paint(tipCache[c.id]); return; }
+    if (Array.isArray(tipCache[c.id])) { paintTips(c, tipCache[c.id]); return; }
     UI.skelRows(body, 4);
-    FB.getTips(c.id, c.name).then(paint).catch(function () { paint([]); });
+    FB.getTips(c.id, c.name).then(function (list) {
+      paintTips(c, list);
+    }).catch(function () {
+      if (Array.isArray(tipCache[c.id])) {
+        paintTips(c, tipCache[c.id]);
+      } else if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
+        body.innerHTML = '<p class="cp-empty">캐릭터 팁을 불러오지 못했습니다.<br>잠시 후 다시 시도해 주세요.</p>';
+      }
+    });
   }
   function bindTipEvents(c) {
     var body = $('cpBody');
@@ -849,13 +874,15 @@
       b.addEventListener('click', function () {
         if (!uid) return;
         var row = b.closest('.tip-row');
-        FB.voteTip(c.id, row.getAttribute('data-tip'), b.getAttribute('data-vote'), uid,
-          row.getAttribute('data-tip-source'), c.name).then(function (list) {
-          tipCache[c.id] = list;
-          if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-            body.innerHTML = tipsHTML(c, list);
-            bindTipEvents(c);
-          }
+        var tipId = row.getAttribute('data-tip');
+        var direction = b.getAttribute('data-vote');
+        b.disabled = true;
+        FB.voteTip(c.id, tipId, direction, uid,
+          row.getAttribute('data-tip-source'), c.name).then(function () {
+          paintTips(c, voteCachedTip(c, tipId, direction, uid));
+        }).catch(function () {
+          b.disabled = false;
+          UI.toast('추천을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.', 'err');
         });
       });
     });
@@ -867,16 +894,19 @@
       body.querySelector('#tipSubmit').addEventListener('click', function () {
         var v = ta.value.trim();
         if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); ta.focus(); return; }
+        var submit = body.querySelector('#tipSubmit');
+        submit.disabled = true;
         var ud = UI.userDoc() || {};
-        FB.addTip(c.id, v, u, ud).then(function (res) {
+        FB.addTip(c.id, v, u, ud, c.name).then(function (res) {
           UI.toast(res.remote ? '꿀팁이 등록되었습니다.' : '임시 저장되었습니다. (서버 연결 실패)', res.remote ? 'ok' : 'err');
-          FB.getTips(c.id, c.name).then(function (list) {
-            tipCache[c.id] = list;
-            if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-              body.innerHTML = tipsHTML(c, list);
-              bindTipEvents(c);
-            }
-          });
+          var list = tipCache[c.id] || [];
+          if (!list.some(function (tip) { return String(tip.id) === String(res.tip.id); })) {
+            list = [res.tip].concat(list);
+          }
+          paintTips(c, list);
+        }).catch(function () {
+          submit.disabled = false;
+          UI.toast('팁을 등록하지 못했습니다. 다시 시도해 주세요.', 'err');
         });
       });
     }
@@ -904,12 +934,19 @@
         main.querySelector('[data-act="save"]').addEventListener('click', function () {
           var v = area.value.trim();
           if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); area.focus(); return; }
-          FB.updateTip(c.id, row.getAttribute('data-tip'), v,
-            row.getAttribute('data-tip-source'), c.name).then(function (list) {
-            tipCache[c.id] = list;
+          var save = main.querySelector('[data-act="save"]');
+          var tipId = row.getAttribute('data-tip');
+          save.disabled = true;
+          FB.updateTip(c.id, tipId, v,
+            row.getAttribute('data-tip-source'), c.name).then(function () {
+            var list = (tipCache[c.id] || []).map(function (tip) {
+              return String(tip.id) === String(tipId) ? Object.assign({}, tip, { text: v }) : tip;
+            });
             UI.toast('팁이 수정되었습니다.', 'ok');
-            body.innerHTML = tipsHTML(c, list);
-            bindTipEvents(c);
+            paintTips(c, list);
+          }).catch(function () {
+            save.disabled = false;
+            UI.toast('팁 수정에 실패했습니다. 권한 또는 연결 상태를 확인해 주세요.', 'err');
           });
         });
       });
@@ -930,13 +967,14 @@
         m.body.querySelector('#tipDelNo').addEventListener('click', m.close);
         m.body.querySelector('#tipDelYes').addEventListener('click', function () {
           m.close();
-          FB.deleteTip(c.id, tipId, row.getAttribute('data-tip-source'), c.name).then(function (list) {
-            tipCache[c.id] = list;
+          FB.deleteTip(c.id, tipId, row.getAttribute('data-tip-source'), c.name).then(function () {
+            var list = (tipCache[c.id] || []).filter(function (tip) {
+              return String(tip.id) !== String(tipId);
+            });
             UI.toast('팁이 삭제되었습니다.', 'ok');
-            if (CP && String(CP.c.id) === String(c.id) && CP.tab === 'tips') {
-              body.innerHTML = tipsHTML(c, list);
-              bindTipEvents(c);
-            }
+            paintTips(c, list);
+          }).catch(function () {
+            UI.toast('팁 삭제에 실패했습니다. 권한 또는 연결 상태를 확인해 주세요.', 'err');
           });
         });
       });

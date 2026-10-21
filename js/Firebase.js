@@ -490,13 +490,16 @@
   }
 
   /* ---------- 캐릭터 팁 (작성·투표·수정·삭제 / 로컬 폴백) ---------- */
-  function tipCollectionName(charId) { return 'tips_' + String(charId).replace(/[^\w-]/g, '_'); }
-  function tipCol(charId, sourceCollection) {
-    return col(sourceCollection === 'userTips' ? 'userTips' : tipCollectionName(charId));
-  }
+  var TIP_COLLECTION = 'userTips';
+  function tipCol() { return col(TIP_COLLECTION); }
   function tipLocalKey(charId) { return 'fpp_tips_' + charId; }
   function readLocalTips(charId) {
-    try { return JSON.parse(localStorage.getItem(tipLocalKey(charId)) || '[]'); } catch (e) { return []; }
+    try {
+      var tips = JSON.parse(localStorage.getItem(tipLocalKey(charId)) || '[]');
+      return Array.isArray(tips) ? tips.map(function (tip) {
+        return Object.assign({}, tip, { sourceCollection: TIP_COLLECTION });
+      }) : [];
+    } catch (e) { return []; }
   }
   function writeLocalTips(charId, arr) {
     try { localStorage.setItem(tipLocalKey(charId), JSON.stringify(arr)); } catch (e) { }
@@ -517,7 +520,8 @@
   }
   function sameTipCharacter(value, charId, charName) {
     if (value == null || value === '') return false;
-    if (typeof value === 'object') value = pick(value, 'id', 'charId', 'characterId', 'name');
+    if (typeof value === 'object') value = pick(value, 'id', 'docId', 'charId', 'characterId',
+      'characterID', 'charID', 'no', 'num', 'name', 'title');
     if (value == null || value === '') return false;
     var normalized = String(value).trim().toLowerCase();
     return normalized === String(charId).trim().toLowerCase() ||
@@ -525,58 +529,56 @@
   }
   function legacyTipMatches(d, charId, charName) {
     var characterRef = pick(d, 'charId', 'characterId', 'characterID', 'charID',
-      'targetCharId', 'targetCharacterId', 'char_id', 'character_id', 'character');
+      'targetCharId', 'targetCharacterId', 'char_id', 'character_id', 'character',
+      'characterRef', 'targetCharacter', 'charNo', 'characterNo', 'characterNumber');
     if (sameTipCharacter(characterRef, charId, charName)) return true;
-    var characterName = pick(d, 'characterName', 'charName', 'character_name');
+    var characterName = pick(d, 'characterName', 'charName', 'character_name',
+      'targetCharacterName', 'char_name');
     return sameTipCharacter(characterName, charId, charName);
   }
-  var legacyTipSnapshotPromise = null;
-  function getLegacyTipSnapshot() {
+  var userTipsSnapshotPromise = null;
+  function getUserTipsSnapshot() {
     if (!ready) return Promise.resolve(null);
-    if (!legacyTipSnapshotPromise) {
-      legacyTipSnapshotPromise = col('userTips').get().catch(function () {
-        legacyTipSnapshotPromise = null;
-        return null;
+    if (!userTipsSnapshotPromise) {
+      userTipsSnapshotPromise = tipCol().get().catch(function () {
+        userTipsSnapshotPromise = null;
+        throw new Error('userTips 컬렉션을 불러오지 못했습니다.');
       });
     }
-    return legacyTipSnapshotPromise;
+    return userTipsSnapshotPromise;
   }
-  function invalidateLegacyTipSnapshot(sourceCollection) {
-    if (sourceCollection === 'userTips') legacyTipSnapshotPromise = null;
-  }
+  function invalidateUserTipsSnapshot() { userTipsSnapshotPromise = null; }
   function getTips(charId, charName) {
     var local = readLocalTips(charId);
     if (!ready) return Promise.resolve(local);
-    var currentTips = tipCol(charId).get().then(function (s) {
-      return mapDocs(s, function (d, id) { return mapTip(d, id, tipCollectionName(charId)); });
-    }).catch(function () { return []; });
-    var legacyTips = getLegacyTipSnapshot().then(function (s) {
-      if (!s) return [];
+    return getUserTipsSnapshot().then(function (s) {
       var out = [];
       s.forEach(function (doc) {
         var data = doc.data() || {};
-        if (legacyTipMatches(data, charId, charName)) out.push(mapTip(data, doc.id, 'userTips'));
+        if (legacyTipMatches(data, charId, charName)) out.push(mapTip(data, doc.id, TIP_COLLECTION));
       });
-      return out;
-    }).catch(function () { return []; });
-    return Promise.all([currentTips, legacyTips]).then(function (sources) {
-      var remote = sources[0].concat(sources[1]);
       var ids = {};
-      remote.forEach(function (tip) {
-        ids[(tip.sourceCollection || tipCollectionName(charId)) + ':' + tip.id] = 1;
+      out.forEach(function (tip) {
+        ids[tip.id] = 1;
       });
-      /* 새 컬렉션, 레거시 userTips, 원격에 없는 로컬 임시 팁을 합친다. */
-      return remote.concat(local.filter(function (tip) {
-        var source = tip.sourceCollection || tipCollectionName(charId);
-        return !ids[source + ':' + tip.id];
+      /* userTips와 아직 원격 저장되지 않은 로컬 임시 팁만 표시 */
+      return out.concat(local.filter(function (tip) {
+        return !ids[tip.id];
       }));
-    }).catch(function () { return local; });
+    }).catch(function (error) {
+      if (local.length) return local;
+      throw error;
+    });
   }
-  function addTip(charId, text, user, ud) {
+  function addTip(charId, text, user, ud, charName) {
     var now = new Date();
     var rec = {
       id: 'local_' + now.getTime() + '_' + Math.floor(Math.random() * 1e5),
-      sourceCollection: tipCollectionName(charId),
+      sourceCollection: 'userTips',
+      charId: String(charId),
+      characterId: String(charId),
+      charName: charName || '',
+      characterName: charName || '',
       text: text, uid: user.uid,
       author: (ud && ud.nickname) || user.displayName || '선원',
       avatar: (ud && ud.profileIcon) || '',
@@ -587,64 +589,84 @@
     local.unshift(rec);
     writeLocalTips(charId, local);
     if (!ready) return Promise.resolve({ tip: rec, remote: false });
-    return tipCol(charId, rec.sourceCollection).add({
-      text: text, uid: user.uid, author: rec.author, avatar: rec.avatar,
+    return tipCol().add({
+      text: text, uid: user.uid, charId: String(charId), characterId: String(charId),
+      charName: charName || '', characterName: charName || '',
+      author: rec.author, avatar: rec.avatar,
       date: rec.date, upBy: [], downBy: [],
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(function (ref) {
       /* 원격 등록 성공 — 로컬 임시본 제거 (중복 노출 방지) */
       writeLocalTips(charId, readLocalTips(charId).filter(function (t) { return t.id !== rec.id; }));
       rec.id = ref.id;
+      invalidateUserTipsSnapshot();
       return { tip: rec, remote: true };
     }).catch(function () { return { tip: rec, remote: false }; });
   }
   function updateTip(charId, tipId, text, sourceCollection, charName) {
-    var local = readLocalTips(charId).map(function (t) {
-      return t.id === tipId ? Object.assign({}, t, { text: text }) : t;
-    });
-    writeLocalTips(charId, local);
-    if (!ready || String(tipId).indexOf('local_') === 0) return getTips(charId, charName);
-    return tipCol(charId, sourceCollection).doc(tipId).update({ text: text })
+    if (String(tipId).indexOf('local_') === 0) {
+      var local = readLocalTips(charId).map(function (t) {
+        return String(t.id) === String(tipId) ? Object.assign({}, t, { text: text }) : t;
+      });
+      writeLocalTips(charId, local);
+      return Promise.resolve(true);
+    }
+    if (!ready) return Promise.reject(new Error('Firebase 연결을 사용할 수 없습니다.'));
+    return tipCol().doc(tipId).update({ text: text })
       .then(function () {
-        invalidateLegacyTipSnapshot(sourceCollection);
-        return getTips(charId, charName);
-      }).catch(function () { return getTips(charId, charName); });
+        invalidateUserTipsSnapshot();
+        return true;
+      }, function (error) {
+        invalidateUserTipsSnapshot();
+        throw error;
+      });
   }
   function deleteTip(charId, tipId, sourceCollection, charName) {
-    var local = readLocalTips(charId).filter(function (t) { return t.id !== tipId; });
-    writeLocalTips(charId, local);
-    if (!ready || String(tipId).indexOf('local_') === 0) return getTips(charId, charName);
-    return tipCol(charId, sourceCollection).doc(tipId).delete()
+    if (String(tipId).indexOf('local_') === 0) {
+      writeLocalTips(charId, readLocalTips(charId).filter(function (t) {
+        return String(t.id) !== String(tipId);
+      }));
+      return Promise.resolve(true);
+    }
+    if (!ready) return Promise.reject(new Error('Firebase 연결을 사용할 수 없습니다.'));
+    return tipCol().doc(tipId).delete()
       .then(function () {
-        invalidateLegacyTipSnapshot(sourceCollection);
-        return getTips(charId, charName);
-      }).catch(function () { return getTips(charId, charName); });
+        invalidateUserTipsSnapshot();
+        writeLocalTips(charId, readLocalTips(charId).filter(function (t) {
+          return String(t.id) !== String(tipId);
+        }));
+        return true;
+      }, function (error) {
+        invalidateUserTipsSnapshot();
+        throw error;
+      });
   }
   function voteTip(charId, tipId, dir, uid, sourceCollection, charName) {
-    var local = readLocalTips(charId).map(function (t) {
-      if (t.id !== tipId) return t;
-      var up = (t.upBy || []).slice(), down = (t.downBy || []).slice();
-      var hadUp = up.indexOf(uid) > -1, hadDown = down.indexOf(uid) > -1;
-      if (dir === 'up') {
-        if (hadUp) up = up.filter(function (x) { return x !== uid; });
-        else { up.push(uid); down = down.filter(function (x) { return x !== uid; }); }
-      } else {
-        if (hadDown) down = down.filter(function (x) { return x !== uid; });
-        else { down.push(uid); up = up.filter(function (x) { return x !== uid; }); }
-      }
-      return Object.assign({}, t, { upBy: up, downBy: down });
-    });
-    writeLocalTips(charId, local);
-    var localTip = local.filter(function (x) { return x.id === tipId; })[0];
-    if (localTip || !ready || String(tipId).indexOf('local_') === 0) {
-      return getTips(charId, charName);
+    if (String(tipId).indexOf('local_') === 0) {
+      var local = readLocalTips(charId).map(function (t) {
+        if (String(t.id) !== String(tipId)) return t;
+        var up = (t.upBy || []).slice(), down = (t.downBy || []).slice();
+        var hadUp = up.indexOf(uid) > -1, hadDown = down.indexOf(uid) > -1;
+        if (dir === 'up') {
+          if (hadUp) up = up.filter(function (x) { return x !== uid; });
+          else { up.push(uid); down = down.filter(function (x) { return x !== uid; }); }
+        } else {
+          if (hadDown) down = down.filter(function (x) { return x !== uid; });
+          else { down.push(uid); up = up.filter(function (x) { return x !== uid; }); }
+        }
+        return Object.assign({}, t, { upBy: up, downBy: down });
+      });
+      writeLocalTips(charId, local);
+      return Promise.resolve(true);
     }
-    var ref = tipCol(charId, sourceCollection).doc(tipId);
+    if (!ready) return Promise.reject(new Error('Firebase 연결을 사용할 수 없습니다.'));
+    var ref = tipCol().doc(tipId);
     return db.runTransaction(function (transaction) {
       return transaction.get(ref).then(function (snapshot) {
         if (!snapshot.exists) throw new Error('팁을 찾을 수 없습니다.');
         var data = snapshot.data() || {};
-        var up = tipArray(data.upBy).slice(), down = tipArray(data.downBy).slice();
+        var up = tipArray(pick(data, 'upBy', 'likedBy')).slice();
+        var down = tipArray(pick(data, 'downBy', 'dislikedBy')).slice();
         var hadUp = up.indexOf(uid) > -1, hadDown = down.indexOf(uid) > -1;
         if (dir === 'up') {
           if (hadUp) up = up.filter(function (x) { return x !== uid; });
@@ -656,9 +678,12 @@
         transaction.update(ref, { upBy: up, downBy: down });
       });
     }).then(function () {
-      invalidateLegacyTipSnapshot(sourceCollection);
-      return getTips(charId, charName);
-    }).catch(function () { return getTips(charId, charName); });
+      invalidateUserTipsSnapshot();
+      return true;
+    }, function (error) {
+      invalidateUserTipsSnapshot();
+      throw error;
+    });
   }
 
   /* ---------- 좋아요 ---------- */
