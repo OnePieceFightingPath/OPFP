@@ -511,7 +511,8 @@
       sourceCollection: sourceCollection,
       text: pick(d, 'text', 'content', 'tip', 'tipText', 'userTip', 'message') || '',
       uid: pick(d, 'uid', 'userId', 'authorId') || '',
-      author: pick(d, 'author', 'nickname', 'displayName', 'userName') || '선원',
+      author: pick(d, 'author', 'authorName', 'nickname', 'displayName', 'userName',
+        'writerName', 'creatorName') || '',
       avatar: pick(d, 'avatar', 'profileIcon', 'photoURL', 'photoUrl') || '',
       date: dateKey(pick(d, 'date', 'createdAt', 'timestamp')) || '',
       upBy: tipArray(pick(d, 'upBy', 'likedBy')),
@@ -580,7 +581,8 @@
       charName: charName || '',
       characterName: charName || '',
       text: text, uid: user.uid,
-      author: (ud && ud.nickname) || user.displayName || '선원',
+      author: pick(ud, 'nickname', 'displayName', 'userName', 'authorName', 'name') ||
+        user.displayName || '선원',
       avatar: (ud && ud.profileIcon) || '',
       date: now.toISOString().slice(0, 10),
       createdAt: now.getTime(), upBy: [], downBy: []

@@ -769,21 +769,22 @@
     if (tipScore(t) > 0) return '<span class="tip-best best-rest">BEST</span>';
     return '';
   }
-  function tipAvaHTML(t) {
+  function tipAvaHTML(t, author) {
     if (t.avatar) {
       return '<span class="tip-ava"><span class="tip-ava-imgwrap"><img src="' + UI.esc(UI.avatarOf(t.avatar)) + '" alt="" loading="lazy"></span></span>';
     }
-    var ch = (t.author || '선').charAt(0).toUpperCase();
+    var ch = (author || t.author || '선').charAt(0).toUpperCase();
     return '<span class="tip-ava"><span class="tip-ava-initial">' + UI.esc(ch) + '</span></span>';
   }
-  function tipRowHTML(t, rank, uid) {
+  function tipRowHTML(t, rank, uid, currentNickname) {
     var mine = !!(uid && t.uid && t.uid === uid);
+    var author = (mine && currentNickname) || t.author || '선원';
     var upOn = !!(uid && (t.upBy || []).indexOf(uid) > -1);
     var downOn = !!(uid && (t.downBy || []).indexOf(uid) > -1);
     var h = '<li class="tip-row' + (mine ? ' tip-row--own' : '') + '" data-tip="' + UI.esc(t.id) + '" data-tip-source="' + UI.esc(t.sourceCollection || '') + '">';
-    h += tipAvaHTML(t);
+    h += tipAvaHTML(t, author);
     h += '<div class="tip-main">' +
-      '<div class="tip-top"><b>' + UI.esc(t.author || '선원') + (mine ? ' (나)' : '') + '</b>' +
+      '<div class="tip-top"><b>' + UI.esc(author) + (mine ? ' (나)' : '') + '</b>' +
       '<time>' + UI.esc(UI.fmtDate(t.date)) + '</time>' + tipBestHTML(t, rank) + '</div>' +
       '<p class="tip-txt">' + UI.escBr(t.text || '') + '</p>' +
       '<div class="tip-foot">' +
@@ -812,6 +813,8 @@
   function tipsHTML(c, list) {
     var u = UI.currentUser();
     var uid = u && u.uid;
+    var profile = UI.userDoc() || {};
+    var currentNickname = profile.nickname || profile.displayName || (u && u.displayName) || '';
     /* 점수(추천-비추천) 내림차순 → 같은 점수면 최신순 */
     var sorted = list.slice().sort(function (a, b) {
       var s = tipScore(b) - tipScore(a);
@@ -821,7 +824,7 @@
     var rank = 0;
     var rows = sorted.map(function (t) {
       if (tipScore(t) > 0) rank += 1;
-      return tipRowHTML(t, rank || 99, uid);
+      return tipRowHTML(t, rank || 99, uid, currentNickname);
     }).join('');
     var empty = '<p class="cp-empty">아직 등록된 꿀팁이 없습니다.<br>첫 꿀팁의 주인공이 되어보세요!</p>';
     return (sorted.length ? '<ul class="tip-list">' + rows + '</ul>' : empty) + tipWriteHTML(u);
@@ -896,8 +899,13 @@
         if (!v) { UI.toast('팁 내용을 입력해 주세요.', 'err'); ta.focus(); return; }
         var submit = body.querySelector('#tipSubmit');
         submit.disabled = true;
-        var ud = UI.userDoc() || {};
-        FB.addTip(c.id, v, u, ud, c.name).then(function (res) {
+        var cachedProfile = UI.userDoc() || {};
+        var profileLookup = FB.getUserDoc ? FB.getUserDoc(u.uid) : Promise.resolve(null);
+        Promise.resolve(profileLookup).catch(function () { return null; }).then(function (profile) {
+          var ud = Object.assign({}, cachedProfile, profile || {});
+          if (!ud.nickname && cachedProfile.nickname) ud.nickname = cachedProfile.nickname;
+          return FB.addTip(c.id, v, u, ud, c.name);
+        }).then(function (res) {
           UI.toast(res.remote ? '꿀팁이 등록되었습니다.' : '임시 저장되었습니다. (서버 연결 실패)', res.remote ? 'ok' : 'err');
           var list = tipCache[c.id] || [];
           if (!list.some(function (tip) { return String(tip.id) === String(res.tip.id); })) {
