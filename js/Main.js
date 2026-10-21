@@ -251,12 +251,9 @@
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
-        var releaseLabel = upcomingDays !== null
-          ? '<span class="orb-release-label" aria-hidden="true">출시예정</span>'
-          : '';
         return '<button class="orb" type="button" data-i="' + i + '" aria-label="' + UI.esc(nm) + ' — ' + UI.esc(label) + (upcomingDays !== null ? ', 출시 예정 D-' + upcomingDays : '') + '">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' +
-          orbBadgesHTML(o.types) + releaseLabel + countdown + '</span>' +
+          orbBadgesHTML(o.types) + countdown + '</span>' +
           '<span class="orb-name">' + UI.esc(nm) + '</span></button>';
       }).join('');
       pg.querySelectorAll('.orb').forEach(function (b) {
@@ -1175,13 +1172,14 @@
         var upcomingDays = upcoming ? pvpDaysUntil(g.date) : null;
         var badgeType = upcoming ? 'upcoming' : kind;
         var badgeName = BNAME[badgeType] || BNAME[kind];
-        var badgeText = upcoming ? badgeName : BSYM[badgeType];
+        var badge = upcoming ? '' :
+          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + BSYM[badgeType] + '</span>';
         var countdown = upcomingDays !== null
           ? '<span class="orb-countdown" aria-hidden="true">D-' + upcomingDays + '</span>'
           : '';
         return '<button class="orb' + (upcoming ? ' orb--upcoming' : '') + '" type="button" data-gid="' + UI.esc(g.uid) + '" aria-label="' + UI.esc(name) + ' (' + badgeName + (upcomingDays !== null ? ' D-' + upcomingDays : '') + ')">' +
           '<span class="orb-img"><img src="' + UI.esc(img) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' + countdown +
-          '<span class="orb-badge badge badge--' + badgeType + '" aria-hidden="true">' + badgeText + '</span></span>' +
+          badge + '</span>' +
           '<span class="orb-name">' + UI.esc(name) + '</span></button>';
       }).join('') + '</div>';
       colEl.querySelectorAll('.orb').forEach(function (el) {
@@ -1208,7 +1206,7 @@
           return gr.items.map(function (it) { return '<li><small>' + UI.escBr(it.text || '') + '</small></li>'; }).join('');
         }).join('') + '</ul>';
       var heading = k === 'upcoming'
-        ? '<span class="badge badge--upcoming">' + BNAME[k] + '</span>'
+        ? '<span class="orb-badge badge badge--upcoming">' + BNAME[k] + '</span>'
         : '<span class="badge badge--' + k + '">' + BSYM[k] + '</span> ' + BNAME[k];
       return '<div class="pvp-sec pvp-sec--' + k + '"><h4>' + heading + '</h4>' + body + '</div>';
     }).join('');

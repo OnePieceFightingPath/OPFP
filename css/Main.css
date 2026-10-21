@@ -57,12 +57,6 @@
   font-family:var(--font-d);font-size:clamp(14px,2vw,19px);font-weight:900;letter-spacing:.2px;
   text-shadow:0 2px 6px rgba(0,0,0,.65);pointer-events:none;
 }
-.orb-release-label{
-  position:absolute;top:-8px;left:50%;z-index:5;transform:translateX(-50%);
-  padding:2px 6px;border:1px solid color-mix(in srgb,var(--gold) 55%,transparent);
-  border-radius:999px;background:var(--surface);color:var(--gold);
-  font-size:9px;font-weight:900;white-space:nowrap;pointer-events:none;
-}
 /* 여러 타입 공존 시 — 좌측 하단 · 중앙 하단 · 우측 하단에 반쯤 걸쳐 노출 */
 .orb-b--l{left:0;right:auto;transform:translateX(-42%)}
 .orb-b--c{left:50%;right:auto;transform:translateX(-50%)}
@@ -408,7 +402,7 @@
 .pvp-sec--nerf h4::before{background:var(--red)}
 .pvp-sec--fix h4::before{background:#d2a679}
 .pvp-sec--upcoming h4::before{background:var(--gold)}
-.pvp-sec .badge{position:static;font-size:11px;padding:3px 9px}
+.pvp-sec .badge{position:static;font-size:11px;padding:3px 9px;box-shadow:none}
 .pvp-list{list-style:none;display:flex;flex-direction:column;gap:8px}
 .pvp-list li{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px}
 .pvp-list li small{font-size:12.5px;color:var(--text-2);line-height:1.65}
