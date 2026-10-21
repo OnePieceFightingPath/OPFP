@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FPP v2</title>
+  <link rel="icon" type="image/png" href="img/logo-light.png" />
+  <script>
+    var settingsRoute = /^#setting(?:-|$)/i.test(location.hash);
+    location.replace((settingsRoute ? 'ko/Settings.html' : 'ko/Main.html') + location.search + location.hash);
+  </script>
+</head>
+<body>
+  <p>FPP v2로 이동 중입니다…</p>
+</body>
+</html>

@@ -1,0 +1,292 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ★ 관리자 이메일 단일 출처 — 여기만 수정하면 admin.js 도 자동 반영됩니다.
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email in [
+          'gichan1005kim@gmail.com',
+          'gimbaein7@gmail.com',
+          'kyg12555@gmail.com',
+          'skadlstj9081@gmail.com',
+          'brawnstars201596@gmail.com',
+        ];
+    }
+
+    function isSuperAdmin() {
+      return isAdmin() &&
+        request.auth.token.email == 'gichan1005kim@gmail.com';
+    }
+
+    // 일반 관리자의 sectionPerms 기반 쓰기 권한 확인
+    // - adminPermissions 문서가 없으면 기존 동작 유지 (전체 허용)
+    // - canManageContent == false 이면 거부
+    // - sectionPerms[sectionKey] 가 있으면 operation별로 검증
+    function canWriteSection(sectionKey) {
+      // email 클레임 미존재 시(익명 인증 등) 즉시 거부
+      let email = request.auth.token.email;
+      let permRef = /databases/$(database)/documents/adminPermissions/$(email);
+      let hasPerm = exists(permRef);
+      let permData = hasPerm ? get(permRef).data : {};
+      let canManage = !hasPerm || permData.get('canManageContent', true) != false;
+      let sp = canManage && hasPerm && permData.get('sectionPerms', null) != null
+                 ? permData.sectionPerms : null;
+      let secPerm = sp != null && sp.get(sectionKey, null) != null
+                      ? sp[sectionKey] : null;
+      let opOk = secPerm == null || (
+        (request.method == 'create' && secPerm.get('add', true) == true) ||
+        (request.method == 'update' && (
+          secPerm.get('edit', true) == true ||
+          secPerm.get('publish', true) == true
+        )) ||
+        (request.method == 'delete' && secPerm.get('delete', true) == true)
+      );
+      return email != null && (isSuperAdmin() || (isAdmin() && canManage && opOk));
+    }
+
+    function canManageUsers() {
+      let email = request.auth != null ? request.auth.token.email : '';
+      let permRef = /databases/$(database)/documents/adminPermissions/$(email);
+      return isSuperAdmin() ||
+        (isAdmin() && exists(permRef) &&
+         get(permRef).data.get('canManageUsers', false) == true);
+    }
+
+    match /characters/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('characters');
+    }
+    match /pvpPatch/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('pvpPatch');
+    }
+    match /patchNotes/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('patchNotes');
+    }
+    match /banners/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('banners');
+    }
+    match /eventBanners/{docId} {
+      // 공개 사이트는 banners 컬렉션만 읽고, eventBanners는 관리자에서만 조회
+      allow read: if isAdmin();
+      allow write: if canWriteSection('events');
+    }
+    match /publishMeta/{docId} {
+      // 공개 페이지에서 필요한 커뮤니티 공개 설정만 노출
+      allow read: if docId == 'communityVisibility' || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /supportCharacters/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('supportCharacters');
+    }
+    match /adminMeta/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 사용자 프로필
+    match /users/{uid} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == uid || isAdmin());
+      // 이메일/비밀번호 가입자는 인증 완료 후에만 쓰기 허용 (Google 로그인은 항상 허용)
+      allow create: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.data.uid == uid &&
+        request.resource.data.keys().hasOnly([
+          'uid', 'email', 'nickname', 'profileIcon', 'createdAt',
+          'settings', 'favChars', 'favSupports', 'counts'
+        ]) &&
+        (request.auth.token.firebase.sign_in_provider != 'password' ||
+         request.auth.token.email_verified == true);
+      // 사용자에게는 프로필/설정만 허용; 계정 식별자와 관리자 쓰기 차단 필드는 보호
+      allow update: if request.auth != null &&
+        (request.auth.token.firebase.sign_in_provider != 'password' ||
+         request.auth.token.email_verified == true) &&
+        (
+          (request.auth.uid == uid &&
+           !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['uid', 'email', 'createdAt', 'canWrite'])) ||
+          (canManageUsers() &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['canWrite']))
+        );
+    }
+
+    // 앱 내 알림 — Cloud Functions만 생성/삭제, 사용자는 본인 알림만 읽고 읽음 처리
+    match /users/{uid}/notifications/{notificationId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'isRead']) &&
+        request.resource.data.read == true &&
+        request.resource.data.isRead == true;
+      allow create, delete: if false;
+    }
+
+    // FCM 토큰 — 사용자는 자신의 기기 토큰만 관리할 수 있음
+    match /users/{uid}/fcmTokens/{deviceId} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null &&
+        request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['token', 'updatedAt']) &&
+        request.resource.data.token is string &&
+        request.resource.data.token.size() > 0 &&
+        request.resource.data.updatedAt is timestamp;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // 공지사항 — 공개 읽기, 권한이 있는 관리자만 쓰기
+    match /notices/{docId} {
+      allow read: if true;
+      allow write: if canWriteSection('notices');
+    }
+
+    // 이벤트 — 공개 읽기, 관리자 쓰기. 로그인 사용자는 댓글 수만 갱신 가능
+    match /events/{docId} {
+      allow read: if true;
+      allow create, delete: if canWriteSection('events');
+      allow update: if canWriteSection('events') ||
+        (request.auth != null &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']));
+    }
+
+    // 조회수 집계 — 익명 방문자도 총계와 방문자 해시를 기록할 수 있음
+    match /patchViews/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /patchViewers/{docId} {
+      allow read: if true;
+      allow create: if true;
+    }
+    match /eventViews/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /eventViewers/{docId} {
+      allow read: if true;
+      allow create: if true;
+    }
+    match /boardViews/{docId} {
+      allow read, write: if true;
+    }
+    match /boardViewers/{docId} {
+      allow read: if true;
+      allow create: if true;
+    }
+
+    // 게시판 댓글
+    match /boardComments/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid &&
+        (!isAdmin() || canWriteSection('boards'));
+      allow update: if request.auth != null && (
+        (resource.data.uid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'dislikedBy'])
+      );
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
+    // 이벤트 댓글
+    match /eventComments/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if request.auth != null && (
+        (resource.data.uid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'editedAt'])) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'dislikedBy'])
+      );
+    }
+
+    // 게시글 — 공개 읽기, 로그인 사용자 작성/수정/삭제/좋아요
+    match /boards/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update: if request.auth != null && (
+        canWriteSection('boards') ||
+        (resource.data.uid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['title', 'text', 'content', 'prefix', 'category', 'editedAt', 'updatedAt', 'images'])) ||
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likedBy', 'dislikedBy', 'likeCount', 'commentCount'])
+      );
+      allow delete: if request.auth != null &&
+        (resource.data.uid == request.auth.uid || canWriteSection('boards'));
+    }
+
+    // 캐릭터 팁 — 현재 프런트엔드는 tips_{charId} 컬렉션을 사용
+    match /{tipsCollection}/{tipId} {
+      allow read: if tipsCollection.matches('^tips_[A-Za-z0-9_-]+$');
+      allow create: if tipsCollection.matches('^tips_[A-Za-z0-9_-]+$') &&
+        request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update: if tipsCollection.matches('^tips_[A-Za-z0-9_-]+$') &&
+        request.auth != null && (
+          (resource.data.uid == request.auth.uid &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])) ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upBy', 'downBy'])
+        );
+      allow delete: if tipsCollection.matches('^tips_[A-Za-z0-9_-]+$') &&
+        request.auth != null &&
+        resource.data.uid == request.auth.uid;
+    }
+
+    // 좋아요
+    match /likes/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 사용자 고객센터 문의 — 생성은 본인만, 열람은 본인과 관리자
+    match /inquiries/{docId} {
+      allow read: if isAdmin() ||
+        (request.auth != null && resource.data.uid == request.auth.uid);
+      allow create: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid;
+      allow update: if canWriteSection('support') &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'reply', 'replyAdminNickname', 'repliedAt', 'updatedAt']) &&
+        request.resource.data.status in ['접수완료', '문의대기', '진행중', '완료됨'] &&
+        (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reply']) ||
+          request.resource.data.status == '완료됨'
+        ) &&
+        (
+          request.resource.data.status != '완료됨' ||
+          ('reply' in request.resource.data &&
+           request.resource.data.reply is string &&
+           request.resource.data.reply.size() > 0 &&
+           request.resource.data.reply.size() <= 10000 &&
+           'replyAdminNickname' in request.resource.data &&
+           request.resource.data.replyAdminNickname is string &&
+           request.resource.data.replyAdminNickname.size() > 0 &&
+           request.resource.data.replyAdminNickname.size() <= 60)
+        );
+      allow delete: if false;
+    }
+
+    // 별도 고객센터 앱의 문의 — 관리자 대시보드 읽기 전용
+    match /supportInquiries/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // 관리자 대시보드 통계 — 서버에서 쓰고 관리자만 읽음
+    match /visitorStats/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // 관리자 권한
+    match /adminPermissions/{docId} {
+      allow read: if isSuperAdmin() ||
+        (isAdmin() && request.auth.token.email == docId);
+      allow write: if isSuperAdmin();
+    }
+  }
+}
