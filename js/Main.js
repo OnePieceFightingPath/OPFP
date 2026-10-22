@@ -259,7 +259,9 @@
       pg.querySelectorAll('.orb').forEach(function (b) {
         b.addEventListener('click', function () {
           var o = orbs[Number(b.getAttribute('data-i'))];
-          route('pvp');
+          /* 홈에서 화면만 전환하면 #home 해시가 남아 홈 탭을 다시 눌러도 hashchange가 발생하지 않음 */
+          if (location.hash === '#pvp') route('pvp');
+          else location.hash = '#pvp';
           openPvpPatchDetail(o.groups[0]);
         });
       });
