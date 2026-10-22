@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="FPP" />
 <link rel="apple-touch-icon" href="img/pwa-icon-180.png" />
 <link rel="icon" type="image/png" href="img/logo-light.png" />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
 <script>
 /* 테마 저장값(JSON 문자열)을 파싱해 정규화 — 따옴표 포함 값이 data-theme에 들어가 CSS 변수가 늦게 적용되던 문제 수정 */
 (function(){try{var t=localStorage.getItem('fpp_theme');if(t){try{t=JSON.parse(t);}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}}catch(e){}})();
@@ -26,11 +27,11 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
 .page-veil.off{opacity:0}
 @keyframes pageVeilFail{to{opacity:0;visibility:hidden}}
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
-<script src="js/sdk.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script defer src="js/sdk.js"></script>
 <script>
 /* 에셋 로더 — 루트/서브폴더 배포 모두 대응 (상대경로 우선 → 절대경로 재시도) */
 (function () {
@@ -66,9 +67,9 @@ html[data-theme="light"] .page-veil{background:#eef3f8}
     };
     document.body.appendChild(s);
   }
-  function cssChain(i) { if (i >= CSS.length) return; loadCSS(B + CSS[i], function () { cssChain(i + 1); }); }
+  function loadStyles() { CSS.forEach(function (path) { loadCSS(B + path, function () {}); }); }
   function jsChain(i) { if (i >= JS.length) return; loadJS(B + JS[i], function () { jsChain(i + 1); }); }
-  cssChain(0);
+  loadStyles();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { jsChain(0); });
   else jsChain(0);
 })();
