@@ -401,6 +401,82 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   border-left:7px solid currentColor;border-radius:0;background:transparent;box-shadow:none;
 }
 
+/* 홈 메인 배너 — Store hero 카드 캐러셀 */
+.banner--home.store-hero{height:clamp(210px,36vw,276px);overflow:hidden}
+.banner--home.store-hero::after{background:none}
+.banner--home.store-hero .banner-media{overflow:visible}
+.store-hero__track{
+  position:absolute;top:0;left:50%;display:flex;align-items:stretch;gap:20px;height:100%;
+  width:max-content;cursor:grab;touch-action:pan-y;will-change:transform;
+}
+.store-hero__track:active{cursor:grabbing}
+.store-hero__card{
+  position:relative;isolation:isolate;display:block;flex:0 0 min(84vw,644px);height:100%;
+  overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:24px;
+  background:linear-gradient(135deg,#152b43,#0a1626);color:#fff;
+}
+.store-hero__card::after{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(3,10,18,.78),rgba(3,10,18,.32) 52%,rgba(3,10,18,.04) 100%),
+    linear-gradient(0deg,rgba(3,10,18,.32),transparent 58%);
+}
+.store-hero__card.noimg{
+  background:radial-gradient(900px 400px at 80% 18%,rgba(86,169,230,.28),transparent 62%),
+    radial-gradient(760px 420px at 10% 92%,rgba(245,185,66,.2),transparent 60%),linear-gradient(115deg,#0b2440,#123a5e 55%,#0a1f38);
+}
+.store-hero__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;pointer-events:none}
+.store-hero__text{
+  position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:center;width:min(74%,420px);height:100%;padding:32px 0 32px 48px;color:#fff;
+}
+.store-hero__title{
+  display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  margin:0;font-size:clamp(22px,3.2vw,30px);font-weight:800;line-height:1.28;letter-spacing:-.04em;
+  text-shadow:0 2px 12px rgba(0,0,0,.36);
+}
+.store-hero__desc{
+  display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  margin:8px 0 0;font-size:14px;font-weight:500;line-height:1.65;color:rgba(255,255,255,.82);
+  text-shadow:0 1px 8px rgba(0,0,0,.45);
+}
+.store-hero__arrow{
+  position:absolute;top:50%;left:50%;z-index:5;display:grid;place-items:center;
+  width:36px;height:36px;border:1px solid rgba(255,255,255,.16);border-radius:50%;
+  background:rgba(6,8,12,.62);color:#fff;cursor:pointer;backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);transition:background .18s ease,transform .18s ease;
+}
+.store-hero__arrow i{font-size:20px}
+.store-hero__arrow:hover{background:rgba(6,8,12,.82);transform:scale(1.06)}
+.store-hero__arrow--prev{left:calc(50% - var(--store-hero-card-half,42vw) - 18px);transform:translateY(-50%)}
+.store-hero__arrow--prev:hover{transform:translateY(-50%) scale(1.06)}
+.store-hero__arrow--next{left:calc(50% + var(--store-hero-card-half,42vw) - 18px);transform:translateY(-50%)}
+.store-hero__arrow--next:hover{transform:translateY(-50%) scale(1.06)}
+.store-hero__pager{
+  position:absolute;right:calc(50% - var(--store-hero-card-half,42vw) + 16px);bottom:16px;z-index:5;
+  display:flex;align-items:center;gap:6px;min-width:76px;height:26px;padding:0 10px;
+  overflow:hidden;border:0;border-radius:999px;background:rgba(6,8,12,.68);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);
+  color:#fff;cursor:pointer;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.store-hero__pager:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.store-hero__pager-border{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.store-hero__pager-track{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.store-hero__pager-path{
+  fill:none;stroke:rgba(255,255,255,.98);stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke;
+}
+.store-hero__count,.store-hero__pager i{position:relative;z-index:1}
+.store-hero__count{min-width:32px;color:#fff;font:700 12px/1 system-ui,sans-serif;text-align:center;white-space:nowrap}
+.store-hero__pager i{font-size:13px}
+@media(max-width:767px){
+  .banner--home.store-hero{height:clamp(210px,58vw,250px)}
+  .store-hero__card{flex-basis:84vw;border-radius:18px}
+  .store-hero__text{width:82%;padding:22px 20px}
+  .store-hero__title{font-size:clamp(21px,6vw,28px)}
+  .store-hero__desc{font-size:12px}
+  .store-hero__arrow{display:none}
+  .store-hero__pager{right:calc(50% - var(--store-hero-card-half,42vw) + 12px);bottom:12px}
+}
+
 /* ---------- 배지 ---------- */
 .badge{
   display:inline-flex;align-items:center;gap:5px;flex:none;

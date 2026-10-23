@@ -1483,16 +1483,288 @@ window.UI = (function () {
     event: { image: 'https://image.qwenlm.ai/generated-images/5e736e5b-ebea-4077-9479-ff5ee9aeae09/_result.png', title: '이벤트', tag: 'EVENTS' },
     cs: { image: 'https://image.qwenlm.ai/generated-images/1f2f41ad-4373-4c23-a185-5a2b8a6bd506/_result.png', title: '고객센터', tag: 'HELP CENTER' }
   };
+  function renderHomeHero(mediaEl, parent, list, fallbackTitle) {
+    var items = (list || []).map(function (b) {
+      var link = String(b.link || '').trim();
+      if (/^\s*(?:javascript|data|vbscript):/i.test(link)) link = '';
+      return {
+        image: b.image || b.imageUrl || b.imageURL || b.src || b.url || '',
+        title: b.title || fallbackTitle || '',
+        desc: b.tag || b.subtitle || '',
+        link: link
+      };
+    });
+    if (!items.length && fallbackTitle) items.push({ image: '', title: fallbackTitle, desc: '', link: '' });
+    if (!items.length) { mediaEl.innerHTML = ''; return; }
+
+    parent.classList.add('store-hero');
+    parent.setAttribute('aria-roledescription', 'carousel');
+    parent.setAttribute('aria-label', '메인 배너');
+
+    var count = items.length;
+    var loop = count > 1 ? items.concat(items, items) : items.slice();
+    var pos = count > 1 ? count : 0;
+    var cardsHTML = loop.map(function (b, i) {
+      var index = i % count;
+      var title = String(b.title || '');
+      var classes = 'store-hero__card' + (!b.image ? ' noimg' : '');
+      return '<article class="' + classes + '" data-index="' + index + '" data-link="' + (b.link ? '1' : '0') + '"' +
+        ' role="' + (b.link ? 'link' : 'group') + '" tabindex="-1" aria-hidden="' + (i !== pos) + '"' +
+        ' aria-label="' + esc(title) + '">' +
+        (b.image ? '<img class="store-hero__img" src="' + esc(b.image) + '" alt="" draggable="false" loading="' + (i === pos ? 'eager' : 'lazy') + '" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'noimg\')">' : '') +
+        '<div class="store-hero__text"><h2 class="store-hero__title">' + escBr(title) + '</h2>' +
+        (b.desc ? '<p class="store-hero__desc">' + escBr(b.desc) + '</p>' : '') +
+        '</div></article>';
+    }).join('');
+    mediaEl.innerHTML = '<div class="store-hero__track">' + cardsHTML + '</div>';
+    var track = mediaEl.querySelector('.store-hero__track');
+    var cards = Array.prototype.slice.call(track.children);
+    var previous = null, next = null;
+    if (count > 1) {
+      previous = document.createElement('button');
+      previous.className = 'store-hero__arrow store-hero__arrow--prev';
+      previous.type = 'button';
+      previous.setAttribute('aria-label', '이전 배너');
+      previous.innerHTML = '<i class="ic-v2-control-arrow-left-line" aria-hidden="true"></i>';
+      next = document.createElement('button');
+      next.className = 'store-hero__arrow store-hero__arrow--next';
+      next.type = 'button';
+      next.setAttribute('aria-label', '다음 배너');
+      next.innerHTML = '<i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i>';
+      parent.appendChild(previous);
+      parent.appendChild(next);
+    }
+
+    var pager = null, countEl = null, playIcon = null, progressPath = null, progressLength = 0;
+    if (count > 1) {
+      pager = document.createElement('button');
+      pager.className = 'store-hero__pager';
+      pager.type = 'button';
+      pager.setAttribute('aria-label', '자동 배너 재생 일시정지');
+      pager.setAttribute('aria-pressed', 'false');
+      pager.innerHTML =
+        '<svg class="store-hero__pager-border" viewBox="0 0 76 26" preserveAspectRatio="none" aria-hidden="true">' +
+        '<rect class="store-hero__pager-track" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
+        '<rect class="store-hero__pager-path" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
+        '</svg><span class="store-hero__count" aria-live="polite"></span>' +
+        '<i class="ic-v2-media-av-pause-fill" aria-hidden="true"></i>';
+      parent.appendChild(pager);
+      countEl = pager.querySelector('.store-hero__count');
+      playIcon = pager.querySelector('i');
+      progressPath = pager.querySelector('.store-hero__pager-path');
+    }
+
+    var delay = 4000, transitionMs = 400;
+    var playing = count > 1, elapsed = 0, lastFrame = null, frameId = null;
+    var dragging = false, dragStart = 0, dragX = 0, pointerId = null, suppressClick = false;
+    var animate = false, resizeObserver = null;
+    function currentIndex() { return ((pos % count) + count) % count; }
+    function measurePager() {
+      if (!pager) return;
+      var width = Math.max(76, Math.round(pager.getBoundingClientRect().width * 10) / 10);
+      pager.querySelector('.store-hero__pager-border').setAttribute('viewBox', '0 0 ' + width + ' 26');
+      var track = pager.querySelector('.store-hero__pager-track');
+      [track, progressPath].forEach(function (rect) { rect.setAttribute('width', width - 3); });
+      progressLength = progressPath.getTotalLength ? progressPath.getTotalLength() : (width * 2 + 24);
+      progressPath.style.strokeDasharray = progressLength + ' ' + progressLength;
+      updateProgress();
+    }
+    function updateProgress() {
+      if (!progressPath || !progressLength) return;
+      var remaining = 1 - Math.min(1, elapsed / delay);
+      progressPath.style.strokeDashoffset = String((progressLength * remaining).toFixed(2));
+    }
+    function updateTransform() {
+      var cardWidth = cards[0] ? cards[0].getBoundingClientRect().width : 0;
+      if (!cardWidth) cardWidth = Math.min(mediaEl.clientWidth * 0.84, 644);
+      var styles = window.getComputedStyle(track);
+      var gap = parseFloat(styles.columnGap || styles.gap) || 20;
+      parent.style.setProperty('--store-hero-card-half', (cardWidth / 2) + 'px');
+      track.style.transition = animate && !dragging ? 'transform ' + transitionMs + 'ms ease' : 'none';
+      track.style.transform = 'translate3d(' + (-(cardWidth / 2) - pos * (cardWidth + gap) + dragX) + 'px,0,0)';
+    }
+    function syncSlides() {
+      cards.forEach(function (card, i) {
+        var isActive = i === pos;
+        card.setAttribute('aria-hidden', String(!isActive));
+        card.tabIndex = isActive && card.getAttribute('data-link') === '1' ? 0 : -1;
+      });
+      if (countEl) countEl.textContent = (currentIndex() + 1) + '/' + count;
+      updateTransform();
+    }
+    function progressTick(timestamp) {
+      if (!playing) { frameId = null; return; }
+      if (lastFrame !== null) elapsed += timestamp - lastFrame;
+      lastFrame = timestamp;
+      if (elapsed >= delay) {
+        elapsed = 0;
+        goBy(1, false);
+      }
+      updateProgress();
+      frameId = window.requestAnimationFrame(progressTick);
+    }
+    function startProgress() {
+      if (!playing || count < 2 || frameId !== null) return;
+      frameId = window.requestAnimationFrame(progressTick);
+    }
+    function restartProgress() {
+      elapsed = 0;
+      lastFrame = null;
+      updateProgress();
+      startProgress();
+    }
+    function goBy(delta, resetTimer) {
+      if (count < 2) return;
+      if (resetTimer) restartProgress();
+      var move = function () {
+        animate = true;
+        pos += delta;
+        syncSlides();
+      };
+      if (pos < count || pos >= count * 2) {
+        animate = false;
+        pos = count + currentIndex();
+        syncSlides();
+        window.requestAnimationFrame(function () { window.requestAnimationFrame(move); });
+      } else {
+        move();
+      }
+    }
+    function onTransitionEnd(event) {
+      if (event.target !== track || event.propertyName !== 'transform') return;
+      if (pos < count || pos >= count * 2) {
+        animate = false;
+        pos = count + currentIndex();
+        syncSlides();
+        window.requestAnimationFrame(function () {
+          window.requestAnimationFrame(function () { animate = true; });
+        });
+      }
+    }
+    function onCardClick(event) {
+      if (suppressClick) {
+        event.preventDefault();
+        suppressClick = false;
+        return;
+      }
+      if (event.currentTarget.getAttribute('data-link') !== '1') return;
+      var item = items[Number(event.currentTarget.getAttribute('data-index'))];
+      if (item && item.link) location.href = item.link;
+    }
+    function onCardKeydown(event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (event.currentTarget.getAttribute('data-link') !== '1') return;
+      event.preventDefault();
+      var item = items[Number(event.currentTarget.getAttribute('data-index'))];
+      if (item && item.link) location.href = item.link;
+    }
+    function onPointerMove(event) {
+      if (!dragging || (pointerId != null && event.pointerId !== pointerId)) return;
+      dragX = event.clientX - dragStart;
+      if (Math.abs(dragX) > 6) suppressClick = true;
+      updateTransform();
+    }
+    function onPointerEnd(event) {
+      if (!dragging || (pointerId != null && event.pointerId !== pointerId)) return;
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerEnd);
+      document.removeEventListener('pointercancel', onPointerEnd);
+      var dx = dragX;
+      dragging = false;
+      pointerId = null;
+      dragX = 0;
+      var threshold = (cards[0] ? cards[0].getBoundingClientRect().width : mediaEl.clientWidth) / 6;
+      if (Math.abs(dx) > 6) {
+        suppressClick = true;
+        window.setTimeout(function () { suppressClick = false; }, 0);
+      } else {
+        suppressClick = false;
+      }
+      if (Math.abs(dx) > threshold) {
+        goBy(dx < 0 ? 1 : -1, true);
+      } else {
+        updateTransform();
+        restartProgress();
+      }
+    }
+    function onPointerDown(event) {
+      if (count < 2 || (event.button != null && event.button !== 0)) return;
+      dragging = true;
+      dragStart = event.clientX;
+      dragX = 0;
+      pointerId = event.pointerId;
+      animate = false;
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      frameId = null;
+      lastFrame = null;
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerEnd);
+      document.addEventListener('pointercancel', onPointerEnd);
+      updateTransform();
+    }
+    function togglePlay() {
+      playing = !playing;
+      pager.setAttribute('aria-pressed', String(!playing));
+      pager.setAttribute('aria-label', playing ? '자동 배너 재생 일시정지' : '자동 배너 재생');
+      playIcon.className = playing ? 'ic-v2-media-av-pause-fill' : 'ic-v2-media-av-play-fill';
+      pager.classList.toggle('is-paused', !playing);
+      if (playing) restartProgress();
+      else {
+        if (frameId !== null) window.cancelAnimationFrame(frameId);
+        frameId = null;
+        elapsed = 0;
+        lastFrame = null;
+        updateProgress();
+      }
+    }
+    function onResize() { updateTransform(); measurePager(); }
+
+    cards.forEach(function (card) {
+      card.addEventListener('click', onCardClick);
+      card.addEventListener('keydown', onCardKeydown);
+    });
+    track.addEventListener('pointerdown', onPointerDown);
+    track.addEventListener('transitionend', onTransitionEnd);
+    if (previous) previous.addEventListener('click', function () { goBy(-1, true); });
+    if (next) next.addEventListener('click', function () { goBy(1, true); });
+    if (pager) pager.addEventListener('click', togglePlay);
+    syncSlides();
+    if (pager) { measurePager(); updateProgress(); }
+    window.addEventListener('resize', onResize);
+    if (window.ResizeObserver) {
+      resizeObserver = new window.ResizeObserver(onResize);
+      resizeObserver.observe(mediaEl);
+    }
+    window.requestAnimationFrame(function () { animate = true; updateTransform(); });
+    if (playing) startProgress();
+
+    parent.__fppHomeHeroCleanup = function () {
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerEnd);
+      document.removeEventListener('pointercancel', onPointerEnd);
+      window.removeEventListener('resize', onResize);
+      if (resizeObserver) resizeObserver.disconnect();
+      parent.style.removeProperty('--store-hero-card-half');
+      parent.__fppHomeHeroCleanup = null;
+    };
+  }
   function fillBanner(mediaEl, fallbackTitle, items) {
     if (!mediaEl) return;
     var parent = mediaEl.parentElement;
+    if (parent.__fppHomeHeroCleanup) parent.__fppHomeHeroCleanup();
     var oldTag = parent.querySelector('.banner-tag');
     if (oldTag) oldTag.remove();
     var oldDots = parent.querySelector('.banner-dots');
     if (oldDots) oldDots.remove();
+    parent.querySelectorAll('.store-hero__arrow,.store-hero__pager').forEach(function (el) { el.remove(); });
     var list = (items || []).filter(function (b) {
       return b && (b.image || b.imageUrl || b.imageURL || b.src || b.url || b.title || fallbackTitle);
     });
+    if (parent.classList.contains('banner--home')) {
+      renderHomeHero(mediaEl, parent, list, fallbackTitle);
+      return;
+    }
     if (!list.length) {
       mediaEl.innerHTML = '';
       if (fallbackTitle) {
