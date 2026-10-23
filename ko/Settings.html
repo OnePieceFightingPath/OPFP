@@ -12,6 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="FPP" />
   <link rel="apple-touch-icon" href="img/pwa-icon-180.png" />
   <link rel="icon" type="image/png" href="img/logo-light.png" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <script>
     (function () {
       try {
@@ -32,10 +33,10 @@
       if (!mobile) window.location.replace('ko/Main.html#home');
     })();
   </script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/Settings.css" />
 </head>
@@ -306,8 +307,8 @@
       </section>
     </div>
   </main>
-  <script src="js/Firebase.js"></script>
-  <script src="js/content-sanitizer.js"></script>
-  <script src="js/Settings.js"></script>
+  <script defer src="js/Firebase.js"></script>
+  <script defer src="js/content-sanitizer.js"></script>
+  <script defer src="js/Settings.js"></script>
 </body>
 </html>
