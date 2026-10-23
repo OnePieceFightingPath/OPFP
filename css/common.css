@@ -460,9 +460,16 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 }
 .store-hero__pager:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .store-hero__pager-border{position:absolute;inset:0;z-index:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.store-hero__pager-track{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .store-hero__pager-path{
-  fill:none;stroke:rgba(255,255,255,.98);stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke;
+  fill:none;stroke:rgb(255,255,255);stroke-width:3px;stroke-dasharray:87.47px;
+  stroke-dashoffset:87.47px;stroke-linecap:round;vector-effect:non-scaling-stroke;
+}
+.store-hero__pager.is-animating .store-hero__pager-path{animation:store-hero-border-draw 4.2s linear forwards}
+.store-hero__pager.is-paused .store-hero__pager-path,
+.store-hero__pager.is-dragging .store-hero__pager-path{animation-play-state:paused}
+@keyframes store-hero-border-draw{
+  from{stroke-dashoffset:87.47px}
+  to{stroke-dashoffset:0}
 }
 .store-hero__count,.store-hero__pager i{position:relative;z-index:1}
 .store-hero__count{min-width:32px;color:#fff;font:700 12px/1 system-ui,sans-serif;text-align:center;white-space:nowrap}

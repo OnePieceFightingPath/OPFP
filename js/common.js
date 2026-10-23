@@ -1535,7 +1535,7 @@ window.UI = (function () {
       parent.appendChild(next);
     }
 
-    var pager = null, countEl = null, playIcon = null, progressPath = null, progressLength = 0;
+    var pager = null, countEl = null, playIcon = null, progressPaths = [];
     if (count > 1) {
       pager = document.createElement('button');
       pager.className = 'store-hero__pager';
@@ -1544,35 +1544,26 @@ window.UI = (function () {
       pager.setAttribute('aria-pressed', 'false');
       pager.innerHTML =
         '<svg class="store-hero__pager-border" viewBox="0 0 76 26" preserveAspectRatio="none" aria-hidden="true">' +
-        '<rect class="store-hero__pager-track" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
-        '<rect class="store-hero__pager-path" x="1.5" y="1.5" width="73" height="23" rx="11.5" />' +
+        '<path class="store-hero__pager-path" d="M 0.75 13.5 A 12.75 12.75 0 0 1 13.5 0.75 H 62.5 A 12.75 12.75 0 0 1 75.25 13.5" />' +
+        '<path class="store-hero__pager-path" d="M 0.75 13.5 A 12.75 12.75 0 0 0 13.5 26.25 H 62.5 A 12.75 12.75 0 0 0 75.25 13.5" />' +
         '</svg><span class="store-hero__count" aria-live="polite"></span>' +
         '<i class="ic-v2-media-av-pause-fill" aria-hidden="true"></i>';
       parent.appendChild(pager);
       countEl = pager.querySelector('.store-hero__count');
       playIcon = pager.querySelector('i');
-      progressPath = pager.querySelector('.store-hero__pager-path');
+      progressPaths = Array.prototype.slice.call(pager.querySelectorAll('.store-hero__pager-path'));
     }
 
-    var delay = 4000, transitionMs = 400;
+    var delay = 4200, transitionMs = 400;
     var playing = count > 1, elapsed = 0, lastFrame = null, frameId = null;
     var dragging = false, dragStart = 0, dragX = 0, pointerId = null, suppressClick = false;
     var animate = false, resizeObserver = null;
     function currentIndex() { return ((pos % count) + count) % count; }
-    function measurePager() {
+    function restartPagerAnimation() {
       if (!pager) return;
-      var width = Math.max(76, Math.round(pager.getBoundingClientRect().width * 10) / 10);
-      pager.querySelector('.store-hero__pager-border').setAttribute('viewBox', '0 0 ' + width + ' 26');
-      var track = pager.querySelector('.store-hero__pager-track');
-      [track, progressPath].forEach(function (rect) { rect.setAttribute('width', width - 3); });
-      progressLength = progressPath.getTotalLength ? progressPath.getTotalLength() : (width * 2 + 24);
-      progressPath.style.strokeDasharray = progressLength + ' ' + progressLength;
-      updateProgress();
-    }
-    function updateProgress() {
-      if (!progressPath || !progressLength) return;
-      var remaining = 1 - Math.min(1, elapsed / delay);
-      progressPath.style.strokeDashoffset = String((progressLength * remaining).toFixed(2));
+      pager.classList.remove('is-animating');
+      void pager.offsetWidth;
+      pager.classList.add('is-animating');
     }
     function updateTransform() {
       var cardWidth = cards[0] ? cards[0].getBoundingClientRect().width : 0;
@@ -1598,9 +1589,9 @@ window.UI = (function () {
       lastFrame = timestamp;
       if (elapsed >= delay) {
         elapsed = 0;
+        restartPagerAnimation();
         goBy(1, false);
       }
-      updateProgress();
       frameId = window.requestAnimationFrame(progressTick);
     }
     function startProgress() {
@@ -1610,7 +1601,7 @@ window.UI = (function () {
     function restartProgress() {
       elapsed = 0;
       lastFrame = null;
-      updateProgress();
+      restartPagerAnimation();
       startProgress();
     }
     function goBy(delta, resetTimer) {
@@ -1669,6 +1660,7 @@ window.UI = (function () {
       document.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerup', onPointerEnd);
       document.removeEventListener('pointercancel', onPointerEnd);
+      if (pager) pager.classList.remove('is-dragging');
       var dx = dragX;
       dragging = false;
       pointerId = null;
@@ -1694,6 +1686,7 @@ window.UI = (function () {
       dragX = 0;
       pointerId = event.pointerId;
       animate = false;
+      if (pager) pager.classList.add('is-dragging');
       if (frameId !== null) window.cancelAnimationFrame(frameId);
       frameId = null;
       lastFrame = null;
@@ -1714,10 +1707,10 @@ window.UI = (function () {
         frameId = null;
         elapsed = 0;
         lastFrame = null;
-        updateProgress();
+        restartPagerAnimation();
       }
     }
-    function onResize() { updateTransform(); measurePager(); }
+    function onResize() { updateTransform(); }
 
     cards.forEach(function (card) {
       card.addEventListener('click', onCardClick);
@@ -1729,7 +1722,7 @@ window.UI = (function () {
     if (next) next.addEventListener('click', function () { goBy(1, true); });
     if (pager) pager.addEventListener('click', togglePlay);
     syncSlides();
-    if (pager) { measurePager(); updateProgress(); }
+    if (pager) restartPagerAnimation();
     window.addEventListener('resize', onResize);
     if (window.ResizeObserver) {
       resizeObserver = new window.ResizeObserver(onResize);
