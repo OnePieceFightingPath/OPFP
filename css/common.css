@@ -402,7 +402,7 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 }
 
 /* 홈 메인 배너 — Store hero 카드 캐러셀 */
-.banner--home.store-hero{height:clamp(210px,36vw,276px);overflow:hidden}
+.banner--home{height:clamp(210px,36vw,276px);overflow:hidden}
 .banner--home.store-hero::after{background:none}
 .banner--home.store-hero .banner-media{overflow:visible}
 .store-hero__track{
@@ -475,7 +475,7 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .store-hero__count{min-width:32px;color:#fff;font:700 12px/1 system-ui,sans-serif;text-align:center;white-space:nowrap}
 .store-hero__pager i{font-size:13px}
 @media(max-width:767px){
-  .banner--home.store-hero{height:clamp(210px,58vw,250px)}
+  .banner--home{height:clamp(210px,58vw,250px)}
   .store-hero__card{flex-basis:84vw;border-radius:18px}
   .store-hero__text{width:82%;padding:22px 20px}
   .store-hero__title{font-size:clamp(21px,6vw,28px)}
