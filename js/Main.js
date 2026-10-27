@@ -1162,7 +1162,8 @@
   function pvpDates() {
     var seen = {};
     return S.pvps.filter(function (g) {
-      return g.type !== 'upcoming' || pvpDaysUntil(g.date) > 0;
+      /* 출시 예정일은 날짜 필터를 만들지 않고, 실제 패치 날짜만 필터에 노출 */
+      return g.type !== 'upcoming';
     }).map(function (g) { return String(g.date || ''); })
       .filter(function (d) { if (!d || seen[d]) return false; seen[d] = 1; return true; })
       .sort()
@@ -1211,8 +1212,11 @@
       var groups = S.pvps.filter(function (g) {
         var upcoming = g.type === 'upcoming';
         var inColumn = g.type === kind || (kind === 'fix' && upcoming);
-        return inColumn && (!upcoming || pvpDaysUntil(g.date) > 0) &&
-          (!pvpSelDate || String(g.date) === pvpSelDate);
+        /* 예정 항목은 출시일까지 유지하며 선택한 실제 패치 날짜와 무관하게 함께 표시 */
+        var inDateRange = upcoming
+          ? pvpDaysUntil(g.date) > 0
+          : (!pvpSelDate || String(g.date) === pvpSelDate);
+        return inColumn && inDateRange;
       });
       /* 선택 날짜 기준 컬럼별 인원 카운트 */
       var cntEl = $(kind + 'Cnt');
