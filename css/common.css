@@ -836,6 +836,18 @@ body.body-lock{
 .modal-body{padding:18px 20px 22px;overflow:auto}
 .modal--legal{width:min(820px,100%);max-height:88vh}
 .modal--legal .modal-body{padding:20px 26px 28px;line-height:1.7}
+.legal-tabs{
+  position:sticky;top:-20px;z-index:3;display:flex;gap:4px;margin:-20px -26px 18px;padding:12px 26px 0;
+  background:var(--surface);border-bottom:1px solid var(--line)
+}
+.legal-tab{
+  flex:1 1 0;min-width:0;padding:9px 7px 10px;border-bottom:2px solid transparent;border-radius:8px 8px 0 0;
+  color:var(--text-3);font-size:12px;font-weight:800;white-space:nowrap;transition:color .18s ease,background .18s ease,border-color .18s ease
+}
+.legal-tab:hover{color:var(--text);background:var(--surface-2)}
+.legal-tab.is-active{color:var(--gold);border-bottom-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,var(--surface))}
+.legal-tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.legal-tab-panel{min-height:180px}
 .legal-disclaimer{
   margin:0 0 16px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line));
   border-radius:var(--r-sm);background:color-mix(in srgb,var(--gold) 9%,var(--surface));font-size:12px;color:var(--text-2)
@@ -848,6 +860,8 @@ body.body-lock{
 .legal-section p{margin:8px 0 0;color:var(--text-2);font-size:13px;line-height:1.75;white-space:pre-line}
 @media (max-width:600px){
   .modal--legal .modal-body{padding:16px 15px 22px}
+  .legal-tabs{top:-16px;margin:-16px -15px 15px;padding:10px 15px 0;gap:2px}
+  .legal-tab{padding:8px 3px 9px;font-size:11px;letter-spacing:-.2px}
   .legal-section+.legal-section{margin-top:15px;padding-top:14px}
 }
 

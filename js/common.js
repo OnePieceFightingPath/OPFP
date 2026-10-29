@@ -1198,10 +1198,71 @@ window.UI = (function () {
     return html + '</div>';
   }
 
-  function openLegalDocument(key) {
+  var FPP_LEGAL_TAB_KEYS = ['terms', 'privacy', 'operations'];
+  var FPP_LEGAL_TAB_LABELS = {
+    terms: '이용약관',
+    privacy: '개인정보처리방침',
+    operations: '운영정책'
+  };
+
+  function renderLegalTabs(activeKey) {
+    var tabs = FPP_LEGAL_TAB_KEYS.map(function (key) {
+      var selected = key === activeKey;
+      return '<button class="legal-tab' + (selected ? ' is-active' : '') + '" type="button" role="tab"' +
+        ' id="legal-tab-' + key + '" aria-controls="legal-document-panel" aria-selected="' + (selected ? 'true' : 'false') + '"' +
+        ' tabindex="' + (selected ? '0' : '-1') + '" data-legal-tab="' + key + '">' +
+        esc(FPP_LEGAL_TAB_LABELS[key]) + '</button>';
+    }).join('');
+    return '<div class="legal-tabs" role="tablist" aria-label="약관 및 정책">' + tabs + '</div>' +
+      '<div class="legal-tab-panel" id="legal-document-panel" role="tabpanel" tabindex="0"' +
+      ' aria-labelledby="legal-tab-' + activeKey + '">' + renderLegalDocument(FPP_LEGAL_DOCS[activeKey]) + '</div>';
+  }
+
+  function selectLegalTab(body, key, moveFocus) {
     var doc = FPP_LEGAL_DOCS[key];
     if (!doc) return;
-    openModal({ title: doc.title, cls: 'modal--legal', body: renderLegalDocument(doc) });
+    var tabs = Array.prototype.slice.call(body.querySelectorAll('[data-legal-tab]'));
+    tabs.forEach(function (tab) {
+      var selected = tab.getAttribute('data-legal-tab') === key;
+      tab.classList.toggle('is-active', selected);
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      tab.setAttribute('tabindex', selected ? '0' : '-1');
+      if (selected && moveFocus) tab.focus();
+    });
+    var panel = body.querySelector('#legal-document-panel');
+    panel.innerHTML = renderLegalDocument(doc);
+    panel.setAttribute('aria-labelledby', 'legal-tab-' + key);
+    body.scrollTop = 0;
+  }
+
+  function bindLegalModalTabs(body) {
+    var tabs = Array.prototype.slice.call(body.querySelectorAll('[data-legal-tab]'));
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        selectLegalTab(body, tab.getAttribute('data-legal-tab'), false);
+      });
+      tab.addEventListener('keydown', function (event) {
+        var index = tabs.indexOf(tab);
+        var next = index;
+        if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+        else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        selectLegalTab(body, tabs[next].getAttribute('data-legal-tab'), true);
+      });
+    });
+  }
+
+  function openLegalDocument(key) {
+    if (!FPP_LEGAL_DOCS[key]) return;
+    var modal = openModal({
+      title: 'FPP 정책 안내',
+      cls: 'modal--legal',
+      body: renderLegalTabs(key)
+    });
+    bindLegalModalTabs(modal.body);
   }
 
   function initLegalFooterLinks() {
