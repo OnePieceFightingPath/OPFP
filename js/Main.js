@@ -1055,12 +1055,30 @@
     s = s.replace(/[\s\-·・.,()（）\[\]【】'’""]/g, '').toLowerCase();
     return s.replace(/(진화|각성|한계돌파|초월|개화|한돌)$/g, '');
   }
+  function hasSCharacterPrefix(n) {
+    var match = String(n || '').trim().match(/^s\s*[-‐‑‒–—−]\s*(.+)$/i);
+    return !!(match && nameKey(match[1]));
+  }
+  function hasExplicitRelatedAlias(ka, kb) {
+    var pairs = [
+      ['s호크', '미호크'],
+      ['s스네이크', '행콕'],
+      ['s스네이크', '보아행콕']
+    ];
+    return pairs.some(function (pair) {
+      return (pair[0] === ka && pair[1] === kb) || (pair[0] === kb && pair[1] === ka);
+    });
+  }
   function isRelatedName(a, b) {
     if (!a || !b) return false;
     if (a === b) return true;
     var ka = nameKey(a), kb = nameKey(b);
     if (!ka || !kb) return false;
     if (ka === kb) return true;
+    /* 세라핌과 원본 캐릭터 이름은 정규화만으로 연결되지 않아 명시적으로 매핑 */
+    if (hasExplicitRelatedAlias(ka, kb)) return true;
+    /* 세라핌 계열은 단독 S 접두사가 같은 경우에만 이름과 무관하게 연결 */
+    if (hasSCharacterPrefix(a) && hasSCharacterPrefix(b)) return true;
     /* 검색과 동일한 포함 관계 매칭 */
     if (ka.length >= 2 && kb.length >= 2 && (ka.indexOf(kb) > -1 || kb.indexOf(ka) > -1)) return true;
     return false;
