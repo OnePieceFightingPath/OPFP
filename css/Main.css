@@ -463,12 +463,12 @@
 .tip-write{margin-top:12px}
 
 /* ===== Scroll to Top Button (캐릭터 페이지 전용) ===== */
-.scroll-top-btn {
+.fpp-fab-top {
   position: fixed;
-  right: 20px;
-  bottom: 90px;
-  width: 44px;
-  height: 44px;
+  right: 40px;
+  bottom: 20px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--gold);
   color: var(--gold-ink);
@@ -479,26 +479,25 @@
   justify-content: center;
   cursor: pointer;
   z-index: 999;
-  transition: transform 0.2s var(--ease), opacity 0.2s var(--ease), box-shadow 0.2s;
+  transition: transform 0.2s cubic-bezier(.4,0,.2,1), opacity 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s;
   opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px);
+  pointer-events: none;
+  transform: translateY(40px);
 }
-.scroll-top-btn.show {
+.fpp-fab-top.is-visible {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
   transform: translateY(0);
 }
-.scroll-top-btn:hover {
-  transform: translateY(-2px);
+.fpp-fab-top:hover {
   box-shadow: 0 6px 18px rgba(245, 185, 66, 0.45);
 }
-.scroll-top-btn svg {
+.fpp-fab-top svg {
   stroke: currentColor;
 }
 /* 모바일에서도 동일하게 우측 하단 */
-@media (max-width: 768px) {
-  .scroll-top-btn {
+@media (max-width: 767px) {
+  .fpp-fab-top {
     right: 16px;
     bottom: 80px;
     width: 42px;

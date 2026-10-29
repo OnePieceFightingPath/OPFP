@@ -1276,10 +1276,20 @@
 
   /* ================= 라우팅 ================= */
   var VIEWS = { home: 'view-home', patch: 'view-patch', characters: 'view-characters', pvp: 'view-pvp' };
+  function syncScrollTopButton() {
+    var button = $('scrollTopBtn');
+    var viewChars = $('view-characters');
+    if (!button) return;
+    var visible = !!(viewChars && !viewChars.hidden && window.scrollY > 300);
+    button.classList.toggle('is-visible', visible);
+    button.setAttribute('aria-hidden', String(!visible));
+    button.tabIndex = visible ? 0 : -1;
+  }
   function route(name, params) {
     name = VIEWS[name] ? name : 'home';
     Object.keys(VIEWS).forEach(function (k) { $(VIEWS[k]).hidden = k !== name; });
     window.scrollTo({ top: 0 });
+    syncScrollTopButton();
     if (!S.loaded) return;
     if (name === 'patch' && (S.visibility.boards || S.visibility.events)) {
       location.href = UI.pageUrl('Community.html' + location.hash);
@@ -1433,26 +1443,8 @@
     /* ===== Scroll to Top Button (캐릭터 페이지 전용) ===== */
     var scrollTopBtn = $('scrollTopBtn');
     if (scrollTopBtn) {
-      var scrollTimeout = null;
-      window.addEventListener('scroll', function () {
-        if (scrollTimeout) return;
-        scrollTimeout = setTimeout(function () {
-          scrollTimeout = null;
-          var viewChars = $('view-characters');
-          if (viewChars && !viewChars.hidden) {
-            if (window.scrollY > 300) {
-              scrollTopBtn.classList.add('show');
-              scrollTopBtn.removeAttribute('hidden');
-            } else {
-              scrollTopBtn.classList.remove('show');
-              scrollTopBtn.setAttribute('hidden', '');
-            }
-          } else {
-            scrollTopBtn.classList.remove('show');
-            scrollTopBtn.setAttribute('hidden', '');
-          }
-        }, 100);
-      }, { passive: true });
+      window.addEventListener('scroll', syncScrollTopButton, { passive: true });
+      syncScrollTopButton();
 
       scrollTopBtn.addEventListener('click', function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
