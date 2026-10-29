@@ -252,21 +252,28 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .desk-nav{display:none;padding:8px 0;background:var(--bg)}
 @media (min-width:768px){.desk-nav{display:block}}
 .fpp-nav__bar{
-  display:flex;align-items:center;gap:4px;width:calc(100% - 40px);max-width:1280px;
+  position:relative;isolation:isolate;display:flex;align-items:center;gap:4px;width:calc(100% - 40px);max-width:1280px;
   min-height:60px;margin:0 auto;padding:6px 12px;
   border:1px solid var(--line);border-radius:999px;background:var(--surface);
   box-shadow:0 2px 8px rgba(0,0,0,.12);
 }
+.fpp-nav__indicator{
+  position:absolute;top:0;left:0;z-index:0;display:block;width:0;height:46px;border-radius:999px;
+  background:color-mix(in srgb,var(--gold) 14%,var(--surface));
+  transition:transform .35s cubic-bezier(.55,-.05,.25,1.05),width .35s cubic-bezier(.55,-.05,.25,1.05),height .35s cubic-bezier(.55,-.05,.25,1.05),background-color .2s;
+  pointer-events:none;
+}
+.fpp-nav__indicator.is-exit{background:color-mix(in srgb,var(--blue) 14%,var(--surface))}
 .dnav{
-  position:relative;padding:0 20px;border-radius:999px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
+  position:relative;z-index:1;padding:0 20px;border-radius:999px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
   transition:color .2s,background .2s;min-height:46px;display:flex;align-items:center;
 }
 .dnav:hover{color:var(--text);background:var(--surface-2)}
-.dnav.active{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface))}
+.dnav.active{color:var(--gold);background:transparent}
 /* 커뮤니티 메뉴의 "메인 홈" — 외부 이동 항목은 블루로 구분 (활성=금색과 혼동 방지) */
 .dnav--exit{color:var(--blue)}
 .dnav--exit:hover{color:var(--text)}
-.dnav--exit.active{color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--surface))}
+.dnav--exit.active{color:var(--blue);background:transparent}
 @media (min-width:768px){.btab--exit{color:var(--blue)}}
 .btab--exit svg{opacity:.95}
 

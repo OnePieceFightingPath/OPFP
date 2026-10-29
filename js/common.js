@@ -504,6 +504,7 @@ window.UI = (function () {
     return NAV;
   }
   var activeNav = 'home';
+  var deskNavResizeBound = false;
   function getCommunityVisibility() {
     return { boards: communityVisibility.boards, events: communityVisibility.events };
   }
@@ -589,9 +590,41 @@ window.UI = (function () {
     var nv = $('desktopNav');
     if (!nv) return;
     var items = navForPage();
-    nv.innerHTML = '<div class="fpp-nav__bar">' + items.map(function (n) {
+    nv.innerHTML = '<div class="fpp-nav__bar"><span class="fpp-nav__indicator" aria-hidden="true"></span>' + items.map(function (n) {
       return '<a class="dnav' + (n.exit ? ' dnav--exit' : '') + '" data-nav="' + n.key + '" href="' + pageUrl(n.page + n.hash) + '">' + (n.label || NAV_LABELS[n.key] || n.key) + '</a>';
     }).join('') + '</div>';
+    if (!deskNavResizeBound) {
+      window.addEventListener('resize', moveDeskNavIndicator, { passive: true });
+      deskNavResizeBound = true;
+    }
+  }
+
+  function moveDeskNavIndicator() {
+    var bar = document.querySelector('.fpp-nav__bar');
+    if (!bar) return;
+    var indicator = bar.querySelector('.fpp-nav__indicator');
+    var active = bar.querySelector('.dnav.active');
+    if (!indicator || !active) return;
+
+    var barRect = bar.getBoundingClientRect();
+    var activeRect = active.getBoundingClientRect();
+    var firstPosition = !indicator.dataset.ready;
+    if (firstPosition) indicator.style.transition = 'none';
+    indicator.style.width = activeRect.width + 'px';
+    indicator.style.height = activeRect.height + 'px';
+    indicator.style.transform = 'translate(' +
+      (activeRect.left - barRect.left - bar.clientLeft) + 'px,' +
+      (activeRect.top - barRect.top - bar.clientTop) + 'px)';
+    indicator.classList.toggle('is-exit', active.classList.contains('dnav--exit'));
+
+    if (firstPosition) {
+      indicator.dataset.ready = 'true';
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          if (indicator.isConnected) indicator.style.removeProperty('transition');
+        });
+      });
+    }
   }
 
   function updateAuthArea() {
@@ -761,6 +794,7 @@ window.UI = (function () {
     document.querySelectorAll('[data-nav]').forEach(function (el) {
       el.classList.toggle('active', el.getAttribute('data-nav') === k);
     });
+    moveDeskNavIndicator();
   }
 
   /* ---------- 팝업 ---------- */
