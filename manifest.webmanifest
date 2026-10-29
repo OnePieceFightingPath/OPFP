@@ -1,0 +1,25 @@
+{
+  "id": "./ko/Main.html",
+  "name": "FPP v2",
+  "short_name": "FPP",
+  "description": "원피스 파이팅 패스 패치 정보와 커뮤니티",
+  "start_url": "./ko/Main.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a1626",
+  "theme_color": "#0a1626",
+  "icons": [
+    {
+      "src": "./img/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./img/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

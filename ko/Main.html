@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<base href="../" />
+<title>FPP v2 — 원피스 파이팅패스 커뮤니티</title>
+<meta name="description" content="FPP v2 — 캐릭터, PvP 패치, 커뮤니티, 고객센터" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#0a1626" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="FPP" />
+<link rel="apple-touch-icon" href="img/pwa-icon-180.png" />
+<link rel="icon" type="image/png" href="img/logo-light.png" />
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+<script>
+/* 테마 저장값(JSON 문자열)을 파싱해 정규화 — 따옴표 포함 값이 data-theme에 들어가 CSS 변수가 늦게 적용되던 문제 수정 */
+(function(){try{var t=localStorage.getItem('fpp_theme');if(t){try{t=JSON.parse(t);}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark');}}catch(e){}})();
+</script>
+<style>
+/* 페이지 전환 시 흰 화면 깜빡임 방지 — CSS 로드 전에도 테마 배경 즉시 적용 */
+html{background:#0a1626;color-scheme:dark}
+html[data-theme="light"]{background:#eef3f8;color-scheme:light}
+/* 페이지 전환 베일 — 스타일시트가 적용되는 즉시 빠르게 해제, 폴백은 .9초 후 강제 해제 */
+.page-veil{position:fixed;inset:0;z-index:9999;pointer-events:none;background:#0a1626;opacity:1;transition:opacity .25s ease;animation:pageVeilFail .3s ease .9s forwards}
+html[data-theme="light"] .page-veil{background:#eef3f8}
+.page-veil.off{opacity:0}
+@keyframes pageVeilFail{to{opacity:0;visibility:hidden}}
+</style>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script defer src="js/sdk.js"></script>
+<script>
+/* 에셋 로더 — 루트/서브폴더 배포 모두 대응 (상대경로 우선 → 절대경로 재시도) */
+(function () {
+  /* <base>가 루트 에셋 경로를 가리키므로 모든 에셋을 동일한 기준으로 불러온다. */
+  var B = './';
+  var CSS = ['css/common.css', 'css/Main.css', 'css/Community.css'];
+  var JS = ['js/Firebase.js', 'js/content-sanitizer.js', 'js/common.js', 'js/Main.js'];
+  var warned = false;
+  function warn() {
+    if (warned) return; warned = true;
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;background:#e8484f;color:#fff;font:700 13px/1.5 sans-serif;padding:10px 14px;text-align:center';
+    d.textContent = '스타일/스크립트를 불러오지 못했습니다. 새로고침 해주세요.';
+    (document.body || document.documentElement).appendChild(d);
+  }
+  function loadCSS(href, done) {
+    var l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = href;
+    l.onload = function () { done(); };
+    l.onerror = function () {
+      if (href.charAt(0) !== '/') loadCSS('/' + href, done);
+      else { warn(); done(); }
+    };
+    document.head.appendChild(l);
+  }
+  function loadJS(href, done) {
+    var s = document.createElement('script');
+    s.src = href;
+    s.onload = function () { done(); };
+    s.onerror = function () {
+      if (href.charAt(0) !== '/') loadJS('/' + href, done);
+      else { warn(); done(); }
+    };
+    document.body.appendChild(s);
+  }
+  function loadStyles() { CSS.forEach(function (path) { loadCSS(B + path, function () {}); }); }
+  function jsChain(i) { if (i >= JS.length) return; loadJS(B + JS[i], function () { jsChain(i + 1); }); }
+  loadStyles();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { jsChain(0); });
+  else jsChain(0);
+})();
+</script>
+</head>
+<body data-page="main">
+
+<div id="pageVeil" class="page-veil" aria-hidden="true"></div>
+<div class="ambient" aria-hidden="true"></div>
+
+<header id="appHeader" class="app-header"></header>
+<nav id="desktopNav" class="desk-nav" aria-label="주 메뉴"></nav>
+
+<div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+<aside class="drawer" id="navDrawer" aria-label="전체 메뉴" aria-hidden="true"></aside>
+
+<main id="view">
+  <!-- ================= 홈 ================= -->
+  <section class="page" id="view-home">
+    <div class="banner banner--home" aria-label="홈 배너">
+      <div class="banner-fallback" aria-hidden="true"></div>
+      <div class="banner-media" id="homeBannerMedia"></div>
+    </div>
+    <div class="wrap">
+      <div class="home-grid">
+        <div class="box box--patch rv" id="homePatchBox">
+          <div class="box-head"><h2 class="box-title">패치노트</h2><a class="box-go" id="homePatchLink" href="ko/Community.html#patch">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-body" id="homePatchList"></div>
+        </div>
+        <div class="box box--pvp rv">
+          <div class="box-head"><h2 class="box-title">PvP 패치</h2><a class="box-go" href="ko/Main.html#pvp">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-body pvp-orbs" id="homePvpGrid"></div>
+        </div>
+        <div class="box box--event rv" id="homeEventBox">
+          <div class="box-head"><h2 class="box-title">이벤트</h2><a class="box-go" href="ko/Community.html#event">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-body home-event-body">
+            <button class="ev-nav ev-nav--prev" id="homeEventPrev" type="button" aria-label="이전 이벤트"><i class="ic-v2-control-arrow-left-circle-fill" aria-hidden="true"></i></button>
+            <div class="ev-roll" id="homeEventRoll"></div>
+            <button class="ev-nav ev-nav--next" id="homeEventNext" type="button" aria-label="다음 이벤트"><i class="ic-v2-control-arrow-right-circle-fill" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <div class="box box--board rv" id="homeBoardBox">
+          <div class="box-head"><h2 class="box-title">게시글</h2><a class="box-go" href="ko/Community.html#board">바로가기 <i class="ic-v2-control-arrow-right-line" aria-hidden="true"></i></a></div>
+          <div class="box-body" id="homeBoardList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 패치노트 ================= -->
+  <section class="page" id="view-patch" hidden>
+    <div class="banner banner--page" aria-label="패치노트 배너">
+      <div class="banner-fallback" aria-hidden="true"></div>
+      <div class="banner-media" id="patchBannerMedia"></div>
+    </div>
+    <div class="wrap">
+      <div class="patch-layout">
+        <div class="patch-content rv" id="patchContent"></div>
+        <aside class="month-filter rv" id="monthFilter" aria-label="월별 필터">
+          <h3 class="month-title">월별</h3>
+          <select id="monthSelect" class="month-select" aria-label="월별 선택"></select>
+          <div class="month-list" id="monthList"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 캐릭터 ================= -->
+  <section class="page" id="view-characters" hidden>
+    <div class="banner banner--page" aria-label="캐릭터 배너">
+      <div class="banner-fallback" aria-hidden="true"></div>
+      <div class="banner-media" id="charBannerMedia"></div>
+    </div>
+    <div class="wrap">
+      <div class="char-tabs rv" role="tablist" aria-label="캐릭터 탭">
+        <button class="char-tab is-on" id="charTabChar" type="button" role="tab" aria-selected="true">캐릭터</button>
+        <button class="char-tab" id="charTabSupport" type="button" role="tab" aria-selected="false">현질 서포터</button>
+      </div>
+      <div class="char-filters rv" aria-label="캐릭터 필터">
+        <div class="cf-row">
+          <select class="cf-sel" id="fGrade" aria-label="등급 필터"></select>
+          <select class="cf-sel" id="fAttr" aria-label="속성 필터"></select>
+          <select class="cf-sel" id="fType" aria-label="타입 필터"></select>
+          <select class="cf-sel" id="fSort" aria-label="정렬"></select>
+          <div class="cf-right">
+            <button class="btn btn--ghost btn--sm cf-fav" id="fFav" type="button" aria-pressed="false"><i class="ic-v2-community-star-fill" aria-hidden="true"></i> 즐겨찾기</button>
+            <label class="cf-search"><span class="sr-only">검색</span>
+              <i class="ic-v2-navigation-search-line" aria-hidden="true"></i>
+              <input id="fSearch" type="search" placeholder="캐릭터 검색" aria-label="캐릭터 검색" />
+            </label>
+            <button class="btn btn--ghost btn--sm" id="fRefresh" type="button" aria-label="필터 새로고침"><i class="ic-v2-control-refresh-line" aria-hidden="true"></i> 새로고침</button>
+          </div>
+        </div>
+      </div>
+      <div class="char-grid" id="charGrid"></div>
+    </div>
+  </section>
+
+  <!-- ================= PvP 패치 ================= -->
+  <section class="page" id="view-pvp" hidden>
+    <div class="banner banner--page" aria-label="PvP 패치 배너">
+      <div class="banner-fallback" aria-hidden="true"></div>
+      <div class="banner-media" id="pvpBannerMedia"></div>
+    </div>
+    <div class="wrap">
+      <div class="pvp-toolbar rv">
+        <div class="pvp-date" id="pvpDateWrap">
+          <button class="btn btn--ghost btn--sm pvp-date-btn" id="pvpDateBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <i class="ic-v2-community-calendar-line" aria-hidden="true"></i>
+            <span id="pvpDateText">전체</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="pvp-date-list" id="pvpDateList" hidden role="listbox" aria-label="패치 날짜 선택"></div>
+        </div>
+      </div>
+      <div class="pvp-cols rv">
+        <section class="pvp-col pvp-col--buff" aria-label="버프">
+          <h2 class="pvp-col-title"><span class="badge badge--buff" aria-hidden="true">▲</span> 버프 <span class="pvp-col-cnt" id="buffCnt" aria-live="polite">0명</span><small class="pvp-col-en">Buff</small></h2>
+          <div class="pvp-col-body" id="buffCol"></div>
+        </section>
+        <section class="pvp-col pvp-col--nerf" aria-label="너프">
+          <h2 class="pvp-col-title"><span class="badge badge--nerf" aria-hidden="true">▼</span> 너프 <span class="pvp-col-cnt" id="nerfCnt" aria-live="polite">0명</span><small class="pvp-col-en">Nerf</small></h2>
+          <div class="pvp-col-body" id="nerfCol"></div>
+        </section>
+        <section class="pvp-col pvp-col--fix" aria-label="기능수정">
+          <h2 class="pvp-col-title"><span class="badge badge--fix" aria-hidden="true">✦</span> 기능수정 <span class="pvp-col-cnt" id="fixCnt" aria-live="polite">0명</span><small class="pvp-col-en">Fix</small></h2>
+          <div class="pvp-col-body" id="fixCol"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <div class="wrap foot-in">
+    <div class="foot-top">
+      <nav class="foot-nav" aria-label="푸터 메뉴">
+        <a href="#terms" data-legal-doc="terms">이용약관</a>
+        <a href="#privacy" data-legal-doc="privacy">개인정보처리방침</a>
+        <a href="#operations" data-legal-doc="operations">운영정책</a>
+        <a href="ko/CustomerService.html">고객센터</a>
+      </nav>
+      <nav class="foot-socials" aria-label="외부 채널">
+        <a class="foot-social" href="https://cafe.naver.com/onepiecefightingpath" target="_blank" rel="noopener noreferrer" aria-label="네이버 카페 새 창에서 열기">
+          <span class="foot-social-icon foot-social-icon--naver" aria-hidden="true">N</span><span>네이버 카페</span>
+        </a>
+        <a class="foot-social" href="https://discord.gg/XzPYW2Mgp" target="_blank" rel="noopener noreferrer" aria-label="Discord 새 창에서 열기">
+          <span class="foot-social-icon foot-social-icon--discord" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19.7 5.4A18 18 0 0 0 15.3 4l-.6 1.2a16.7 16.7 0 0 0-5.4 0L8.7 4a18 18 0 0 0-4.4 1.4C1.5 9.6.7 13.7 1.1 17.7a18.2 18.2 0 0 0 5.4 2.7l1.2-2a11.8 11.8 0 0 1-1.9-.9l.5-.4a12.9 12.9 0 0 0 11.4 0l.5.4a11.8 11.8 0 0 1-1.9.9l1.2 2a18.2 18.2 0 0 0 5.4-2.7c.5-4.7-.8-8.8-3.2-12.3ZM8.8 14.5c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg></span><span>Discord</span>
+        </a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <a class="foot-brand" href="ko/Main.html" aria-label="FPP 홈">
+        <img src="img/logo-dark.png" alt="" loading="lazy" />
+      </a>
+      <small>© 2026 FPPatch. All game assets and trademarks are the property of 《航海王热血航线》 and its respective owners.</small>
+    </div>
+  </div>
+</footer>
+
+<nav id="bottomTabs" class="bottom-tabs" aria-label="하단 메뉴"></nav>
+
+<!-- Scroll to Top Button (캐릭터 페이지 전용) -->
+<button id="scrollTopBtn" class="fpp-fab-top" type="button" aria-label="최상단으로 이동" aria-hidden="true" tabindex="-1">
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M5 4h14M12 20V8m-5 5 5-5 5 5"/>
+  </svg>
+</button>
+
+<div id="popupRoot"></div>
+<div id="toastRoot" aria-live="polite"></div>
+
+</body>
+</html>
