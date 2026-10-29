@@ -589,7 +589,7 @@ window.UI = (function () {
     var nv = $('desktopNav');
     if (!nv) return;
     var items = navForPage();
-    nv.innerHTML = '<div class="wrap dnav-in">' + items.map(function (n) {
+    nv.innerHTML = '<div class="fpp-nav__bar">' + items.map(function (n) {
       return '<a class="dnav' + (n.exit ? ' dnav--exit' : '') + '" data-nav="' + n.key + '" href="' + pageUrl(n.page + n.hash) + '">' + (n.label || NAV_LABELS[n.key] || n.key) + '</a>';
     }).join('') + '</div>';
   }
@@ -1899,23 +1899,6 @@ window.UI = (function () {
     fillBanner(mediaEl, null, found.length ? found : [def]);
   }
 
-  /* ---------- 티커 ---------- */
-  function ticker(el, items) {
-    if (!el) return;
-    var arr = (items || []);
-    if (!arr.length) { el.hidden = true; return; }
-    el.hidden = false;
-    var html = arr.map(function (x) {
-      var cls = String(x).indexOf('📋') === 0 ? 'tick-item tick-note' : 'tick-item';
-      return '<span class="' + cls + '">' + esc(x) + '</span>';
-    }).join('<span class="tick-sep">•</span>');
-    el.innerHTML = '<div class="tick-track">' + html + '<span class="tick-sep">•</span>' + html + '<span class="tick-sep">•</span></div>';
-    /* 속도 규칙 — 5개 이하 20초 / 6~9개 40초 / 10개 이상 60초 */
-    var dur = arr.length <= 5 ? 20 : (arr.length <= 9 ? 40 : 60);
-    var track = el.querySelector('.tick-track');
-    if (track) track.style.animationDuration = dur + 's';
-  }
-
   /* ---------- 공유 ---------- */
   function share(title, url) {
     var u = url || location.href;
@@ -2134,7 +2117,7 @@ window.UI = (function () {
     lockBody: lockBody, unlockBody: unlockBody,
     SET_ACTIONS: SET_ACTIONS,
     PAGE_BANNERS: PAGE_BANNERS, fillBanner: fillBanner, fillPageBanner: fillPageBanner,
-    ticker: ticker, share: share, toast: toast,
+    share: share, toast: toast,
     skelRows: skelRows, skelCards: skelCards, skelGrid: skelGrid, empty: empty,
     renderContent: renderContent, watchReveals: watchReveals
   };

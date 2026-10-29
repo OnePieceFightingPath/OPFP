@@ -82,7 +82,6 @@ ul,ol{list-style:none}
   background:
     radial-gradient(900px 500px at 85% -10%, color-mix(in srgb,var(--blue) 14%,transparent), transparent 60%),
     radial-gradient(760px 520px at -8% 108%, color-mix(in srgb,var(--gold) 9%,transparent), transparent 62%),
-    repeating-linear-gradient(172deg, transparent 0 118px, color-mix(in srgb,var(--blue) 4%,transparent) 118px 120px),
     var(--bg);
 }
 
@@ -250,25 +249,24 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 }
 
 /* ---------- 데스크톱 내비 ---------- */
-.desk-nav{display:none;border-bottom:1px solid var(--line);background:var(--bg-2)}
+.desk-nav{display:none;padding:8px 0;border-bottom:1px solid var(--line);background:var(--bg)}
 @media (min-width:768px){.desk-nav{display:block}}
-.dnav-in{display:flex;gap:4px}
+.fpp-nav__bar{
+  display:flex;align-items:center;gap:4px;width:calc(100% - 40px);max-width:1280px;
+  min-height:60px;margin:0 auto;padding:6px 12px;
+  border:1px solid var(--line);border-radius:999px;background:var(--surface);
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
 .dnav{
-  position:relative;padding:13px 20px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
-  transition:color .2s;min-height:46px;display:flex;align-items:center;
+  position:relative;padding:0 20px;border-radius:999px;font-weight:900;font-size:14.5px;letter-spacing:.3px;color:var(--text-3);
+  transition:color .2s,background .2s;min-height:46px;display:flex;align-items:center;
 }
-.dnav:hover{color:var(--text)}
-.dnav.active{color:var(--gold)}
-.dnav::after{
-  content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:3px;background:var(--gold);
-  transform:scaleX(0);transform-origin:left;transition:transform .28s var(--ease);
-}
-.dnav.active::after{transform:scaleX(1)}
+.dnav:hover{color:var(--text);background:var(--surface-2)}
+.dnav.active{color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,var(--surface))}
 /* 커뮤니티 메뉴의 "메인 홈" — 외부 이동 항목은 블루로 구분 (활성=금색과 혼동 방지) */
 .dnav--exit{color:var(--blue)}
 .dnav--exit:hover{color:var(--text)}
-.dnav--exit.active{color:var(--blue)}
-.dnav--exit.active::after{transform:scaleX(0)}
+.dnav--exit.active{color:var(--blue);background:color-mix(in srgb,var(--blue) 14%,var(--surface))}
 @media (min-width:768px){.btab--exit{color:var(--blue)}}
 .btab--exit svg{opacity:.95}
 
@@ -324,24 +322,13 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 /* ---------- 배너 ---------- */
 .banner{position:relative;overflow:hidden;height:200px}
 @media (min-width:768px){.banner{height:420px}}
-.banner-fallback{position:absolute;inset:0;background:var(--bg-2)}
-.banner--home .banner-fallback::before{
-  content:"";position:absolute;inset:-40% -10%;
-  background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,255,255,.045) 46px 48px);
-  animation:drift 26s linear infinite;
-}
-@keyframes drift{to{transform:translateX(92px)}}
+.banner-fallback{position:absolute;inset:0;background:var(--bg)}
 .banner-media{position:absolute;inset:0;z-index:1}
 .bimg{position:absolute;inset:0;opacity:0;pointer-events:none;cursor:pointer}
 .bimg img{width:100%;height:100%;object-fit:cover}
 .bimg.on{opacity:1;pointer-events:auto}
 /* 배너 이미지 로드 실패(CDN 차단 등) 시 폴백 배경 */
-.bimg.noimg{background:
-  radial-gradient(900px 400px at 80% 18%, rgba(86,169,230,.28), transparent 62%),
-  radial-gradient(760px 420px at 10% 92%, rgba(245,185,66,.20), transparent 60%),
-  linear-gradient(115deg,#0b2440,#123a5e 55%,#0a1f38);}
-.bimg.noimg::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,255,255,.045) 46px 48px)}
+.bimg.noimg{background:var(--bg)}
 /* 홈 배너는 이미지 줌 없이 페이드 전환만 적용 */
 .banner--home .bimg{transition:opacity 1s ease}
 .banner--home::after{
@@ -413,17 +400,15 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
 .store-hero__card{
   position:relative;isolation:isolate;display:block;flex:0 0 min(84vw,644px);height:100%;
   overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:24px;
-  background:linear-gradient(135deg,#152b43,#0a1626);color:#fff;
+  background:var(--bg);color:var(--text);
 }
 .store-hero__card::after{
   content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(90deg,rgba(3,10,18,.78),rgba(3,10,18,.32) 52%,rgba(3,10,18,.04) 100%),
     linear-gradient(0deg,rgba(3,10,18,.32),transparent 58%);
 }
-.store-hero__card.noimg{
-  background:radial-gradient(900px 400px at 80% 18%,rgba(86,169,230,.28),transparent 62%),
-    radial-gradient(760px 420px at 10% 92%,rgba(245,185,66,.2),transparent 60%),linear-gradient(115deg,#0b2440,#123a5e 55%,#0a1f38);
-}
+.store-hero__card.noimg{background:var(--bg)}
+.store-hero__card.noimg::after{background:none}
 .store-hero__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;pointer-events:none}
 .store-hero__text{
   position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;
@@ -439,6 +424,9 @@ body.fonticon-ok .gnb-font-icon svg{display:none}
   margin:8px 0 0;font-size:14px;font-weight:500;line-height:1.65;color:rgba(255,255,255,.82);
   text-shadow:0 1px 8px rgba(0,0,0,.45);
 }
+.store-hero__card.noimg .store-hero__text{color:var(--text)}
+.store-hero__card.noimg .store-hero__title{ text-shadow:none }
+.store-hero__card.noimg .store-hero__desc{color:var(--text-2);text-shadow:none}
 .store-hero__arrow{
   position:absolute;top:50%;left:50%;z-index:5;display:grid;place-items:center;
   width:36px;height:36px;border:1px solid rgba(255,255,255,.16);border-radius:50%;
@@ -1303,7 +1291,7 @@ main,.app-footer{animation:pageRise .3s var(--ease) both}
 
 @media (prefers-reduced-motion:reduce){
   .rv{opacity:1;transform:none;transition:none}
-  .bimg,.bimg.on,.tick-track{animation:none!important;transition:none!important}
+  .bimg,.bimg.on{animation:none!important;transition:none!important}
   /* 모션 최소화 환경 — 전환 애니메이션 비활성화, 베일은 즉시 제거 */
   #pageVeil{animation:none!important;opacity:0!important;visibility:hidden!important}
   body,main,.app-footer{animation:none!important}

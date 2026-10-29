@@ -183,21 +183,6 @@
     UI.setActiveNav('home');
     UI.fillBanner($('homeBannerMedia'), 'FPP', S.banners);
 
-    /* 티커 — 최신 패치노트 1개 + 최신 PvP 날짜 항목 (속도: ≤5→20s, 6~9→40s, ≥10→60s) */
-    var tick = [];
-    if (S.patches.length) {
-      var np = S.patches[0];
-      tick.push('📋 [패치노트] ' + (np.title || '패치노트') + ' · ' + UI.fmtDate(np.date));
-    }
-    if (S.pvps.length) {
-      var latestDate = String(S.pvps[0].date || '');
-      S.pvps.filter(function (g) { return String(g.date) === latestDate; }).forEach(function (g) {
-        var nm = pvpCharacterName(g);
-        tick.push((nm ? nm + ' ' : '') + (BNAME[g.type] || '수정') + ' · ' + UI.fmtDate(g.date));
-      });
-    }
-    UI.ticker($('homeTicker'), tick);
-
     /* 진행 중이면서 실제 내용(제목·본문·이미지 중 하나라도)이 있는 이벤트만 */
     var patchLink = $('homePatchLink');
     if (patchLink) {

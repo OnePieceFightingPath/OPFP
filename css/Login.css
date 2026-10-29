@@ -1,12 +1,5 @@
 /* ============ FPP v2 — Login.css ============ */
 
-.sea-lines{
-  position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
-  background:
-    repeating-radial-gradient(circle at 50% 130%, transparent 0 90px, rgba(86,169,230,.05) 90px 92px),
-    repeating-radial-gradient(circle at 50% 140%, transparent 0 140px, rgba(245,185,66,.045) 140px 142px);
-}
-
 .login-stage{
   min-height:100vh;display:flex;flex-direction:column;align-items:center;
   position:relative;padding:56px 20px 60px;
@@ -93,7 +86,7 @@ html[data-theme="light"] .login-logo-image--light{display:block}
     background:var(--bg);color:var(--text);
     padding-bottom:0;
   }
-  .login-page .ambient,.login-page .sea-lines{display:none}
+  .login-page .ambient{display:none}
   .login-page .login-stage{
     min-height:100svh;display:block;padding:57px 18px 34px;
     background:var(--bg);

@@ -3,24 +3,6 @@
    ============================================================ */
 .page[hidden]{display:none}
 
-/* ===== 홈 티커 — 배너 아래 독립 스트립 ===== */
-.banner-ticker{
-  position:relative;overflow:hidden;
-  background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-  padding:10px 0;box-shadow:0 10px 26px -14px rgba(0,0,0,.5);
-}
-.banner-ticker::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold) 18%,var(--red) 50%,var(--blue) 82%,transparent);
-  opacity:.55;
-}
-.tick-track{display:inline-flex;gap:22px;white-space:nowrap;animation:tickMove 40s linear infinite;will-change:transform}
-.banner-ticker:hover .tick-track{animation-play-state:paused}
-@keyframes tickMove{to{transform:translateX(-50%)}}
-.tick-item{font-size:12px;font-weight:700;color:var(--text-2)}
-.tick-sep{color:var(--gold);font-size:12px}
-.tick-note{color:var(--gold);font-weight:900}
-
 /* ===== 홈 2×2 그리드 ===== */
 .home-grid{display:grid;gap:18px;margin:26px 0 34px;grid-template-columns:1fr}
 @media (min-width:768px){.home-grid{grid-template-columns:1fr 1fr}}
