@@ -1012,8 +1012,11 @@ window.UI = (function () {
   function openModal(opts) {
     var back = document.createElement('div');
     back.className = 'modal-back' + (opts.backCls ? ' ' + opts.backCls : '');
+    var modalHead = opts.headHTML != null
+      ? opts.headHTML
+      : '<h3>' + esc(opts.title) + '</h3>';
     back.innerHTML = '<div class="modal ' + (opts.cls || '') + '" role="dialog" aria-modal="true" aria-label="' + esc(opts.title) + '">' +
-      '<div class="modal-head"><h3>' + esc(opts.title) + '</h3>' +
+      '<div class="modal-head">' + modalHead +
       '<button class="modal-x" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
       '<div class="modal-body">' + opts.body + '</div></div>';
     $('popupRoot').appendChild(back);

@@ -355,6 +355,9 @@
 
 /* ===== PvP 패치 정보 팝업 ===== */
 .pvp-top{display:flex;gap:16px;align-items:center;padding:2px 0 16px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.pvp-modal .modal-head{position:relative}
+.pvp-modal .modal-head .pvp-top{flex:1;min-width:0;padding:0 48px 0 0;margin:0;border:0}
+.pvp-modal .modal-head .modal-x{position:absolute;top:10px;right:10px}
 .pvp-ava{
   flex:none;width:88px;height:88px;aspect-ratio:1/1;padding:0;
   border-radius:50%;overflow:hidden;border:2px solid var(--line-2);

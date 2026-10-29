@@ -1259,12 +1259,13 @@
     UI.openModal({
       cls: 'pvp-modal',
       title: 'PvP 밸런스 패치',
-      body:
+      headHTML:
       '<div class="pvp-top">' +
       '<span class="pvp-ava"><img src="' + UI.esc(img) + '" alt="" onerror="this.style.display=\'none\'"></span>' +
       '<div class="pvp-id"><div class="pvp-name">' + UI.esc(name) + '</div>' +
       '<div class="pvp-sub"><span class="badge badge--patch">PvP 패치</span><span class="pvp-modal-date">' + UI.esc(UI.fmtDate(g.date)) + '</span></div></div>' +
-      '</div>' + sections
+      '</div>',
+      body: sections
     });
   }
   function renderPvp() {
